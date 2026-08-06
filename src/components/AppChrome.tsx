@@ -286,11 +286,6 @@ function ShellInner({
             <Link href="/?mobile=0">Quitter</Link>
           </div>
         ) : null}
-        {isAdmin ? (
-          <div className="founder-banner">
-            <Link href="/admin">Espace fondateur</Link>
-          </div>
-        ) : null}
         {showFullscreenGuide ? (
           <FirstHourGuide
             state={firstHour!}
