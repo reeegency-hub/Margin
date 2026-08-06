@@ -3627,6 +3627,43 @@ button {
   color: var(--text-muted, #6b7280);
 }
 
+.planning-add {
+  margin-top: 16px;
+  border-radius: var(--radius-card, 16px);
+  background: #12141a;
+  color: #f4f4f5;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.planning-add > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 14px 16px;
+  font-size: 0.95rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  user-select: none;
+}
+.planning-add > summary::-webkit-details-marker {
+  display: none;
+}
+.planning-add > summary::after {
+  content: "+";
+  float: right;
+  font-weight: 700;
+  opacity: 0.7;
+}
+.planning-add[open] > summary::after {
+  content: "−";
+}
+.planning-add .planning-shift-form {
+  padding: 14px 16px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.planning-add .field-label {
+  color: rgba(244, 244, 245, 0.7) !important;
+}
+
 .stock-sheet__row {
   display: flex;
   align-items: center;
@@ -6360,6 +6397,113 @@ button {
   font-size: 0.8125rem;
   color: #6b7280;
   line-height: 1.4;
+}
+
+.hub-now {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.hub-now__eyebrow {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sg-cta-on-ink, #e6f8aa);
+  opacity: 0.9;
+}
+.hub-now__title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #fff;
+  line-height: 1.15;
+}
+.hub-now__detail {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.68);
+}
+.hub-now__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 8px;
+}
+.hub-now__hint {
+  margin: 0;
+  font-size: 0.84rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+.hub-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.hub-empty p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-muted, #6b7280);
+  line-height: 1.45;
+}
+.hub-empty__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.hub-secondary-link {
+  margin: 4px 0 16px;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+.hub-secondary-link a {
+  color: var(--eerie-black, #0a0a0a);
+  text-decoration: none;
+}
+.hub-secondary-link a:hover {
+  text-decoration: underline;
+}
+.hub-section-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.hub-section-lead {
+  margin: -8px 0 0;
+  font-size: 0.88rem;
+  color: var(--text-muted, #6b7280);
+  line-height: 1.4;
+}
+.team-wa-hint__title {
+  margin: 0 0 6px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--eerie-black);
+  opacity: 0.55;
+}
+.team-payroll__head {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+  font-weight: 750;
+  color: #fff;
+}
+.team-payroll__sub {
+  margin: 0 0 14px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.4;
+}
+.team-payroll__scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 @media (min-width: 768px) {
@@ -10929,6 +11073,40 @@ button {
 }
 
 /* ========== Caisse — parcours connexion magasin ========== */
+.pos-setup-fold {
+  margin: 0;
+}
+.pos-setup-fold__summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.95rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  color: var(--text-primary-dark, #0a0a0a);
+  padding: 4px 0;
+}
+.pos-setup-fold__summary::-webkit-details-marker {
+  display: none;
+}
+.pos-setup-fold__summary::after {
+  content: "▾";
+  float: right;
+  opacity: 0.55;
+  font-weight: 600;
+}
+.pos-setup-fold[open] .pos-setup-fold__summary::after {
+  content: "▴";
+}
+.pos-setup-fold__body {
+  margin-top: 12px;
+}
+.pos-guide-details summary {
+  cursor: pointer;
+  list-style: none;
+}
+.pos-guide-details summary::-webkit-details-marker {
+  display: none;
+}
 .pos-steps {
   display: flex;
   flex-wrap: wrap;
@@ -11583,6 +11761,13 @@ button {
   margin: 0;
   font-size: 0.95rem;
   color: #9ca3af;
+}
+.shop-list--empty .shop-list__empty {
+  color: #4b5563;
+}
+.shop-list--empty .shop-list__hint,
+.shop-list--empty .shop-list__hint a {
+  color: #6b7280 !important;
 }
 .shop-list__actions {
   display: flex;

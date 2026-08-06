@@ -2,10 +2,10 @@ import { requireSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { formatKitchenQty } from "@/lib/units";
 import { BrandPage } from "@/components/brand/BrandCard";
-import { generateOrders } from "@/app/actions";
 import { OrderSplitPanel } from "@/components/dashboard/OrderSplitPanel";
 import { computeShoppingNeeds } from "@/lib/orders-engine";
 import { orderStatusLabel } from "@/lib/order-labels";
+import { euro } from "@/lib/dashboard";
 
 export default async function OrdersPage({
   searchParams,
@@ -49,13 +49,37 @@ export default async function OrdersPage({
         : null,
   }));
 
+  const missing = needs.filter((n) => n.reason === "missing").length;
+  const soon = needs.filter((n) => n.reason === "soon").length;
+
   return (
     <BrandPage
       question="Courses"
-      guide="Manquants et risque sous 2–3 jours — une liste."
+      guide="Ce qu’il manque / risque sous 2–3 jours — une liste."
     >
       {params.generated ? <p className="flash">Liste mise à jour.</p> : null}
       {params.validated ? <p className="flash">Course marquée faite.</p> : null}
+
+      <div className="dash-card dash-card--dark hub-now">
+        <p className="hub-now__eyebrow">À faire maintenant</p>
+        <p className="hub-now__title">
+          {lines.length === 0
+            ? "Rien à racheter"
+            : `${lines.length} produit${lines.length > 1 ? "s" : ""} à faire`}
+        </p>
+        <p className="hub-now__detail">
+          {lines.length === 0
+            ? "Stock OK pour les 2–3 prochains jours. Actualisez si vous venez de compter."
+            : [
+                missing > 0
+                  ? `${missing} manquant${missing > 1 ? "s" : ""}`
+                  : null,
+                soon > 0 ? `${soon} à risque` : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+        </p>
+      </div>
 
       <OrderSplitPanel
         lines={lines}
@@ -67,7 +91,8 @@ export default async function OrdersPage({
           status: o.status,
           statusLabel: orderStatusLabel(o.status),
           totalAmount: o.totalAmount,
-          amountLabel: "",
+          amountLabel:
+            o.totalAmount > 0 ? euro(o.totalAmount) : "",
           lineCount: o.lines.length,
           linesLabel: o.lines
             .map(
@@ -92,14 +117,6 @@ export default async function OrdersPage({
           doneAt: (o.validatedAt || o.sentAt)?.toISOString() ?? null,
         }))}
       />
-
-      <div className="shop-list__footer-actions">
-        <form action={generateOrders}>
-          <button type="submit" className="btn-ghost">
-            Actualiser la liste
-          </button>
-        </form>
-      </div>
     </BrandPage>
   );
 }

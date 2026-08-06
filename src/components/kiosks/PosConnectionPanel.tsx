@@ -113,9 +113,7 @@ export function PosConnectionPanel({
   );
 
   const live = connections.find((c) => c.lastOrderAt) || connections[0];
-  const liveVendor = live
-    ? POS_VENDOR_LABELS[live.vendor as PosVendor] ?? live.vendor
-    : null;
+  const hasPending = pendingProducts.length > 0;
 
   const stepIndex = !selectedVendor
     ? 0
@@ -146,86 +144,172 @@ export function PosConnectionPanel({
   }
 
   return (
-    <div className="pos-setup space-y-6">
-      <div className="pos-ticket">
-        <header className="pos-ticket__head">
-          <span
-            className={`pos-ticket__dot${live?.lastOrderAt ? " is-on" : ""}`}
-          />
-          <span>
-            {live
-              ? `Caisse · ${liveVendor}`
-              : "Caisse · pas encore branchée"}
-          </span>
-          <em>{live?.lastOrderAt ? "sync" : "attente"}</em>
-        </header>
-        <div className="pos-ticket__body">
-          <p className="pos-ticket__id">
-            {live?.lastOrderAt
-              ? `Dernière vente · ${live.lastOrderAt}`
-              : "Choisissez votre logiciel, créez le lien, branchez"}
+    <div className="pos-setup space-y-4">
+      {countIngredientIds ? (
+        <div className="dash-card dash-card--dark hub-now">
+          <p className="hub-now__eyebrow">Après sync</p>
+          <p className="hub-now__title">Catalogue mis à jour</p>
+          <p className="hub-now__detail">
+            Comptez ces produits pour aligner le stock réel.
           </p>
-          {pendingProducts.length > 0 ? (
-            <ul className="pos-ticket__lines">
-              {pendingProducts.slice(0, 4).map((p) => (
-                <li key={p.id}>
-                  <span>{p.name}</span>
-                  <span>{euro(p.lastUnitPrice)}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <ul className="pos-ticket__lines pos-ticket__lines--muted">
-              <li>
-                <span>Les ventes arriveront ici</span>
-                <span>→ stock</span>
-              </li>
-            </ul>
-          )}
-          <footer className="pos-ticket__foot">
-            <span>
-              {pendingProducts.length
-                ? `${pendingProducts.length} à valider`
-                : live?.lastOrderAt
-                  ? "Connectée"
-                  : "À brancher"}
-            </span>
-            <span>{live?.name || "—"}</span>
-          </footer>
+          <div className="hub-now__actions">
+            <form action={startInventoryForIngredientsAction}>
+              <input
+                type="hidden"
+                name="ingredientIds"
+                value={countIngredientIds}
+              />
+              <input
+                type="hidden"
+                name="note"
+                value="Vérification après sync caisse"
+              />
+              <button type="submit" className="btn-lime">
+                Compter ces produits
+              </button>
+            </form>
+          </div>
         </div>
-        <p className="pos-ticket__pulse">
-          {live?.lastOrderAt
-            ? "→ stock mis à jour automatiquement"
-            : "→ branchez pour synchroniser le magasin"}
-        </p>
-      </div>
+      ) : null}
 
+      {hasPending ? (
+        <section className="dash-card dash-card--light space-y-3">
+          <p className="hub-section-title">
+            Produits découverts ({pendingProducts.length})
+          </p>
+          <p className="hub-section-lead">
+            Validez pour les ajouter au catalogue, puis comptez si besoin.
+          </p>
+          <ul className="space-y-2">
+            {pendingProducts.map((p) => (
+              <li key={p.id} className="pos-pending">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={Boolean(selected[p.id])}
+                  onChange={(e) =>
+                    setSelected((s) => ({ ...s, [p.id]: e.target.checked }))
+                  }
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-[var(--text-primary-dark)]">
+                    {p.name}
+                  </p>
+                  <p className="text-[12px] text-[var(--text-secondary-dark)]">
+                    {p.vendorHint ? `${p.vendorHint} · ` : ""}
+                    {p.externalSku ? `SKU ${p.externalSku} · ` : ""}
+                    {euro(p.lastUnitPrice)} · vu {p.timesSeen}×
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="flex flex-wrap gap-2">
+            <form action={acceptPosPendingProductsAction}>
+              {selectedIds.map((id) => (
+                <input key={id} type="hidden" name="pendingId" value={id} />
+              ))}
+              <button
+                type="submit"
+                className="btn-lime"
+                disabled={!selectedIds.length}
+              >
+                Ajouter au catalogue ({selectedIds.length})
+              </button>
+            </form>
+            <form action={ignorePosPendingProductsAction}>
+              {selectedIds.map((id) => (
+                <input key={id} type="hidden" name="pendingId" value={id} />
+              ))}
+              <button
+                type="submit"
+                className="btn-ghost"
+                disabled={!selectedIds.length}
+              >
+                Ignorer
+              </button>
+            </form>
+          </div>
+        </section>
+      ) : null}
+
+      {hasPending ? (
+        <details className="pos-setup-fold">
+          <summary className="pos-setup-fold__summary">
+            Brancher / gérer la caisse
+          </summary>
+          <div className="pos-setup-fold__body space-y-4">
+            <PosSetupBody
+              selectedVendor={selectedVendor}
+              connections={connections}
+              forVendor={forVendor}
+              vendor={vendor}
+              tuto={tuto}
+              stepIndex={stepIndex}
+              baseUrl={baseUrl}
+              pickVendor={pickVendor}
+            />
+          </div>
+        </details>
+      ) : (
+        <div className="space-y-4">
+          <PosSetupBody
+            selectedVendor={selectedVendor}
+            connections={connections}
+            forVendor={forVendor}
+            vendor={vendor}
+            tuto={tuto}
+            stepIndex={stepIndex}
+            baseUrl={baseUrl}
+            pickVendor={pickVendor}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PosSetupBody({
+  selectedVendor,
+  connections,
+  forVendor,
+  vendor,
+  tuto,
+  stepIndex,
+  baseUrl,
+  pickVendor,
+}: {
+  selectedVendor: PosVendor | null;
+  connections: Connection[];
+  forVendor: Connection[];
+  vendor: PosVendor;
+  tuto: ReturnType<typeof getPosTuto>;
+  stepIndex: number;
+  baseUrl: string;
+  pickVendor: (v: PosVendor) => void;
+}) {
+  return (
+    <>
       <ol className="pos-steps" aria-label="Étapes de connexion">
-        {[
-          "Logiciel",
-          "Lien caisse",
-          "Brancher / tester",
-          "Produits",
-        ].map((label, i) => (
-          <li
-            key={label}
-            className={`pos-steps__item${i === stepIndex ? " is-active" : ""}${
-              i < stepIndex ? " is-done" : ""
-            }`}
-          >
-            <span>{i + 1}</span>
-            {label}
-          </li>
-        ))}
+        {["Logiciel", "Lien caisse", "Brancher / tester", "Produits"].map(
+          (label, i) => (
+            <li
+              key={label}
+              className={`pos-steps__item${
+                i === stepIndex ? " is-active" : ""
+              }${i < stepIndex ? " is-done" : ""}`}
+            >
+              <span>{i + 1}</span>
+              {label}
+            </li>
+          )
+        )}
       </ol>
 
-      <section className="space-y-3">
-        <h3 className="text-[15px] font-semibold text-[var(--text-primary-dark)]">
-          1. Votre logiciel de caisse
-        </h3>
-        <p className="text-[13px] text-[var(--text-secondary-dark)]">
-          Sélectionnez celui installé en magasin. C’est le point de départ pour
-          synchroniser les ventes → stock.
+      <section className="dash-card dash-card--light space-y-3">
+        <p className="hub-section-title">1. Votre logiciel de caisse</p>
+        <p className="hub-section-lead">
+          Sélectionnez celui installé en magasin.
         </p>
         <div className="pos-vendor-grid" data-guide-action="pos">
           {POS_PICKER_VENDORS.map((v) => {
@@ -253,29 +337,24 @@ export function PosConnectionPanel({
 
       {selectedVendor ? (
         <>
-          <section className="pos-guide space-y-3">
-            <h3 className="text-[15px] font-semibold text-[var(--text-primary-dark)]">
-              Guide {tuto.title}
-            </h3>
-            <p className="text-[14px] text-[var(--text-secondary-dark)]">
-              {tuto.body}
-            </p>
+          <details
+            className="dash-card dash-card--light pos-guide-details"
+            open={forVendor.length === 0}
+          >
+            <summary className="hub-section-title">Guide {tuto.title}</summary>
+            <p className="hub-section-lead mt-2">{tuto.body}</p>
             <ol className="pos-guide__list">
               {tuto.tips.map((s) => (
                 <li key={s}>{s}</li>
               ))}
             </ol>
-          </section>
+          </details>
 
-          <section className="space-y-3">
-            <h3 className="text-[15px] font-semibold text-[var(--text-primary-dark)]">
-              2. Créer / gérer le lien
-            </h3>
-            <p className="text-[13px] text-[var(--text-secondary-dark)]">
+          <section className="dash-card dash-card--light space-y-3">
+            <p className="hub-section-title">2. Créer / gérer le lien</p>
+            <p className="hub-section-lead">
               Margin génère une adresse sécurisée pour{" "}
               {POS_VENDOR_LABELS[vendor]}. En Franchise, on branche pour vous.
-              En Commerce, vous (ou votre intégrateur) collez l’adresse dans la
-              caisse.
             </p>
 
             {forVendor.map((c) => (
@@ -300,26 +379,27 @@ export function PosConnectionPanel({
                   label="Adresse à coller dans votre caisse"
                   value={c.webhookUrl}
                 />
-                <CopyField
-                  label="Adresse v1 (SKU strict + HMAC)"
-                  value={`${baseUrl}/api/v1/webhooks/pos/${c.vendor === "tiller" ? "sumup" : c.vendor}?connectionId=${c.id}`}
-                />
-                {c.webhookSecret ? (
-                  <details className="pos-tech-details mt-2">
-                    <summary>Code secret (à ne pas partager)</summary>
-                    <div className="mt-2 space-y-2">
-                      <CopyField
-                        label="Code secret (x-webhook-secret)"
-                        value={c.webhookSecret}
-                      />
-                      <p className="text-[12px] opacity-70">
-                        HMAC optionnel : header{" "}
-                        <code>x-pos-signature: sha256=…</code> (HMAC-SHA256 du
-                        body avec ce secret).
-                      </p>
-                    </div>
-                  </details>
-                ) : null}
+                <details className="pos-tech-details mt-2">
+                  <summary>Adresse v1 & code secret</summary>
+                  <div className="mt-2 space-y-2">
+                    <CopyField
+                      label="Adresse v1 (SKU strict + HMAC)"
+                      value={`${baseUrl}/api/v1/webhooks/pos/${c.vendor === "tiller" ? "sumup" : c.vendor}?connectionId=${c.id}`}
+                    />
+                    {c.webhookSecret ? (
+                      <>
+                        <CopyField
+                          label="Code secret (x-webhook-secret)"
+                          value={c.webhookSecret}
+                        />
+                        <p className="text-[12px] opacity-70">
+                          HMAC optionnel : header{" "}
+                          <code>x-pos-signature: sha256=…</code>
+                        </p>
+                      </>
+                    ) : null}
+                  </div>
+                </details>
 
                 <div className="pos-link__actions">
                   {process.env.NODE_ENV !== "production" ? (
@@ -404,7 +484,10 @@ export function PosConnectionPanel({
 
                 <details className="pos-danger mt-2">
                   <summary>Supprimer ce lien</summary>
-                  <form action={deletePosConnectionAction} className="mt-2 space-y-2">
+                  <form
+                    action={deletePosConnectionAction}
+                    className="mt-2 space-y-2"
+                  >
                     <input type="hidden" name="connectionId" value={c.id} />
                     <Field label={`Tapez « ${c.name} » pour confirmer`}>
                       <input
@@ -498,121 +581,23 @@ export function PosConnectionPanel({
             </form>
           </section>
 
-          <section className="pos-guide space-y-2">
-            <h3 className="text-[15px] font-semibold text-[var(--text-primary-dark)]">
-              3. Brancher & vérifier
-            </h3>
-            <ul className="pos-guide__tips">
-              {tuto.tips.map((t) => (
-                <li key={t}>{t}</li>
-              ))}
-            </ul>
-            <p className="text-[13px] text-[var(--text-secondary-dark)]">
-              Utilisez <strong>Tester une vente</strong> pour vérifier sans
-              toucher à la vraie caisse. Ensuite, une vente réelle confirme que
-              le stock suit.
+          <section className="dash-card dash-card--light space-y-2">
+            <p className="hub-section-title">3. Brancher & vérifier</p>
+            <p className="hub-section-lead">
+              Collez l’adresse dans la caisse. Utilisez{" "}
+              <strong>Tester une vente</strong> (local) pour vérifier sans
+              toucher à la vraie caisse.
             </p>
           </section>
         </>
       ) : (
-        <div className="pos-guide">
-          <p className="text-[14px] text-[var(--text-secondary-dark)]">
+        <div className="dash-card dash-card--light hub-empty">
+          <p>
             Choisissez votre logiciel ci-dessus pour afficher le guide et créer
-            le lien caisse de votre magasin.
+            le lien caisse.
           </p>
         </div>
       )}
-
-      {countIngredientIds ? (
-        <div className="pos-guide">
-          <p className="font-semibold text-[var(--text-primary-dark)]">
-            Catalogue mis à jour — comptez maintenant
-          </p>
-          <form action={startInventoryForIngredientsAction} className="mt-3">
-            <input
-              type="hidden"
-              name="ingredientIds"
-              value={countIngredientIds}
-            />
-            <input
-              type="hidden"
-              name="note"
-              value="Vérification après sync caisse"
-            />
-            <button type="submit" className="btn-lime">
-              Compter ces produits
-            </button>
-          </form>
-        </div>
-      ) : null}
-
-      <section className="space-y-3 border-t border-[var(--border-dark)] pt-4">
-        <h3 className="text-[15px] font-semibold text-[var(--text-primary-dark)]">
-          4. Produits découverts ({pendingProducts.length})
-        </h3>
-        <p className="text-[13px] text-[var(--text-secondary-dark)]">
-          Après branchement, les articles inconnus apparaissent ici. Vous
-          validez → catalogue → vérification stock.
-        </p>
-        {pendingProducts.length === 0 ? (
-          <p className="text-[13px] text-[var(--text-secondary-dark)]">
-            Aucun produit en attente — simulez une vente ou vendez en caisse.
-          </p>
-        ) : (
-          <>
-            <ul className="space-y-2">
-              {pendingProducts.map((p) => (
-                <li key={p.id} className="pos-pending">
-                  <input
-                    type="checkbox"
-                    className="mt-1"
-                    checked={Boolean(selected[p.id])}
-                    onChange={(e) =>
-                      setSelected((s) => ({ ...s, [p.id]: e.target.checked }))
-                    }
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-[var(--text-primary-dark)]">
-                      {p.name}
-                    </p>
-                    <p className="text-[12px] text-[var(--text-secondary-dark)]">
-                      {p.vendorHint ? `${p.vendorHint} · ` : ""}
-                      {p.externalSku ? `SKU ${p.externalSku} · ` : ""}
-                      {euro(p.lastUnitPrice)} · vu {p.timesSeen}×
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-            <div className="flex flex-wrap gap-2">
-              <form action={acceptPosPendingProductsAction}>
-                {selectedIds.map((id) => (
-                  <input key={id} type="hidden" name="pendingId" value={id} />
-                ))}
-                <button
-                  type="submit"
-                  className="btn-lime"
-                  disabled={!selectedIds.length}
-                >
-                  Ajouter au catalogue ({selectedIds.length})
-                </button>
-              </form>
-              <form action={ignorePosPendingProductsAction}>
-                {selectedIds.map((id) => (
-                  <input key={id} type="hidden" name="pendingId" value={id} />
-                ))}
-                <button
-                  type="submit"
-                  className="btn-ghost"
-                  disabled={!selectedIds.length}
-                >
-                  Ignorer
-                </button>
-              </form>
-            </div>
-          </>
-        )}
-      </section>
-    </div>
+    </>
   );
 }

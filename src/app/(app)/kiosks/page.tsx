@@ -55,6 +55,33 @@ export default async function KiosksPage({
       : null,
   }));
 
+  const live =
+    posConnections.find((c) => c.lastOrderAt) || posConnections[0] || null;
+  const liveVendor = live
+    ? POS_VENDOR_LABELS[live.vendor as PosVendor] ?? live.vendor
+    : null;
+  const pendingCount = pendingProducts.length;
+
+  const inkTitle =
+    pendingCount > 0
+      ? `${pendingCount} produit${pendingCount > 1 ? "s" : ""} à valider`
+      : live?.lastOrderAt
+        ? "Caisse synchronisée"
+        : posConnections.length > 0
+          ? "En attente de première vente"
+          : "Caisse à brancher";
+
+  const inkDetail =
+    pendingCount > 0
+      ? "Validez les articles découverts pour les ajouter au catalogue."
+      : live?.lastOrderAt
+        ? `Dernière vente · ${live.lastOrderAt.toLocaleString("fr-FR")}${
+            liveVendor ? ` · ${liveVendor}` : ""
+          }`
+        : posConnections.length > 0
+          ? "Lien créé — collez l’adresse dans la caisse ou testez une vente."
+          : "Choisissez votre logiciel, créez le lien, les ventes mettent le stock à jour.";
+
   return (
     <BrandPage
       question="Caisse"
@@ -100,29 +127,42 @@ export default async function KiosksPage({
         <p className="flash flash-warn">Connexion introuvable.</p>
       ) : null}
 
-      <div className="dash-card dash-card--dark">
-        <Suspense fallback={<p className="text-[14px]">Chargement…</p>}>
-          <PosConnectionPanel
-            baseUrl={baseUrl}
-            connections={posConnections.map((c) => ({
-              id: c.id,
-              name: c.name,
-              vendor: c.vendor,
-              status: c.status,
-              webhookUrl: `${baseUrl}/api/webhooks/pos/${c.id}`,
-              webhookSecret: c.webhookSecret,
-              lastOrderAt: c.lastOrderAt
-                ? c.lastOrderAt.toLocaleString("fr-FR")
-                : null,
-              hasApiKey: Boolean(c.apiKeyEncrypted),
-              merchantExternalId: c.merchantExternalId,
-              apiBaseUrl: c.apiBaseUrl,
-            }))}
-            pendingProducts={pendingProducts}
-            countIngredientIds={params.countIngredients ?? null}
-          />
-        </Suspense>
+      <div className="dash-card dash-card--dark hub-now">
+        <p className="hub-now__eyebrow">À faire maintenant</p>
+        <p className="hub-now__title">{inkTitle}</p>
+        <p className="hub-now__detail">{inkDetail}</p>
+        {pendingCount > 0 ? (
+          <p className="hub-now__hint">Liste à valider juste en dessous.</p>
+        ) : null}
       </div>
+
+      <Suspense
+        fallback={
+          <div className="dash-card dash-card--light">
+            <p className="text-[14px]">Chargement…</p>
+          </div>
+        }
+      >
+        <PosConnectionPanel
+          baseUrl={baseUrl}
+          connections={posConnections.map((c) => ({
+            id: c.id,
+            name: c.name,
+            vendor: c.vendor,
+            status: c.status,
+            webhookUrl: `${baseUrl}/api/webhooks/pos/${c.id}`,
+            webhookSecret: c.webhookSecret,
+            lastOrderAt: c.lastOrderAt
+              ? c.lastOrderAt.toLocaleString("fr-FR")
+              : null,
+            hasApiKey: Boolean(c.apiKeyEncrypted),
+            merchantExternalId: c.merchantExternalId,
+            apiBaseUrl: c.apiBaseUrl,
+          }))}
+          pendingProducts={pendingProducts}
+          countIngredientIds={params.countIngredients ?? null}
+        />
+      </Suspense>
     </BrandPage>
   );
 }

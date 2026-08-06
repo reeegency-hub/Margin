@@ -6,7 +6,6 @@ import {
   getMonthlyPayroll,
 } from "@/lib/employee-engine";
 import { BrandPage } from "@/components/brand/BrandCard";
-import { FeatureSection } from "@/components/ui/FeatureSection";
 import {
   clockInAction,
   markAbsentAction,
@@ -57,6 +56,25 @@ export default async function EmployeesPage({
     return ap - bp;
   });
 
+  const inkTitle =
+    pending > 0
+      ? `${pending} à pointer`
+      : shifts.length === 0
+        ? employees.length === 0
+          ? "Aucune équipe"
+          : "Personne planifiée"
+        : "Tout le monde a pointé";
+
+  const inkDetail = urgent
+    ? `Attention : manque en ${ROLE_LABEL[urgent.role] || urgent.role}.`
+    : shifts.length === 0
+      ? employees.length === 0
+        ? "Ajoutez l’équipe, puis planifiez la journée."
+        : "Créez les créneaux du jour pour pouvoir pointer."
+      : `${present} présent${present !== 1 ? "s" : ""}${
+          absent > 0 ? ` · ${absent} absent${absent > 1 ? "s" : ""}` : ""
+        }`;
+
   return (
     <BrandPage
       question="Qui travaille aujourd’hui ?"
@@ -67,49 +85,53 @@ export default async function EmployeesPage({
         <p className="flash">Créneaux du jour créés — vous pouvez pointer.</p>
       ) : null}
 
-      <div
-        className={`dash-card dash-card--light action-card ${
-          urgent || pending > 0 ? "action-card--urgent" : "action-card--ok"
-        }`}
-      >
-        <p className="action-card__title">
-          {pending > 0
-            ? `${pending} à pointer`
-            : shifts.length === 0
-              ? "Personne planifiée"
-              : "Tout le monde a pointé"}
-        </p>
-        <p className="action-card__detail">
-          {urgent
-            ? `Attention : manque en ${ROLE_LABEL[urgent.role] || urgent.role}.`
-            : shifts.length === 0
-              ? "Créez les créneaux du jour en un clic."
-              : `${present} présent${present !== 1 ? "s" : ""}${
-                  absent > 0
-                    ? ` · ${absent} absent${absent > 1 ? "s" : ""}`
-                    : ""
-                }`}
-        </p>
-        {shifts.length === 0 && employees.length > 0 ? (
-          <form action={planTodayShiftsAction} className="mt-3">
-            <button type="submit" className="pill-btn pill-btn--primary">
-              Planifier aujourd’hui
-            </button>
-          </form>
-        ) : (
-          <Link href="/employees/planning" className="action-card__link">
-            Planning
-          </Link>
-        )}
+      <div className="dash-card dash-card--dark hub-now">
+        <p className="hub-now__eyebrow">À faire maintenant</p>
+        <p className="hub-now__title">{inkTitle}</p>
+        <p className="hub-now__detail">{inkDetail}</p>
+        <div className="hub-now__actions">
+          {shifts.length === 0 && employees.length > 0 ? (
+            <form action={planTodayShiftsAction}>
+              <button type="submit" className="btn-lime">
+                Planifier aujourd’hui
+              </button>
+            </form>
+          ) : null}
+          {employees.length === 0 ? (
+            <Link href="/employees/planning" className="btn-ghost">
+              Voir le planning
+            </Link>
+          ) : null}
+          {shifts.length > 0 && pending === 0 ? (
+            <Link href="/employees/planning" className="btn-ghost">
+              Voir le planning
+            </Link>
+          ) : null}
+          {shifts.length > 0 && pending > 0 ? (
+            <p className="hub-now__hint">Pointez dans la liste ci-dessous.</p>
+          ) : null}
+        </div>
       </div>
 
       {shifts.length === 0 ? (
-        <div className="dash-card dash-card--light space-y-3">
-          <p className="text-[15px] text-[var(--text-muted)]">
+        <div className="dash-card dash-card--light hub-empty">
+          <p>
             {employees.length === 0
-              ? "Aucun membre d’équipe."
-              : `${employees.length} personne(s) en équipe, mais aucun créneau aujourd’hui.`}
+              ? "Aucun membre d’équipe pour l’instant."
+              : `${employees.length} personne${employees.length > 1 ? "s" : ""} en équipe, mais aucun créneau aujourd’hui.`}
           </p>
+          <div className="hub-empty__actions">
+            {employees.length > 0 ? (
+              <form action={planTodayShiftsAction}>
+                <button type="submit" className="pill-btn pill-btn--primary">
+                  Planifier aujourd’hui
+                </button>
+              </form>
+            ) : null}
+            <Link href="/employees/planning" className="pill-btn pill-btn--ghost">
+              Planning de la semaine
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="dash-card dash-card--light team-today">
@@ -189,41 +211,34 @@ export default async function EmployeesPage({
         </div>
       )}
 
-      <p className="phone-only team-payroll-teaser">
-        Voir les heures & salaires estimés → ouvrez Équipe sur ordinateur.
+      <p className="hub-secondary-link">
+        <Link href="/employees/planning">Planning de la semaine →</Link>
       </p>
 
-      <div className="phone-hide space-y-4">
-        <FeatureSection
-          title="Pointage WhatsApp"
-          subtitle="Depuis votre numéro gérant branché dans Paramètres."
-        />
-        <div className="dash-card dash-card--light team-wa-hint">
-          <p>Envoyez un message WhatsApp à Margin :</p>
-          <ul>
-            <li>
-              <code>Julie 18:05</code> — arrivée
-            </li>
-            <li>
-              <code>Julie départ 23:00</code> — fin de service
-            </li>
-          </ul>
-          <p className="team-wa-hint__note">
-            Le prénom doit correspondre à l’équipe. Les heures et le salaire
-            estimé se mettent à jour ci-dessous.
-          </p>
-        </div>
+      <div className="dash-card dash-card--light team-wa-hint">
+        <p className="team-wa-hint__title">Pointage WhatsApp</p>
+        <p>Depuis le numéro gérant (Réglages) :</p>
+        <ul>
+          <li>
+            <code>Julie 18:05</code> — arrivée
+          </li>
+          <li>
+            <code>Julie départ 23:00</code> — fin de service
+          </li>
+        </ul>
+      </div>
 
-        <FeatureSection
-          title={`Heures & salaires — ${payroll.periodLabel}`}
-          subtitle="Estimé = heures pointées × taux horaire. Pas une fiche de paie officielle."
-        />
-        <div className="dash-card dash-card--dark team-payroll">
-          {payroll.rows.length === 0 ? (
-            <p className="text-[15px] text-[var(--text-muted)]">
-              Aucun membre d’équipe.
-            </p>
-          ) : (
+      <div className="dash-card dash-card--dark team-payroll">
+        <p className="team-payroll__head">
+          Heures & salaires — {payroll.periodLabel}
+        </p>
+        <p className="team-payroll__sub">
+          Estimé = heures pointées × taux. Pas une fiche de paie.
+        </p>
+        {payroll.rows.length === 0 ? (
+          <p className="text-[15px] opacity-70">Aucun membre d’équipe.</p>
+        ) : (
+          <div className="team-payroll__scroll">
             <table className="team-payroll__table">
               <thead>
                 <tr>
@@ -262,47 +277,38 @@ export default async function EmployeesPage({
                 </tr>
               </tfoot>
             </table>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {stubs.length > 0 ? (
-        <div className="phone-hide">
-          <FeatureSection
-            title="Donner un vrai prénom"
-            subtitle="Remplacez les postes génériques (Caissier 1…) par les prénoms."
-          />
-          <div className="dash-card dash-card--dark space-y-4">
-            {stubs.map((e) => (
-              <form
-                key={e.id}
-                action={renameEmployeeAction}
-                className="flex flex-wrap items-end gap-2"
-              >
-                <input type="hidden" name="employeeId" value={e.id} />
-                <Field label={e.name}>
-                  <input
-                    name="name"
-                    className={inputClass}
-                    placeholder="Prénom Nom"
-                    required
-                  />
-                </Field>
-                <button type="submit" className="pill-btn pill-btn--primary">
-                  Renommer
-                </button>
-              </form>
-            ))}
-          </div>
+        <div className="dash-card dash-card--light space-y-4">
+          <p className="hub-section-title">Donner un vrai prénom</p>
+          <p className="hub-section-lead">
+            Remplacez les postes génériques par les prénoms.
+          </p>
+          {stubs.map((e) => (
+            <form
+              key={e.id}
+              action={renameEmployeeAction}
+              className="flex flex-wrap items-end gap-2"
+            >
+              <input type="hidden" name="employeeId" value={e.id} />
+              <Field label={e.name}>
+                <input
+                  name="name"
+                  className={inputClass}
+                  placeholder="Prénom Nom"
+                  required
+                />
+              </Field>
+              <button type="submit" className="pill-btn pill-btn--primary">
+                Renommer
+              </button>
+            </form>
+          ))}
         </div>
       ) : null}
-
-      <Link
-        href="/employees/planning"
-        className="pill-btn pill-btn--ghost phone-hide"
-      >
-        Voir / éditer le planning
-      </Link>
     </BrandPage>
   );
 }

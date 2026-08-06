@@ -12,28 +12,36 @@ export type PlanningShiftRow = {
   startTime: string;
   endTime: string;
   isToday: boolean;
+  /** Dates after today (same week window) */
+  isUpcoming?: boolean;
 };
 
 const FILTERS = [
-  { key: "tous" as const, label: "Tous" },
   { key: "today" as const, label: "Aujourd’hui" },
-  { key: "week" as const, label: "À venir" },
+  { key: "week" as const, label: "Semaine" },
+  { key: "tous" as const, label: "Tous" },
 ];
 
 const PREVIEW = 6;
 
 /**
- * Planning téléphone : filtres + liste courte avec Voir plus / moins.
+ * Planning : filtres + liste courte avec Voir plus / moins.
+ * Semaine = dates à venir (≥ demain), pas le passé.
  */
 export function PlanningWeekList({ shifts }: { shifts: PlanningShiftRow[] }) {
   const [filter, setFilter] = useState<"tous" | "today" | "week">("today");
   const [expanded, setExpanded] = useState(false);
 
+  const upcoming = useMemo(
+    () => shifts.filter((s) => (s.isUpcoming != null ? s.isUpcoming : !s.isToday)),
+    [shifts]
+  );
+
   const filtered = useMemo(() => {
     if (filter === "today") return shifts.filter((s) => s.isToday);
-    if (filter === "week") return shifts.filter((s) => !s.isToday);
+    if (filter === "week") return upcoming;
     return shifts;
-  }, [shifts, filter]);
+  }, [shifts, filter, upcoming]);
 
   const visible = expanded ? filtered : filtered.slice(0, PREVIEW);
   const canToggle = filtered.length > PREVIEW;
@@ -41,20 +49,24 @@ export function PlanningWeekList({ shifts }: { shifts: PlanningShiftRow[] }) {
   if (shifts.length === 0) {
     return (
       <p className="text-[15px] text-[var(--text-muted)]">
-        Aucun créneau planifié sur les 7 prochains jours.
+        Aucun créneau planifié sur les 7 prochains jours. Ajoutez-en ci-dessous.
       </p>
     );
   }
 
   return (
     <div className="planning-list">
-      <div className="planning-list__filters" role="tablist" aria-label="Filtrer le planning">
+      <div
+        className="planning-list__filters"
+        role="tablist"
+        aria-label="Filtrer le planning"
+      >
         {FILTERS.map((f) => {
           const count =
             f.key === "today"
               ? shifts.filter((s) => s.isToday).length
               : f.key === "week"
-                ? shifts.filter((s) => !s.isToday).length
+                ? upcoming.length
                 : shifts.length;
           return (
             <button
@@ -80,8 +92,10 @@ export function PlanningWeekList({ shifts }: { shifts: PlanningShiftRow[] }) {
       {filtered.length === 0 ? (
         <p className="planning-list__empty">
           {filter === "today"
-            ? "Rien aujourd’hui — ajoutez un créneau ci-dessus."
-            : "Aucun créneau dans ce filtre."}
+            ? "Rien aujourd’hui — ajoutez un créneau ci-dessous."
+            : filter === "week"
+              ? "Rien de prévu plus tard cette semaine."
+              : "Aucun créneau dans ce filtre."}
         </p>
       ) : (
         <ul className="planning-list__rows">

@@ -87,7 +87,7 @@ function ShoppingListCard({
 
   if (!lines.length) {
     return (
-      <article className="dash-card dash-card--dark shop-list">
+      <article className="dash-card dash-card--light shop-list shop-list--empty">
         <p className="shop-list__empty">
           Rien à racheter pour les 2–3 prochains jours.
         </p>
@@ -98,10 +98,10 @@ function ShoppingListCard({
           <form action={generateOrders} data-guide-form="courses-create">
             <button
               type="submit"
-              className="btn-lime shop-list__empty-cta"
+              className="btn-ghost"
               data-guide-action="courses-create"
             >
-              Créer une liste
+              Actualiser
             </button>
           </form>
         </div>
@@ -251,6 +251,7 @@ function OrdersHistory({ orders }: { orders: OrderRow[] }) {
                   <span>
                     {order.lineCount} produit
                     {order.lineCount > 1 ? "s" : ""}
+                    {order.amountLabel ? ` · ${order.amountLabel}` : ""}
                   </span>
                 </span>
               </button>

@@ -5,7 +5,6 @@ import {
   roleLabel,
 } from "@/lib/employee-engine";
 import { BrandPage } from "@/components/brand/BrandCard";
-import { FeatureSection } from "@/components/ui/FeatureSection";
 import Link from "next/link";
 import { format, isSameDay, startOfDay } from "date-fns";
 import { PlanningWeekList } from "@/components/employees/PlanningWeekList";
@@ -29,19 +28,25 @@ export default async function EmployeesPlanningPage({
   const todayIso = format(new Date(), "yyyy-MM-dd");
   const today = startOfDay(new Date());
 
-  const shiftRows = week.map((s) => ({
-    id: s.id,
-    dateKey: format(s.date, "yyyy-MM-dd"),
-    dateLabel: s.date.toLocaleDateString("fr-FR", {
-      weekday: "short",
-      day: "numeric",
-    }),
-    employeeName: s.employee.name,
-    role: roleLabel(s.employee.role),
-    startTime: s.startTime,
-    endTime: s.endTime,
-    isToday: isSameDay(s.date, today),
-  }));
+  const todayCount = week.filter((s) => isSameDay(s.date, today)).length;
+
+  const shiftRows = week.map((s) => {
+    const isToday = isSameDay(s.date, today);
+    return {
+      id: s.id,
+      dateKey: format(s.date, "yyyy-MM-dd"),
+      dateLabel: s.date.toLocaleDateString("fr-FR", {
+        weekday: "short",
+        day: "numeric",
+      }),
+      employeeName: s.employee.name,
+      role: roleLabel(s.employee.role),
+      startTime: s.startTime,
+      endTime: s.endTime,
+      isToday,
+      isUpcoming: !isToday,
+    };
+  });
 
   const employeeOptions = employees.map((e) => ({
     id: e.id,
@@ -53,36 +58,63 @@ export default async function EmployeesPlanningPage({
   return (
     <BrandPage
       question="Planning de la semaine"
-      guide="Aujourd’hui d’abord. Ajoutez ou retirez des créneaux."
+      guide="Aujourd’hui d’abord, puis la semaine. Ajoutez ou retirez des créneaux."
     >
       <Link href="/employees" className="pill-btn pill-btn--ghost mb-4">
-        ← Retour à aujourd’hui
+        ← Aujourd’hui
       </Link>
 
       {params.created ? <p className="flash">Créneau ajouté.</p> : null}
       {params.deleted ? <p className="flash">Créneau supprimé.</p> : null}
 
-      {employees.length > 0 ? (
-        <>
-          <FeatureSection
-            title="Ajouter un créneau"
-            subtitle="Qui travaille, salaire du poste, quel jour, quelles heures."
-          />
-          <PlanningShiftForm
-            employees={employeeOptions}
-            todayIso={todayIso}
-          />
-        </>
-      ) : null}
-
-      <FeatureSection
-        next
-        title="Créneaux"
-        subtitle="Filtrez, puis retirez si besoin."
-      />
-      <div className="dash-card dash-card--light">
-        <PlanningWeekList shifts={shiftRows} />
+      <div className="dash-card dash-card--dark hub-now">
+        <p className="hub-now__eyebrow">Aujourd’hui</p>
+        <p className="hub-now__title">
+          {todayCount === 0
+            ? "Aucun créneau aujourd’hui"
+            : `${todayCount} créneau${todayCount > 1 ? "x" : ""} aujourd’hui`}
+        </p>
+        <p className="hub-now__detail">
+          {employees.length === 0
+            ? "Pas encore d’équipe active — les créneaux apparaîtront ici."
+            : "Filtrez la liste, puis ajoutez un créneau plus bas si besoin."}
+        </p>
+        {employees.length > 0 ? (
+          <div className="hub-now__actions">
+            <Link href="/employees" className="btn-lime">
+              Pointer l’équipe
+            </Link>
+          </div>
+        ) : null}
       </div>
+
+      {employees.length === 0 ? (
+        <div className="dash-card dash-card--light hub-empty">
+          <p>
+            Aucun membre d’équipe. Terminez l’onboarding ou contactez Margin
+            pour peupler l’équipe, puis revenez ici pour planifier.
+          </p>
+          <div className="hub-empty__actions">
+            <Link href="/employees" className="pill-btn pill-btn--ghost">
+              Retour à aujourd’hui
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="dash-card dash-card--light">
+            <PlanningWeekList shifts={shiftRows} />
+          </div>
+
+          <details className="planning-add">
+            <summary>Ajouter un créneau</summary>
+            <PlanningShiftForm
+              employees={employeeOptions}
+              todayIso={todayIso}
+            />
+          </details>
+        </>
+      )}
     </BrandPage>
   );
 }

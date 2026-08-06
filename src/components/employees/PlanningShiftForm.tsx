@@ -39,7 +39,7 @@ export function PlanningShiftForm({ employees, todayIso }: Props) {
   return (
     <form
       action={createShiftAction}
-      className="dash-card dash-card--dark mb-4 grid gap-3 sm:grid-cols-2"
+      className="planning-shift-form grid gap-3 sm:grid-cols-2"
     >
       <Field label="Personne">
         <select
