@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: margin
+      POSTGRES_PASSWORD: margin
+      POSTGRES_DB: marginshop
+    volumes:
+      - marginshop_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U margin -d marginshop"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  marginshop_pg:

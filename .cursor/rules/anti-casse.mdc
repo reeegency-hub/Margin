@@ -1,0 +1,14 @@
+---
+description: Après toute feature / info site, lancer le check anti-casse pour ne rien casser.
+alwaysApply: true
+---
+
+# Anti-casse Margin
+
+Après avoir ajouté ou modifié une feature, une page, un texte marketing, l’onboarding, la nav ou l’auth :
+
+1. Lancer `npm run check:quick` (rapide) ou `npm run check` (complet : tsc + unit + inventaire).
+2. Si échec : corriger avant de considérer la tâche terminée.
+3. Ne pas retirer les gardes fondateur (`reeegency@gmail.com` only), le chemin onboarding, ni les pages listées dans `scripts/anti-casse.ts` sans mettre à jour ce script.
+
+Le hook Cursor `stop` relance aussi l’inventaire anti-casse en fin de session.

@@ -1,0 +1,27 @@
+---
+description: Isolation multi-tenant Margin Shop (restaurantId / RLS) — obligatoire à chaque feature
+alwaysApply: true
+---
+
+# Multi-tenant Margin Shop
+
+Architecture figée (20–100 entreprises) : **shared database + shared schema**.
+
+- Tenant = `Restaurant` ; clé = `restaurantId` (= `tenant_id`)
+- Pas de schema-per-tenant tant qu’un gros client ne l’exige pas
+- RLS Postgres : `prisma/rls.sql` + `withTenantRls()` dans `src/lib/db.ts`
+- Helpers : `src/lib/tenant.ts` (`tenantWhere`, `withTenantWhere`, `assertSameTenant`)
+
+## À chaque nouvelle feature
+
+1. Toute table métier porte `restaurantId` **ou** est listée dans `TENANT_CHILD_MODELS` (enfant d’un parent scopé).
+2. Toute requête Prisma filtre par `restaurantId` du `requireSession().user.restaurantId` (jamais un id seul sans assert).
+3. Les routes admin (`/admin`) sont les seules autorisées cross-tenant.
+4. Après le code : lancer **`npm run test:tenant`** et corriger les ERROR avant de conclure.
+5. Si nouveau model avec `restaurantId` : l’ajouter à `TENANT_SCOPED_MODELS` **et** à `prisma/rls.sql`.
+
+## Interdit
+
+- `findMany` / `updateMany` / `deleteMany` sans `restaurantId`
+- Exposer un id d’un autre magasin via API
+- Désactiver RLS en prod sans rôle `BYPASSRLS` documenté

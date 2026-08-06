@@ -1,0 +1,273 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 4 /Kids [5 0 R 7 0 R 9 0 R 11 0 R] >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Length 2555 >>
+stream
+BT /F1 9 Tf 40 800 Td 12 TL
+(Margin Shop ? Étude de marché commerce de détail & prévisions Années 1?3) Tj
+T* () Tj
+T* (Version : août 2026 · alignée sur le produit et les tarifs actuels) Tj
+T* (Statut : MVP fonctionnel \(app + caisse + stock + Ops\) · pas encore de clients payants à grande) Tj
+T* (échelle) Tj
+T* () Tj
+T* (---) Tj
+T* () Tj
+T* (Résumé exécutif) Tj
+T* () Tj
+T* (Margin Shop est un SaaS multi-tenant pour commerces de proximité \(épicerie, alimentation) Tj
+T* (spécialisée, prêt-à-porter, beauté, quincaillerie? tout magasin avec caisse + stock physique\).) Tj
+T* () Tj
+T* (Ce que le produit fait aujourd?hui :) Tj
+T* () Tj
+T* (  Module   Rôle) Tj
+T* ( --- ---) Tj
+T* (  Caisse   Connexion au logiciel POS \(Zelty, Cashpad, Square, etc.\) via webhook ? ventes ?) Tj
+T* (stock) Tj
+T* (  Stock   Niveaux, seuils, catalogue produits \(? 200 en Commerce\)) Tj
+T* (  Courses   Liste de réassort unique, « marquer comme fait » ? stock remonte) Tj
+T* (  Équipe   Pointage + planning) Tj
+T* (  WhatsApp   Alertes stock / listes \(Twilio ou ouverture native\)) Tj
+T* (  Ops Margin   Console admin pour créer / configurer un magasin à la place du client) Tj
+T* (  Paiement   Stripe Checkout \(abo mensuel / annuel ?20 %\)) Tj
+T* () Tj
+T* (Différence vs l?ancienne étude : l?interface principale n?est plus « WhatsApp only ». C?est) Tj
+T* (une app métier \(Première heure, Stock, Caisse, Courses, Équipe\) ; WhatsApp reste un canal) Tj
+T* (d?alerte, pas le dashboard. Le copilote conversationnel \(Keke\) est secondaire / optionnel.) Tj
+T* () Tj
+T* (Offre tarifaire \(figée\)) Tj
+T* () Tj
+T* (  Plan   Mensuel HT*   Annuel \(?20 %\)   Limites   Mise en place caisse) Tj
+T* ( --- --- --- --- ---) Tj
+T* (  Commerce   89 ?   854 ?/an   1 boutique · ? 200 produits   Non incluse \(self-serve\)) Tj
+T* (  Franchise   249 ?   2 390 ?/an   1?3 boutiques · produits illimités   Incluse \(~400 ?) Tj
+T* (économisés / magasin\)) Tj
+T* () Tj
+T* (\\*Prix affichés dans l?app ; TVA selon régime.) Tj
+T* (Setup technique ponctuel ~400 ? : option Commerce / inclus Franchise.) Tj
+T* () Tj
+T* (Architecture : shared database + shared schema, isolation par restaurantId \(tenant\) + RLS) Tj
+T* (Postgres \(Supabase\).) Tj
+T* () Tj
+T* (Go-to-market : France d?abord, Suisse / Luxembourg années 2?3. Deux chemins : self-serve) Tj
+T* (commerçant ou Ops configure pour lui.) Tj
+T* () Tj
+T* (> Les projections ci-dessous sont des scénarios \(pas de base de conversion réelle encore\). À) Tj
+T* (recalibrer dès les premières signatures.) Tj
+T* () Tj
+T* (---) Tj
+T* () Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+endobj
+6 0 obj
+<< /Length 2686 >>
+stream
+BT /F1 9 Tf 40 800 Td 12 TL
+(1. Étude de marché ? commerce de détail) Tj
+T* () Tj
+T* (Taille du marché \(TAM\)) Tj
+T* () Tj
+T* (  Pays   Marché   Source) Tj
+T* ( --- --- ---) Tj
+T* (  France   ~300 000 points de vente commerce de détail · CA ~660?670 Md? · ~2 M emplois   INSEE) Tj
+T* (  Suisse   ~35 000 entreprises de commerce de détail · CA ~100 Md CHF   Swiss Retail) Tj
+T* (Federation / about.swiss) Tj
+T* (  Luxembourg   ~3 300 commerces de détail   STATEC) Tj
+T* () Tj
+T* (SAM / SOM) Tj
+T* () Tj
+T* (- SAM : commerces déjà équipés d?une caisse numérique branchable \(webhook / export\) ?) Tj
+T* (condition technique Margin Shop.) Tj
+T* (- SOM Années 1?3 : fraction modeste du SAM ? preuve de valeur sur 1?2 verticales et 2?3) Tj
+T* (caisses dominantes, pas « tout le retail » dès J1.) Tj
+T* () Tj
+T* (Dynamique favorable) Tj
+T* () Tj
+T* (- Fort flux de créations de commerces en France \(secteur dynamique côté TPE\).) Tj
+T* (- Suisse : retail en croissance réelle modérée ? pouvoir d?achat utile pour un ARPA plus élevé.) Tj
+T* (- C?ur de cible : TPE &lt; 10 salariés ? trop petites pour un ERP lourd, trop complexes pour) Tj
+T* (le stock « Excel + mémoire ».) Tj
+T* (- WhatsApp déjà utilisé informellement ? canal d?alerte crédible, sans remplacer l?app.) Tj
+T* () Tj
+T* (---) Tj
+T* () Tj
+T* (2. Paysage concurrentiel) Tj
+T* () Tj
+T* (Le marché des caisses / retail est mature et fragmenté. Margin Shop ne remplace pas la caisse) Tj
+T* (: il s?y branche.) Tj
+T* () Tj
+T* (  Acteur   Positionnement   Écart vs Margin) Tj
+T* ( --- --- ---) Tj
+T* (  Fastmag   Suite retail \(mode?\)   Dashboard complet, pas d?Ops self-serve + webhook léger) Tj
+T* (  Wavy   Beauté   Vertical fort, pas transversal proximité) Tj
+T* (  RoverCash   Indépendants multi-secteurs   Pas de parcours « Première heure + courses + Ops ») Tj
+T* (  Bimedia   Proximité \(tabac, presse?\)   Ancrage terrain, pas la même promesse stock?caisse) Tj
+T* (  SumUp / Square / Zettle   Encaissement   Peu de profondeur stock / courses / équipe) Tj
+T* (  Lightspeed / Tiller   Caisse + stock basique   Seuils réactifs ; pas la couche Ops Margin ni) Tj
+T* (liste courses métier) Tj
+T* () Tj
+T* (Différenciateurs produit \(réels aujourd?hui\)) Tj
+T* () Tj
+T* (1. Branchement caisse existante \(pas forcer un changement de caisse\).) Tj
+T* (2. Parcours commerçant : signup / Stripe ? onboarding court ? Première heure ? stock / courses.) Tj
+T* (3. Deux chemins : self-serve ou Ops Margin configure à sa place.) Tj
+T* (4. Franchise = multi-magasins + mise en place technique incluse \(valeur ~400 ?\).) Tj
+T* (5. Multi-tenant prêt pour 20?100 entreprises \(shared schema + restaurantId + RLS\).) Tj
+T* () Tj
+T* (---) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 6 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+endobj
+8 0 obj
+<< /Length 2074 >>
+stream
+BT /F1 9 Tf 40 800 Td 12 TL
+() Tj
+T* (3. Modèle économique) Tj
+T* () Tj
+T* (Prix retenus) Tj
+T* () Tj
+T* (  Plan   Mensuel   Annuel \(?20 %\)) Tj
+T* ( --- --- ---) Tj
+T* (  Commerce   89 ?   854 ?) Tj
+T* (  Franchise   249 ?   2 390 ?) Tj
+T* () Tj
+T* (Hypothèses de mix) Tj
+T* () Tj
+T* (  Hypothèse   Valeur) Tj
+T* ( --- ---) Tj
+T* (  Mix clients   80 % Commerce / 20 % Franchise) Tj
+T* (  ARPA mensuel   \\\(0{,}8 × 89 + 0{,}2 × 249\\\) = 121 ?) Tj
+T* (  Setup 400 ?   Rare en Commerce \(option\) · inclus Franchise \(déjà dans le positionnement prix\)) Tj
+T* (  Churn mensuel   3 % Années 1?2 · 2,5 % Année 3 \(prudent, early-stage\)) Tj
+T* () Tj
+T* (Comparables marché logiciels caisse / stock TPE : souvent ~29?200+ ?/mois selon profondeur.) Tj
+T* (89 ? = milieu de gamme « stock + sync ».) Tj
+T* (249 ? = premium réseau + service d?intégration.) Tj
+T* () Tj
+T* (---) Tj
+T* () Tj
+T* (4. Prévisions Années 1?3 \(base case\)) Tj
+T* () Tj
+T* (Scénario à traiter comme point de départ, pas comme engagement.) Tj
+T* () Tj
+T* (    Année 1   Année 2   Année 3) Tj
+T* ( --- --- --- ---) Tj
+T* (  Zone   France \(pilote ? scale\)   France + Suisse   FR + CH + LU) Tj
+T* (  Verticales   1?2 pilotes \(ex. alimentation spécialisée, mode\)   3?4   Large proximité) Tj
+T* (  Clients actifs fin d?année   60   250   700) Tj
+T* (  ARPA mensuel   ~121 ?   ~125 ?   ~130 ?) Tj
+T* (  MRR fin d?année   ~7 300 ?   ~31 000 ?   ~91 000 ?) Tj
+T* (  ARR \(run-rate\)   ~87 000 ?   ~375 000 ?   ~1,1 M?) Tj
+T* (  Churn mensuel   3 %   3 %   2,5 %) Tj
+T* () Tj
+T* (Logique de montée en charge) Tj
+T* () Tj
+T* (- A1 : product-market fit France, fiabilité webhook caisse, onboarding & Ops rodés, 2?3) Tj
+T* (connecteurs POS prioritaires.) Tj
+T* (- A2 : Suisse + élargissement verticales.) Tj
+T* (- A3 : Luxembourg en complément + acquisition plus mature \(partenariats grossistes /) Tj
+T* (intégrateurs caisse\).) Tj
+T* () Tj
+T* (Sensibilité ARPA \(si le mix Franchise monte\)) Tj
+T* () Tj
+T* (  Mix Franchise   ARPA   MRR @ 60 clients) Tj
+T* ( --- --- ---) Tj
+T* (  10 %   105 ?   ~6 300 ?) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 8 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+endobj
+10 0 obj
+<< /Length 2241 >>
+stream
+BT /F1 9 Tf 40 800 Td 12 TL
+(  20 % \(base\)   121 ?   ~7 300 ?) Tj
+T* (  30 %   137 ?   ~8 200 ?) Tj
+T* () Tj
+T* (---) Tj
+T* () Tj
+T* (5. Faisabilité & risques) Tj
+T* () Tj
+T* (  Sujet   Lecture) Tj
+T* ( --- ---) Tj
+T* (  Technique   MVP app + POS webhook + Stripe + multi-tenant en place. RLS à activer sur) Tj
+T* (Postgres/Supabase au go-live.) Tj
+T* (  Commercial   Passage 0 ? 60 clients = hypothèse la plus fragile. Valider avant gros budget) Tj
+T* (ads.) Tj
+T* (  Intégration caisse   Diversité des POS ? concentrer 2?3 vendors par verticale pilote.) Tj
+T* (  Dispersion   Ne pas viser « tout le détail » en A1 ? 1?2 verticales d?abord.) Tj
+T* (  Positionnement WhatsApp   Ne pas sur-promettre « tout se gère sur WhatsApp » : l?app reste) Tj
+T* (le cockpit ; WA = alertes.) Tj
+T* () Tj
+T* (Recommandation opérationnelle) Tj
+T* () Tj
+T* (1. Verrouiller 2 verticales + 2?3 caisses.) Tj
+T* (2. Vendre Commerce 89 ? en self-serve et Franchise 249 ? en accompagné \(Ops\).) Tj
+T* (3. Mesurer conversion welcome ? signup ? checkout ? onboarding terminé.) Tj
+T* (4. Recalculer ARR dès 10 clients payants réels.) Tj
+T* () Tj
+T* (---) Tj
+T* () Tj
+T* (6. Sources \(marché\)) Tj
+T* () Tj
+T* (- INSEE ? Focus / Première commerce de détail & créations d?entreprises) Tj
+T* (- about.swiss / Swiss Retail Federation ? commerce de détail CH) Tj
+T* (- STATEC ? commerces de détail LU) Tj
+T* (- Comparatifs logiciels de caisse 2026 \(Tool Advisor, L?Écho Commerces\)) Tj
+T* (- Statistiques cessions fonds de commerce \(TPE\) ? sources type Altares / BPI) Tj
+T* () Tj
+T* (*Données de marché sourcées ; projections financières = scénarios internes Margin Shop \(août) Tj
+T* (2026\).*) Tj
+T* () Tj
+T* (---) Tj
+T* () Tj
+T* (Annexe ? Alignement produit ? étude) Tj
+T* () Tj
+T* (  Ancienne étude   Produit / étude actuelle) Tj
+T* ( --- ---) Tj
+T* (  « Piloté depuis WhatsApp, sans dashboard »   App complète + alertes WhatsApp) Tj
+T* (  Prix « à définir » / hypo 79 ? & 249 ?   89 ? Commerce · 249 ? Franchise) Tj
+T* (  Copilote IA central   Secondaire ; focus sync caisse ? stock ? courses) Tj
+T* (  Multi-établissements vague   Franchise = 1?3 boutiques, produits illimités, setup inclus) Tj
+T* (  ?   Multi-tenant shared schema + Ops admin + Stripe) Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 10 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+endobj
+xref
+0 12
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000134 00000 n 
+0000000204 00000 n 
+0000002811 00000 n 
+0000002937 00000 n 
+0000005675 00000 n 
+0000005801 00000 n 
+0000007927 00000 n 
+0000008053 00000 n 
+0000010347 00000 n 
+trailer<< /Size 12 /Root 1 0 R >>
+startxref
+10475
+%%EOF

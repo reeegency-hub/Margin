@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Margin — Présentation commerciale</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 18mm 16mm 18mm 16mm;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      color: #1c1a17;
+      background: #fff;
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+      font-size: 11pt;
+      line-height: 1.45;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .page {
+      page-break-after: always;
+      min-height: 260mm;
+      position: relative;
+    }
+    .page:last-child { page-break-after: auto; }
+    .sand { background: #e2ddd4; }
+    .ink { color: #1c1a17; }
+    .muted { color: #5c574f; }
+    .accent { color: #2f5d3a; }
+    h1, h2, h3 {
+      font-family: "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif;
+      letter-spacing: -0.02em;
+      font-weight: 700;
+      margin: 0 0 0.45em;
+      line-height: 1.15;
+    }
+    h1 { font-size: 28pt; }
+    h2 { font-size: 16pt; margin-top: 0; }
+    h3 { font-size: 12pt; }
+    p { margin: 0 0 0.7em; }
+    .sans {
+      font-family: "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+    .eyebrow {
+      font-family: "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 9pt;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #5c574f;
+      margin-bottom: 10px;
+    }
+    .lead {
+      font-size: 13.5pt;
+      line-height: 1.4;
+      max-width: 38em;
+    }
+    .cover {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 28mm 8mm 14mm;
+      background: #e2ddd4;
+      min-height: 260mm;
+    }
+    .brand {
+      font-family: "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 42pt;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      margin: 0;
+    }
+    .tagline {
+      font-size: 18pt;
+      line-height: 1.25;
+      max-width: 14em;
+      margin: 18px 0 0;
+      font-weight: 600;
+    }
+    .cover-foot {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      font-family: "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 9pt;
+      color: #5c574f;
+      border-top: 1px solid #b8b1a5;
+      padding-top: 12px;
+    }
+    .section-head {
+      border-bottom: 2px solid #1c1a17;
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+    .card {
+      border: 1px solid #c9c2b6;
+      padding: 12px 14px;
+      background: #f7f5f1;
+      break-inside: avoid;
+    }
+    .card.dark {
+      background: #1c1a17;
+      color: #f3efe8;
+      border-color: #1c1a17;
+    }
+    .card.dark .muted { color: #b8b1a5; }
+    .card.dark h3 { color: #f3efe8; }
+    .card strong { display: block; margin-bottom: 4px; }
+    .pain {
+      border-left: 3px solid #8b3a2a;
+      padding: 8px 0 8px 12px;
+      margin: 0 0 10px;
+      break-inside: avoid;
+    }
+    .need {
+      border-left: 3px solid #2f5d3a;
+      padding: 8px 0 8px 12px;
+      margin: 0 0 10px;
+      break-inside: avoid;
+    }
+    .arrow {
+      font-family: "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 9pt;
+      font-weight: 600;
+      color: #2f5d3a;
+      margin-top: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 9.5pt;
+      margin: 10px 0 14px;
+    }
+    th, td {
+      border: 1px solid #c9c2b6;
+      padding: 7px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #e2ddd4;
+      font-weight: 700;
+    }
+    ul { margin: 0 0 0.8em; padding-left: 1.15em; }
+    li { margin-bottom: 0.35em; }
+    .steps {
+      counter-reset: step;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .steps li {
+      counter-increment: step;
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+      break-inside: avoid;
+    }
+    .steps li::before {
+      content: counter(step);
+      font-family: "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif;
+      font-weight: 800;
+      font-size: 12pt;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #1c1a17;
+      color: #e2ddd4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 28px;
+      text-align: center;
+    }
+    .price {
+      font-family: "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 22pt;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+    .price span {
+      font-size: 10pt;
+      font-weight: 600;
+      color: #5c574f;
+    }
+    .cta-box {
+      background: #1c1a17;
+      color: #f3efe8;
+      padding: 18px 20px;
+      margin-top: 18px;
+    }
+    .cta-box h2 { color: #e2ddd4; margin-bottom: 8px; }
+    .cta-box p { margin-bottom: 6px; }
+    .small {
+      font-family: "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 8.5pt;
+      color: #5c574f;
+    }
+    .vs-row {
+      display: grid;
+      grid-template-columns: 1fr 24px 1fr;
+      gap: 8px;
+      align-items: stretch;
+      margin-bottom: 10px;
+      break-inside: avoid;
+    }
+    .vs-mid {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif;
+      font-weight: 800;
+      color: #8b3a2a;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PAGE 1 — COVER -->
+  <section class="page cover">
+    <div>
+      <p class="eyebrow">Document commercial · août 2026</p>
+      <p class="brand">Margin</p>
+      <p class="tagline">Le stock qui suit la caisse.<br />Moins de ruptures. Plus de marge.</p>
+      <p class="lead" style="margin-top:22px; max-width:34em;">
+        Logiciel de stock pour commerces de proximité. Chaque vente met le stock à jour.
+        Alertes claires quand ça manque. Sans changer de caisse. Sans Excel le soir.
+      </p>
+    </div>
+    <div class="cover-foot">
+      <div>
+        <strong style="color:#1c1a17;">Pour qui</strong><br />
+        Épiceries, alimentation spécialisée,<br />
+        prêt-à-porter, beauté, quincaillerie…
+      </div>
+      <div>
+        <strong style="color:#1c1a17;">Offre</strong><br />
+        Commerce 89 €/mois · Franchise 249 €/mois<br />
+        Annuel −20 %
+      </div>
+      <div style="text-align:right;">
+        <strong style="color:#1c1a17;">Promesse</strong><br />
+        Votre caisse reste.<br />
+        Votre stock devient fiable.
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE 2 — PROBLEMES -->
+  <section class="page">
+    <div class="section-head">
+      <p class="eyebrow">Le constat</p>
+      <h2>Les problèmes du commerce de proximité aujourd’hui</h2>
+    </div>
+    <p class="lead muted">
+      La plupart des TPE gèrent le stock avec <strong class="ink">Excel + mémoire</strong>.
+      La caisse enregistre les ventes. Le stock, lui, reste approximatif.
+    </p>
+
+    <div class="grid-2" style="margin-top:16px;">
+      <div class="pain">
+        <h3 class="sans">Le stock n’est jamais juste</h3>
+        <p class="muted" style="margin:0;">Ventes non reportées, oublis en rayon, écart permanent entre « ce qu’on croit avoir » et le réel.</p>
+        <p class="arrow">→ Ruptures surprises · surstock · argent immobilisé</p>
+      </div>
+      <div class="pain">
+        <h3 class="sans">La double saisie le soir</h3>
+        <p class="muted" style="margin:0;">Après la fermeture, quelqu’un retape les ventes dans un tableur. Fatigue, erreurs, retards.</p>
+        <p class="arrow">→ Temps perdu · données fausses · équipes saturées</p>
+      </div>
+      <div class="pain">
+        <h3 class="sans">Les ruptures qui coûtent cher</h3>
+        <p class="muted" style="margin:0;">Le client demande un produit absent. Pas d’alerte à temps. Marge perdue, confiance abîmée.</p>
+        <p class="arrow">→ Ventes manquées · image du magasin</p>
+      </div>
+      <div class="pain">
+        <h3 class="sans">Les outils trop lourds (ou trop faibles)</h3>
+        <p class="muted" style="margin:0;">ERP trop cher / trop complexe pour une TPE. Caisse seule : encaissement OK, stock superficiel.</p>
+        <p class="arrow">→ Soit on subit Excel, soit on paie trop pour peu d’usage</p>
+      </div>
+      <div class="pain">
+        <h3 class="sans">Changer de caisse ? Non.</h3>
+        <p class="muted" style="margin:0;">Les commerçants refusent de tout reprendre. Ils veulent garder Zelty, Cashpad, Square, SumUp…</p>
+        <p class="arrow">→ Besoin d’un outil qui se branche, pas qui remplace</p>
+      </div>
+      <div class="pain">
+        <h3 class="sans">Le réassort au feeling</h3>
+        <p class="muted" style="margin:0;">Pas de seuils fiables. Liste de courses floue. Commandes trop tôt, trop tard, ou en double.</p>
+        <p class="arrow">→ Gaspillage · ruptures · stress du gérant</p>
+      </div>
+    </div>
+
+    <div class="card dark" style="margin-top:18px;">
+      <h3 class="sans" style="margin-bottom:6px;">En une phrase</h3>
+      <p style="margin:0; font-size:12.5pt;">
+        Le commerce de proximité a une caisse moderne… et un stock du siècle dernier.
+        <strong>Margin comble exactement cet écart.</strong>
+      </p>
+    </div>
+  </section>
+
+  <!-- PAGE 3 — BESOINS -->
+  <section class="page">
+    <div class="section-head">
+      <p class="eyebrow">Les besoins</p>
+      <h2>À quoi Margin répond — concret</h2>
+    </div>
+    <p class="muted" style="margin-bottom:14px;">
+      Pas une suite ERP. Pas un remplacement de caisse. Un besoin métier précis :
+      <strong class="ink">savoir ce qu’il reste, à temps, sans travail supplémentaire.</strong>
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:32%;">Besoin du commerçant</th>
+          <th style="width:34%;">Ce qu’il attend</th>
+          <th>Ce que Margin apporte</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Fiabiliser le stock</strong></td>
+          <td>Un niveau à jour après chaque vente</td>
+          <td>Lien caisse → stock automatique</td>
+        </tr>
+        <tr>
+          <td><strong>Anticiper les ruptures</strong></td>
+          <td>Être prévenu avant le rayon vide</td>
+          <td>Seuils + alertes WhatsApp (sans spam)</td>
+        </tr>
+        <tr>
+          <td><strong>Gagner du temps</strong></td>
+          <td>Plus de report manuel le soir</td>
+          <td>Zéro double saisie quotidienne</td>
+        </tr>
+        <tr>
+          <td><strong>Garder sa caisse</strong></td>
+          <td>Ne pas tout changer</td>
+          <td>Branchement sur l’outil existant</td>
+        </tr>
+        <tr>
+          <td><strong>Réassort simple</strong></td>
+          <td>Une liste claire à traiter</td>
+          <td>Liste de courses unique + « marquer fait »</td>
+        </tr>
+        <tr>
+          <td><strong>Contrôler en rayon</strong></td>
+          <td>Corriger l’écart théorique / réel</td>
+          <td>Vérification / inventaire guidé</td>
+        </tr>
+        <tr>
+          <td><strong>Démarrer vite</strong></td>
+          <td>Pas 3 semaines de paramétrage</td>
+          <td>Import catalogue + Première heure · ou Ops Margin le fait</td>
+        </tr>
+        <tr>
+          <td><strong>Scaler à 2–3 magasins</strong></td>
+          <td>Vue multi-sites sans usine à gaz</td>
+          <td>Formule Franchise (jusqu’à 3 boutiques)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="grid-3" style="margin-top:8px;">
+      <div class="need">
+        <h3 class="sans">Besoin n°1</h3>
+        <p style="margin:0;"><strong>Visibilité</strong> — savoir ce qu’il y a vraiment en magasin.</p>
+      </div>
+      <div class="need">
+        <h3 class="sans">Besoin n°2</h3>
+        <p style="margin:0;"><strong>Réactivité</strong> — agir avant la rupture, pas après le client mécontent.</p>
+      </div>
+      <div class="need">
+        <h3 class="sans">Besoin n°3</h3>
+        <p style="margin:0;"><strong>Simplicité</strong> — un outil à la taille d’une TPE, pas d’une centrale.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE 4 — PROBLEMATIQUES RESOLUES -->
+  <section class="page">
+    <div class="section-head">
+      <p class="eyebrow">Problématiques → solutions</p>
+      <h2>Ce que Margin résout, angle par angle</h2>
+    </div>
+
+    <div class="vs-row">
+      <div class="card">
+        <strong class="sans">Avant</strong>
+        <span class="muted">Stock Excel, mis à jour « quand on peut »</span>
+      </div>
+      <div class="vs-mid">→</div>
+      <div class="card">
+        <strong class="sans">Avec Margin</strong>
+        <span class="muted">Chaque ticket de caisse décrémente le stock</span>
+      </div>
+    </div>
+    <div class="vs-row">
+      <div class="card">
+        <strong class="sans">Avant</strong>
+        <span class="muted">Rupture découverte au moment de la vente</span>
+      </div>
+      <div class="vs-mid">→</div>
+      <div class="card">
+        <strong class="sans">Avec Margin</strong>
+        <span class="muted">Alerte sous seuil, regroupée, sur WhatsApp</span>
+      </div>
+    </div>
+    <div class="vs-row">
+      <div class="card">
+        <strong class="sans">Avant</strong>
+        <span class="muted">Changer de caisse pour avoir du stock</span>
+      </div>
+      <div class="vs-mid">→</div>
+      <div class="card">
+        <strong class="sans">Avec Margin</strong>
+        <span class="muted">On garde la caisse · Margin s’y branche</span>
+      </div>
+    </div>
+    <div class="vs-row">
+      <div class="card">
+        <strong class="sans">Avant</strong>
+        <span class="muted">Catalogue importé sale → tickets support</span>
+      </div>
+      <div class="vs-mid">→</div>
+      <div class="card">
+        <strong class="sans">Avec Margin</strong>
+        <span class="muted">Contrôles à l’import + assistant de nettoyage</span>
+      </div>
+    </div>
+    <div class="vs-row">
+      <div class="card">
+        <strong class="sans">Avant</strong>
+        <span class="muted">Seul face au paramétrage technique</span>
+      </div>
+      <div class="vs-mid">→</div>
+      <div class="card">
+        <strong class="sans">Avec Margin</strong>
+        <span class="muted">Self-serve <em>ou</em> Ops Margin configure pour vous</span>
+      </div>
+    </div>
+
+    <h3 class="sans" style="margin-top:16px;">Impact business attendu</h3>
+    <div class="grid-3">
+      <div class="card">
+        <strong class="sans accent">Moins de ruptures</strong>
+        <span class="muted">Seuils + alertes avant le rayon vide → ventes sauvées.</span>
+      </div>
+      <div class="card">
+        <strong class="sans accent">Moins de temps perdu</strong>
+        <span class="muted">Fin du report Excel du soir · focus rayon & clients.</span>
+      </div>
+      <div class="card">
+        <strong class="sans accent">Meilleure marge</strong>
+        <span class="muted">Moins de surstock inutile · moins d’achats en urgence.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE 5 — PRODUIT -->
+  <section class="page">
+    <div class="section-head">
+      <p class="eyebrow">Le produit</p>
+      <h2>Comment ça marche</h2>
+    </div>
+
+    <ol class="steps sans">
+      <li>
+        <div>
+          <strong>Vous gardez votre caisse</strong>
+          <p class="muted" style="margin:0;">Zelty, Cashpad, Square, SumUp / Tiller, Lightspeed… Margin se connecte. Pas de migration forcée.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Vous importez (ou on importe) votre catalogue</strong>
+          <p class="muted" style="margin:0;">Liste produits, unités, seuils. Contrôles anti-doublons / prix / unités. Nettoyage guidé.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Chaque vente met le stock à jour</strong>
+          <p class="muted" style="margin:0;">Ticket en caisse → niveau stock dans Margin. Plus de saisie le soir.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Vous êtes alerté quand ça manque</strong>
+          <p class="muted" style="margin:0;">WhatsApp + app. Une alerte groupée, pas une rafale. Puis liste de courses à traiter.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Vous comptez en rayon quand besoin</strong>
+          <p class="muted" style="margin:0;">Inventaire / écarts corrigés. Le théorique rejoint le réel.</p>
+        </div>
+      </li>
+    </ol>
+
+    <h3 class="sans" style="margin-top:8px;">Ce que contient l’app</h3>
+    <table>
+      <thead>
+        <tr><th>Module</th><th>Rôle pour le commerçant</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Stock</strong></td><td>Niveaux, seuils, catalogue, qualité des données</td></tr>
+        <tr><td><strong>Caisse</strong></td><td>Connexion POS, synchro ventes → stock</td></tr>
+        <tr><td><strong>Courses</strong></td><td>Liste de réassort unique · marquer fait</td></tr>
+        <tr><td><strong>Équipe</strong></td><td>Pointage & planning (au quotidien magasin)</td></tr>
+        <tr><td><strong>WhatsApp</strong></td><td>Canal d’alerte — pas le tableau de bord</td></tr>
+        <tr><td><strong>Ops Margin</strong></td><td>On peut créer / configurer le magasin à votre place</td></tr>
+      </tbody>
+    </table>
+    <p class="small">Margin ne remplace pas votre caisse. Il la rend enfin utile pour le stock.</p>
+  </section>
+
+  <!-- PAGE 6 — OFFRE + CTA -->
+  <section class="page">
+    <div class="section-head">
+      <p class="eyebrow">Offre</p>
+      <h2>Deux formules, une promesse</h2>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <p class="eyebrow" style="margin-bottom:4px;">Indépendant · 1 boutique</p>
+        <h3 class="sans" style="font-size:16pt;">Commerce</h3>
+        <p class="price">89 € <span>/ mois HT*</span></p>
+        <p class="muted" style="margin-bottom:8px;">854 € / an (−20 %)</p>
+        <ul>
+          <li>1 boutique · jusqu’à 200 produits</li>
+          <li>Stock, alertes, vérification, courses</li>
+          <li>Lien caisse → stock (une fois branché)</li>
+          <li>Branchement caisse : <strong>à votre charge</strong> (ou prestataire)</li>
+        </ul>
+      </div>
+      <div class="card dark">
+        <p class="eyebrow" style="margin-bottom:4px; color:#b8b1a5;">1 à 3 boutiques</p>
+        <h3 class="sans" style="font-size:16pt;">Franchise</h3>
+        <p class="price" style="color:#e2ddd4;">249 € <span style="color:#b8b1a5;">/ mois HT*</span></p>
+        <p style="color:#b8b1a5; margin-bottom:8px;">2 390 € / an (−20 %)</p>
+        <ul>
+          <li>Tout Commerce + multi-magasins</li>
+          <li>Produits illimités</li>
+          <li>Vue d’ensemble des sites</li>
+          <li>Branchement caisse <strong>inclus</strong> (~400 € économisés / magasin)</li>
+          <li>Aide prioritaire équipe Margin</li>
+        </ul>
+      </div>
+    </div>
+    <p class="small">*TVA selon régime. Setup technique ponctuel ~400 € : option sur Commerce · inclus Franchise.</p>
+
+    <h3 class="sans" style="margin-top:14px;">Pourquoi Margin plutôt qu’un autre outil</h3>
+    <ul>
+      <li><strong>On ne change pas votre caisse</strong> — on s’y branche.</li>
+      <li><strong>Pensé TPE</strong> — trop petit pour un ERP, trop complexe pour Excel.</li>
+      <li><strong>Deux chemins</strong> — vous faites seul, ou Ops Margin configure pour vous.</li>
+      <li><strong>WhatsApp utile, pas envahissant</strong> — alertes regroupées, app = interface principale.</li>
+    </ul>
+
+    <div class="cta-box">
+      <h2 class="sans">Prochaine étape</h2>
+      <p>1. Identifier votre caisse actuelle (marque / modèle).</p>
+      <p>2. Choisir Commerce (1 boutique) ou Franchise (jusqu’à 3 + branchement inclus).</p>
+      <p>3. On démarre : import catalogue → lien caisse → Première heure.</p>
+      <p style="margin-top:12px; color:#e2ddd4; font-family:'Avenir Next',Helvetica,sans-serif; font-weight:700;">
+        Contact Ops Margin — on configure avec vous, ou pour vous.
+      </p>
+    </div>
+
+    <p class="small" style="margin-top:16px;">
+      Margin · Logiciel de stock pour commerces de proximité · Document commercial août 2026 ·
+      Les prix et fonctionnalités décrits correspondent à l’offre produit en vigueur.
+    </p>
+  </section>
+
+</body>
+</html>

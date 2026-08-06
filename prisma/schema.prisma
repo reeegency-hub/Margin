@@ -1,0 +1,868 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  name         String
+  passwordHash String
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+}
+
+/// Tenant root (entreprise / magasin). id = tenant_id.
+/// Architecture : shared DB + shared schema + restaurantId partout + RLS Postgres.
+model Restaurant {
+  /// = tenant_id (clé d’isolation multi-tenant)
+  id                    String    @id @default(cuid())
+  name                  String
+  timezone              String    @default("Europe/Paris")
+  whatsappTo            String?
+  openaiApiKeyEncrypted String?
+  openaiModel           String?
+  onboardingCompletedAt DateTime?
+  procurementMode       String?
+  staffSalle            Int       @default(0)
+  staffCuisine          Int       @default(0)
+  staffLivreur          Int       @default(0)
+  onboardingPlatforms   String?
+  pendingStockRecapJson   String?
+  pendingStockRecapStatus String?
+  pendingStockRecapKey    String?
+  pendingStockRecapAt     DateTime?
+  /// boutique | commerce | reseau
+  plan                    String?
+  /// monthly | yearly
+  billingPeriod           String?
+  stripeCustomerId        String?
+  stripeSubscriptionId    String?
+  /// none | incomplete | active | past_due | canceled | unpaid | trialing
+  stripeStatus            String?
+  /// Début d’échec de paiement (dunning)
+  paymentFailedAt         DateTime?
+  /// Accès maintenu jusqu’à cette date malgré past_due (grâce)
+  accessGraceUntil        DateTime?
+  /// Dernière relance client (WhatsApp / email)
+  dunningLastNotifiedAt   DateTime?
+  /// voluntary | involuntary — renseigné à la coupure / résiliation
+  churnType               String?
+  churnedAt               DateTime?
+  /// Miroir Stripe cancel_at_period_end
+  cancelAtPeriodEnd       Boolean   @default(false)
+  /// Magasin actif (désactivable depuis Ops / fin de grâce)
+  active                  Boolean   @default(true)
+  /// Code affiliation public (ex. MS-A1B2C3D4)
+  referralCode            String?   @unique
+  /// Magasin parrain (signup via ?ref=)
+  referredByRestaurantId  String?
+  referredBy              Restaurant?  @relation("RestaurantReferrals", fields: [referredByRestaurantId], references: [id], onDelete: SetNull)
+  referrals               Restaurant[] @relation("RestaurantReferrals")
+  /// Mois de crédit gagnés via affiliation (à appliquer côté Stripe plus tard)
+  affiliateCreditMonths   Int       @default(0)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  users                       User[]
+  ingredients                 Ingredient[]
+  dishes                      Dish[]
+  sales                       Sale[]
+  stockMovements              StockMovement[]
+  suppliers                   Supplier[]
+  supplierReceipts            SupplierReceipt[]
+  ingredientPriceEvents       IngredientPriceEvent[]
+  alerts                      Alert[]
+  catalogIssues               CatalogIssue[]
+  employees                   Employee[]
+  inventoryCounts             InventoryCount[]
+  purchaseOrders              PurchaseOrder[]
+  kiosks                      Kiosk[]
+  deliveryPlatformConnections DeliveryPlatformConnection[]
+  commissionRules             CommissionRule[]
+  platformOutages             PlatformOutage[]
+  whatsAppSessions            WhatsAppSession[]
+  whatsAppActionLogs          WhatsAppActionLog[]
+  whatsAppOutboundMessages    WhatsAppOutboundMessage[]
+  deliveryDrivers             DeliveryDriver[]
+  deliveryOrders              DeliveryOrder[]
+  externalPosConnections      ExternalPosConnection[]
+  posPendingProducts          PosPendingProduct[]
+  posWebhookEvents            PosWebhookEvent[]
+  posReconciliationRuns       PosReconciliationRun[]
+  newsletterSubscribers       NewsletterSubscriber[]
+}
+
+/// Journal idempotent des événements Stripe (event.id unique)
+model StripeWebhookEvent {
+  id            String    @id @default(cuid())
+  /// evt_… Stripe
+  stripeEventId String    @unique
+  type          String
+  payloadHash   String
+  /// Tenant résolu si connu
+  restaurantId  String?
+  /// RECEIVED | PROCESSING | APPLIED | IGNORED_DUP | FAILED | DEAD
+  status        String    @default("RECEIVED")
+  attempts      Int       @default(0)
+  nextRetryAt   DateTime?
+  lastError     String?
+  rawPayload    String?
+  receivedAt    DateTime  @default(now())
+  appliedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([status, nextRetryAt])
+  @@index([type, receivedAt])
+  @@index([restaurantId, receivedAt])
+}
+
+/// Snapshot réconciliation abonnement Stripe ↔ Margin
+model StripeReconciliationRun {
+  id             String   @id @default(cuid())
+  restaurantId   String?
+  status         String   @default("OK")
+  checkedCount   Int      @default(0)
+  mismatchCount  Int      @default(0)
+  fixedCount     Int      @default(0)
+  detailJson     String?
+  createdAt      DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([restaurantId, createdAt])
+}
+
+model Ingredient {
+  id                String     @id @default(cuid())
+  restaurantId      String
+  restaurant        Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  name              String
+  unit              String
+  stockTheoretical  Float      @default(0)
+  criticalThreshold Float      @default(0)
+  reorderQty        Float      @default(0)
+  /// Dernier prix d’achat unitaire (€)
+  lastPurchasePrice Float?
+  lastPurchaseAt    DateTime?
+  /// frais | epicerie | liquide | piece | autre
+  category          String?
+  /// none | unit_default | velocity | manual
+  thresholdSource   String?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  recipeIngredients   RecipeIngredient[]
+  stockMovements      StockMovement[]
+  receiptLines        SupplierReceiptLine[]
+  alerts              Alert[]
+  catalogItems        SupplierCatalogItem[]
+  purchaseOrderLines  PurchaseOrderLine[]
+  inventoryCountLines InventoryCountLine[]
+  priceEvents         IngredientPriceEvent[]
+
+  @@index([restaurantId])
+  @@index([restaurantId, criticalThreshold])
+}
+
+/// Anomalies catalogue (doublons, unités, prix, seuils) — assistant de nettoyage
+model CatalogIssue {
+  id             String   @id @default(cuid())
+  restaurantId   String
+  restaurant     Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  /// duplicate_ingredient | duplicate_dish | bad_unit | missing_unit | zero_price | aberrant_price | missing_threshold | stale_price
+  kind           String
+  /// OPEN | RESOLVED | IGNORED
+  status         String   @default("OPEN")
+  title          String
+  detail         String?
+  ingredientId   String?
+  ingredientIdB  String?
+  dishId         String?
+  payloadJson    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([restaurantId, status])
+  @@index([restaurantId, kind, status])
+}
+
+model Dish {
+  id               String     @id @default(cuid())
+  restaurantId     String
+  restaurant       Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  name             String
+  salePrice        Float
+  /// Coût matière recalculé (recette × prix d’achat)
+  foodCost         Float?
+  foodCostUpdatedAt DateTime?
+  description      String?
+  allergens        String?
+  imageUrl         String?
+  externalSku      String?
+  active           Boolean    @default(true)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  ingredients RecipeIngredient[]
+  saleItems   SaleItem[]
+
+  @@index([restaurantId])
+  @@unique([restaurantId, externalSku])
+}
+
+model RecipeIngredient {
+  id           String     @id @default(cuid())
+  dishId       String
+  dish         Dish       @relation(fields: [dishId], references: [id], onDelete: Cascade)
+  ingredientId String
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  quantity     Float
+  unit         String
+
+  @@unique([dishId, ingredientId])
+}
+
+model Sale {
+  id              String     @id @default(cuid())
+  restaurantId    String
+  restaurant      Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  soldAt          DateTime   @default(now())
+  totalAmount     Float
+  channel         String     @default("dine_in")
+  kioskId         String?
+  kiosk           Kiosk?     @relation(fields: [kioskId], references: [id])
+  externalOrderId String?
+  createdAt       DateTime   @default(now())
+
+  items SaleItem[]
+
+  @@unique([restaurantId, externalOrderId])
+  @@index([restaurantId, soldAt])
+  @@index([restaurantId, channel])
+}
+
+model SaleItem {
+  id        String @id @default(cuid())
+  saleId    String
+  sale      Sale   @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  dishId    String
+  dish      Dish   @relation(fields: [dishId], references: [id])
+  quantity  Int
+  unitPrice Float
+}
+
+model StockMovement {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  ingredientId String
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  type         String
+  deltaQty     Float
+  refType      String?
+  refId        String?
+  createdAt    DateTime   @default(now())
+
+  @@index([restaurantId, ingredientId, createdAt])
+}
+
+model Supplier {
+  id                    String     @id @default(cuid())
+  restaurantId          String
+  restaurant            Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  name                  String
+  contact               String?
+  deliveryDays          String     @default("[]")
+  avgDeliveryDelayHours Int        @default(24)
+  reliabilityScore      Float      @default(0.9)
+  createdAt             DateTime   @default(now())
+
+  receipts       SupplierReceipt[]
+  catalogItems   SupplierCatalogItem[]
+  purchaseOrders PurchaseOrder[]
+
+  @@index([restaurantId])
+}
+
+model SupplierCatalogItem {
+  id           String     @id @default(cuid())
+  supplierId   String
+  supplier     Supplier   @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  ingredientId String
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  price        Float
+  unit         String
+  minOrderQty  Float      @default(1)
+
+  @@unique([supplierId, ingredientId])
+}
+
+model PurchaseOrder {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  supplierId   String
+  supplier     Supplier   @relation(fields: [supplierId], references: [id])
+  status       String     @default("DRAFT")
+  totalAmount  Float      @default(0)
+  proposedAt   DateTime   @default(now())
+  validatedAt  DateTime?
+  sentAt       DateTime?
+  // Cuisine a vérifié que le stock théorique colle au réel
+  kitchenCheckedAt DateTime?
+  kitchenCheckedBy String?
+  createdAt    DateTime   @default(now())
+
+  lines PurchaseOrderLine[]
+
+  @@index([restaurantId, status])
+}
+
+model PurchaseOrderLine {
+  id            String        @id @default(cuid())
+  orderId       String
+  order         PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  ingredientId  String
+  ingredient    Ingredient    @relation(fields: [ingredientId], references: [id])
+  quantity      Float
+  unitPrice     Float
+  chosenReason  String?
+}
+
+model SupplierReceipt {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  supplierId   String
+  supplier     Supplier   @relation(fields: [supplierId], references: [id])
+  receivedAt   DateTime   @default(now())
+  note         String?
+  createdAt    DateTime   @default(now())
+
+  lines SupplierReceiptLine[]
+
+  @@index([restaurantId])
+}
+
+model SupplierReceiptLine {
+  id           String          @id @default(cuid())
+  receiptId    String
+  receipt      SupplierReceipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  ingredientId String
+  ingredient   Ingredient      @relation(fields: [ingredientId], references: [id])
+  quantity     Float
+  /// Prix unitaire facturé (€) — saisi depuis la facture fournisseur
+  unitPrice    Float?
+}
+
+/// Historique des prix d’achat (hausses / baisses)
+model IngredientPriceEvent {
+  id            String     @id @default(cuid())
+  restaurantId  String
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  ingredientId  String
+  ingredient    Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  supplierId    String?
+  unitPrice     Float
+  previousPrice Float?
+  /// RECEIPT | CATALOG | MANUAL
+  source        String     @default("RECEIPT")
+  createdAt     DateTime   @default(now())
+
+  @@index([restaurantId, createdAt])
+  @@index([restaurantId, ingredientId, createdAt])
+}
+
+model InventoryCount {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  countedAt    DateTime   @default(now())
+  status       String     @default("DRAFT")
+  note         String?
+  validatedAt  DateTime?
+  createdAt    DateTime   @default(now())
+
+  lines InventoryCountLine[]
+
+  @@index([restaurantId, status])
+}
+
+model InventoryCountLine {
+  id               String         @id @default(cuid())
+  inventoryCountId String
+  inventoryCount   InventoryCount @relation(fields: [inventoryCountId], references: [id], onDelete: Cascade)
+  ingredientId     String
+  ingredient       Ingredient     @relation(fields: [ingredientId], references: [id])
+  theoreticalQty   Float
+  countedQty       Float
+  varianceQty      Float
+  /// Valeur € de l’écart (négatif = perte)
+  varianceValueEur Float?
+}
+
+model Employee {
+  id              String     @id @default(cuid())
+  restaurantId    String
+  restaurant      Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  name            String
+  role            String
+  hourlyRate      Float
+  hiredAt         DateTime   @default(now())
+  certifications  String     @default("[]")
+  active          Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+
+  shifts                 Shift[]
+  attendances            Attendance[]
+  performanceSnapshots   PerformanceSnapshot[]
+
+  @@index([restaurantId])
+}
+
+model Shift {
+  id         String    @id @default(cuid())
+  employeeId String
+  employee   Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date       DateTime
+  startTime  String
+  endTime    String
+  role       String
+  status     String    @default("PUBLISHED")
+  createdAt  DateTime  @default(now())
+
+  attendances Attendance[]
+
+  @@index([employeeId, date])
+}
+
+model Attendance {
+  id          String    @id @default(cuid())
+  employeeId  String
+  employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  shiftId     String?
+  shift       Shift?    @relation(fields: [shiftId], references: [id])
+  clockIn     DateTime?
+  clockOut    DateTime?
+  lateMinutes Int       @default(0)
+  status      String    @default("PRESENT")
+  createdAt   DateTime  @default(now())
+
+  @@index([employeeId])
+}
+
+model PerformanceSnapshot {
+  id           String   @id @default(cuid())
+  employeeId   String
+  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  periodStart  DateTime
+  periodEnd    DateTime
+  salesAmount  Float    @default(0)
+  avgTicket    Float    @default(0)
+  errorCount   Int      @default(0)
+  createdAt    DateTime @default(now())
+}
+
+model Kiosk {
+  id            String     @id @default(cuid())
+  restaurantId  String
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  name          String
+  locationLabel String
+  status        String     @default("ONLINE")
+  lastSeenAt    DateTime?
+  createdAt     DateTime   @default(now())
+
+  sales Sale[]
+
+  @@index([restaurantId])
+}
+
+model DeliveryPlatformConnection {
+  id                String     @id @default(cuid())
+  restaurantId      String
+  restaurant        Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  platform          String
+  status            String     @default("DISCONNECTED")
+  commissionPercent Float      @default(25)
+  payoutDelayDays   Int        @default(7)
+  apiKeyEncrypted   String?
+  storeId           String?
+  webhookSecret     String?
+  connectedAt       DateTime?
+  lastSyncAt        DateTime?
+  createdAt         DateTime   @default(now())
+
+  @@unique([restaurantId, platform])
+}
+
+model DeliveryDriver {
+  id             String     @id @default(cuid())
+  restaurantId   String
+  restaurant     Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  name           String
+  phone          String?
+  whatsappOptIn  Boolean    @default(true)
+  isActive       Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+
+  assignments DeliveryAssignment[]
+
+  @@index([restaurantId, isActive])
+}
+
+model DeliveryOrder {
+  id              String     @id @default(cuid())
+  restaurantId    String
+  restaurant      Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  platform        String
+  externalOrderId String
+  customerName    String?
+  status          String     @default("PENDING")
+  totalAmount     Float      @default(0)
+  readyAt         DateTime?
+  deliveredAt     DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  assignments DeliveryAssignment[]
+
+  @@index([restaurantId, status])
+  @@unique([restaurantId, externalOrderId])
+}
+
+model DeliveryAssignment {
+  id              String         @id @default(cuid())
+  deliveryOrderId String
+  deliveryOrder   DeliveryOrder  @relation(fields: [deliveryOrderId], references: [id], onDelete: Cascade)
+  driverId        String
+  driver          DeliveryDriver @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  status          String         @default("ASSIGNED")
+  assignedAt      DateTime       @default(now())
+  pickedUpAt      DateTime?
+  deliveredAt     DateTime?
+
+  @@index([deliveryOrderId])
+}
+
+model ExternalPosConnection {
+  id                String     @id @default(cuid())
+  restaurantId      String
+  restaurant        Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  name              String
+  vendor            String     @default("custom")
+  apiKeyEncrypted   String?
+  /// Square location_id, Lightspeed account_id, etc.
+  merchantExternalId String?
+  /// Override base URL API pull (partenariat / sandbox)
+  apiBaseUrl        String?
+  webhookSecret     String
+  status            String     @default("PENDING")
+  lastOrderAt       DateTime?
+  /// Dernier occurredAt POS appliqué avec succès (order-gate soft)
+  lastAppliedOccurredAt DateTime?
+  createdAt         DateTime   @default(now())
+
+  pendingProducts PosPendingProduct[]
+  webhookEvents   PosWebhookEvent[]
+
+  @@index([restaurantId])
+}
+
+/// Journal idempotent des webhooks caisse (at-least-once → exactly-once métier)
+model PosWebhookEvent {
+  id               String                 @id @default(cuid())
+  restaurantId     String
+  restaurant       Restaurant             @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  connectionId     String
+  connection       ExternalPosConnection  @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  vendor           String
+  /// ID stable POS ou hash dédup
+  externalEventId  String
+  payloadHash      String
+  /// SALE | CANCEL (V1: SALE)
+  eventKind        String                 @default("SALE")
+  occurredAt       DateTime?
+  receivedAt       DateTime               @default(now())
+  appliedAt        DateTime?
+  /// RECEIVED | PROCESSING | APPLIED | IGNORED_DUP | DEFERRED | FAILED | DEAD | SKU_NOT_FOUND
+  status           String                 @default("RECEIVED")
+  attempts         Int                    @default(0)
+  nextRetryAt      DateTime?
+  lastError        String?
+  saleId           String?
+  recordedLines    Int                    @default(0)
+  pendingLines     Int                    @default(0)
+  rawPayload       String?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  @@unique([restaurantId, connectionId, externalEventId])
+  @@index([restaurantId, status, receivedAt])
+  @@index([status, nextRetryAt])
+  @@index([connectionId, receivedAt])
+}
+
+/// Rapport de réconciliation POS (nuit + pull API)
+model PosReconciliationRun {
+  id              String     @id @default(cuid())
+  restaurantId    String
+  restaurant      Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  connectionId    String?
+  /// YYYY-MM-DD (jour couvert, timezone resto)
+  dayKey          String
+  /// internal | zelty_pull
+  kind            String     @default("internal")
+  status          String     @default("OK")
+  appliedCount    Int        @default(0)
+  failedCount     Int        @default(0)
+  deadCount       Int        @default(0)
+  deferredCount   Int        @default(0)
+  pendingStale    Int        @default(0)
+  negativeStock   Int        @default(0)
+  /// Tickets POS absents de Margin (pull)
+  missingCount    Int        @default(0)
+  /// Tickets Margin absents du POS (pull)
+  extraCount      Int        @default(0)
+  /// Tickets backfillés automatiquement
+  backfilledCount Int        @default(0)
+  detailJson      String?
+  createdAt       DateTime   @default(now())
+
+  @@index([restaurantId, dayKey])
+  @@index([restaurantId, createdAt])
+}
+
+/// Produits vendus en caisse pas encore dans le catalogue Margin
+model PosPendingProduct {
+  id             String                 @id @default(cuid())
+  restaurantId   String
+  restaurant     Restaurant             @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  connectionId   String?
+  connection     ExternalPosConnection? @relation(fields: [connectionId], references: [id], onDelete: SetNull)
+  /// Clé de dédup : "sku:XXX" ou "name:normalized"
+  dedupeKey      String
+  externalSku    String?
+  name           String
+  normalizedName String
+  lastUnitPrice  Float?
+  timesSeen      Int                    @default(1)
+  totalQtySold   Float                  @default(0)
+  status         String                 @default("PENDING")
+  samplePayload  String?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  @@unique([restaurantId, dedupeKey])
+  @@index([restaurantId, status])
+  @@index([connectionId])
+}
+
+model WhatsAppSession {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  phone        String
+  flow         String     @default("idle")
+  step         Int        @default(0)
+  payload      String     @default("{}")
+  expiresAt    DateTime
+  updatedAt    DateTime   @updatedAt
+  createdAt    DateTime   @default(now())
+
+  @@unique([restaurantId, phone])
+  @@index([expiresAt])
+}
+
+model WhatsAppActionLog {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  phone        String
+  action       String
+  payload      String     @default("{}")
+  createdAt    DateTime   @default(now())
+
+  @@index([restaurantId, createdAt])
+}
+
+model CommissionRule {
+  id              String     @id @default(cuid())
+  restaurantId    String
+  restaurant      Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  platform        String
+  percent         Float
+  payoutDelayDays Int        @default(7)
+
+  @@unique([restaurantId, platform])
+}
+
+model PlatformOutage {
+  id                   String     @id @default(cuid())
+  restaurantId         String
+  restaurant           Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  platform             String
+  startedAt            DateTime
+  endedAt              DateTime?
+  estimatedLostRevenue Float      @default(0)
+  createdAt            DateTime   @default(now())
+
+  @@index([restaurantId, platform])
+}
+
+model Alert {
+  id             String      @id @default(cuid())
+  restaurantId   String
+  restaurant     Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  type           String
+  severity       Int         @default(2)
+  status         String      @default("ACTIVE")
+  title          String
+  constat        String
+  cause          String?
+  impact         String
+  action         String
+  ingredientId   String?
+  ingredient     Ingredient? @relation(fields: [ingredientId], references: [id])
+  whatsappSentAt DateTime?
+  /// Mis en file pour batch WhatsApp (null une fois envoyé ou résolu)
+  whatsappPendingAt DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  resolvedAt     DateTime?
+
+  @@index([restaurantId, status, severity])
+  @@index([restaurantId, type, status, whatsappPendingAt])
+}
+
+/// Journal des messages WhatsApp sortants (coût + délivrabilité Twilio)
+model WhatsAppOutboundMessage {
+  id                 String    @id @default(cuid())
+  restaurantId       String?
+  restaurant         Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: SetNull)
+  /// stock_recap | stock_alert | billing_dunning | test | session_reply | delivery | other
+  purpose            String
+  /// twilio | console
+  channel            String    @default("twilio")
+  templateKey        String?
+  twilioSid          String?   @unique
+  /// queued | accepted | sent | delivered | read | failed | undelivered | canceled | limit_skipped
+  status             String    @default("queued")
+  errorCode          String?
+  errorMessage       String?
+  bodyPreview        String?
+  estimatedCostCents Int       @default(0)
+  /// IDs Alert regroupés (JSON array)
+  alertIdsJson       String?
+  toMasked           String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  statusUpdatedAt    DateTime?
+
+  @@index([restaurantId, createdAt])
+  @@index([status, createdAt])
+  @@index([purpose, createdAt])
+}
+
+/// Abonnés newsletter (signup, landing, ops)
+model NewsletterSubscriber {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  /// signup | landing | admin | import
+  source         String    @default("signup")
+  name           String?
+  restaurantId   String?
+  restaurant     Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: SetNull)
+  /// Token opaque pour désinscription (lien email)
+  unsubscribeToken String  @unique @default(cuid())
+  consentedAt    DateTime  @default(now())
+  unsubscribedAt DateTime?
+  welcomeSentAt  DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([unsubscribedAt, createdAt])
+  @@index([source])
+}
+
+/// Challenge OTP avant création de compte (anti-bot)
+model SignupOtpChallenge {
+  id          String    @id @default(cuid())
+  email       String
+  /// E.164 si canal SMS
+  phone       String?
+  /// email | sms
+  channel     String    @default("email")
+  codeHash    String
+  attempts    Int       @default(0)
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([email, createdAt])
+  @@index([expiresAt])
+}
+
+/// Prospect cold email (pipeline fondateur)
+model MarketingProspect {
+  id              String    @id @default(cuid())
+  email           String
+  contactName     String?
+  businessName    String?
+  city            String?
+  /// epicerie | mode | beaute | boulangerie | franchise | autre
+  segment         String    @default("epicerie")
+  /// Zelty | Cashpad | Square | SumUp | autre | inconnu
+  posVendor       String?
+  source          String    @default("manual")
+  /// new | sequenced | replied | meeting | won | lost | paused
+  status          String    @default("new")
+  /// 1 | 2 | 3 — étape séquence actuelle
+  sequenceStep    Int       @default(0)
+  lastContactedAt DateTime?
+  nextFollowUpAt  DateTime?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([email])
+  @@index([status, nextFollowUpAt])
+  @@index([segment])
+}
+
+/// Micro-influenceur / créateur pour pub SaaS
+model MarketingInfluencer {
+  id              String    @id @default(cuid())
+  handle          String
+  displayName     String?
+  /// instagram | tiktok | youtube | linkedin | twitter
+  platform        String    @default("instagram")
+  profileUrl      String?
+  email           String?
+  city            String?
+  /// retail | food | entrepreneur | franchise | tech | autre
+  niche           String    @default("retail")
+  followers       Int       @default(0)
+  engagementPct   Float?
+  /// 0–100 score fit Margin
+  fitScore        Int       @default(0)
+  /// research | contacted | negotiating | active | declined | paused
+  status          String    @default("research")
+  /// barter | affiliate | paid | gift
+  dealType        String?
+  notes           String?
+  lastContactedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([platform, handle])
+  @@index([status, fitScore])
+  @@index([niche])
+}
