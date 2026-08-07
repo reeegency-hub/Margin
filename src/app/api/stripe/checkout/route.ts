@@ -52,6 +52,8 @@ export async function POST(request: Request) {
   const restaurantId = body.restaurantId || session?.user?.restaurantId;
   let customerEmail = session?.user?.email || undefined;
   let customerId: string | undefined;
+  let hasReferrer = false;
+  let referredByRestaurantId = "";
 
   if (restaurantId) {
     const restaurant = await prisma.restaurant.findUnique({
@@ -63,29 +65,40 @@ export async function POST(request: Request) {
     }
     customerEmail = restaurant.users[0]?.email || customerEmail;
     customerId = restaurant.stripeCustomerId || undefined;
+    hasReferrer = Boolean(restaurant.referredByRestaurantId);
+    referredByRestaurantId = restaurant.referredByRestaurantId || "";
   }
 
   const origin = new URL(request.url).origin;
   const successUrl = `${origin}/onboarding?paid=1&session_id={CHECKOUT_SESSION_ID}`;
   const cancelUrl = `${origin}/welcome#tarifs`;
 
+  const { affiliateCheckoutDiscounts } = await import(
+    "@/lib/stripe/affiliate-discount"
+  );
+  const discounts = await affiliateCheckoutDiscounts(stripe, hasReferrer);
+
   const checkout = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customerId,
     customer_email: customerId ? undefined : customerEmail,
     line_items: [{ price: priceId, quantity: 1 }],
+    ...(discounts ? { discounts } : {}),
     success_url: successUrl,
     cancel_url: cancelUrl,
     metadata: {
       plan,
       billingPeriod,
       restaurantId: restaurantId || "",
+      affiliateDiscount: discounts ? "1" : "0",
+      referredByRestaurantId,
     },
     subscription_data: {
       metadata: {
         plan,
         billingPeriod,
         restaurantId: restaurantId || "",
+        referredByRestaurantId,
       },
     },
   });

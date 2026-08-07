@@ -404,7 +404,28 @@ export default function WelcomePage() {
           </p>
         </div>
 
-        <div className="land-peak" aria-hidden />
+        <div className="land-peak" aria-hidden>
+          <span className="land-peak__glow" />
+          <svg
+            className="land-peak__svg"
+            viewBox="0 0 280 56"
+            preserveAspectRatio="none"
+          >
+            <path
+              className="land-peak__aura"
+              d="M20 56 L140 4 L260 56 Z"
+            />
+            <path
+              className="land-peak__fill"
+              d="M0 56 L140 0 L280 56 Z"
+            />
+            <path
+              className="land-peak__ridge"
+              d="M70 56 L140 12 L210 56"
+              fill="none"
+            />
+          </svg>
+        </div>
       </section>
 
       <section

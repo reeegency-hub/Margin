@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { MarginLogoMark } from "@/components/brand/MarginLogo";
 import type { BreadcrumbItem } from "./types";
 
 export function Topbar({
-  title,
   breadcrumbs,
   onMenuClick,
-  onAssistantClick,
   notificationCount = 0,
   onNotificationsClick,
   user,
@@ -18,13 +17,13 @@ export function Topbar({
   title?: string;
   breadcrumbs?: BreadcrumbItem[];
   onMenuClick?: () => void;
-  onAssistantClick?: () => void;
   notificationCount?: number;
   onNotificationsClick?: () => void;
   user?: { name: string; email?: string; initials?: string } | null;
   userMenu?: ReactNode;
   actions?: ReactNode;
 }) {
+  const [scrolled, setScrolled] = useState(false);
   const initials =
     user?.initials ||
     user?.name
@@ -35,8 +34,25 @@ export function Topbar({
       .toUpperCase() ||
     "?";
 
+  useEffect(() => {
+    const scroller =
+      document.querySelector<HTMLElement>(".ds-shell__content") || window;
+
+    function onScroll() {
+      const y =
+        scroller === window
+          ? window.scrollY
+          : (scroller as HTMLElement).scrollTop;
+      setScrolled(y > 12);
+    }
+
+    onScroll();
+    scroller.addEventListener("scroll", onScroll, { passive: true });
+    return () => scroller.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
-    <header className="ds-top">
+    <header className={`ds-top${scrolled ? " is-scrolled" : ""}`}>
       <div className="ds-top__left">
         {onMenuClick ? (
           <button
@@ -68,28 +84,22 @@ export function Topbar({
               ))}
             </nav>
           ) : null}
-          {title ? <h1 className="ds-top__title">{title}</h1> : null}
         </div>
       </div>
 
-      <div className="ds-top__right">
-        {onAssistantClick ? (
-          <button
-            type="button"
-            className="ds-top__assistant"
-            onClick={onAssistantClick}
-            aria-label="Ouvrir l’assistant Margin"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
-              <path d="M12 3a4 4 0 014 4v1h1a3 3 0 010 6h-.5" />
-              <path d="M8 8V7a4 4 0 014-4" />
-              <path d="M7 14h10v4a3 3 0 01-3 3h-4a3 3 0 01-3-3v-4z" />
-              <path d="M9 17h.01M15 17h.01" />
-            </svg>
-            <span>Assistant</span>
-          </button>
-        ) : null}
+      <div className="ds-top__brand">
+        <Link href="/" className="ds-top__logo" aria-label="Margin — Accueil">
+          <span className="ds-top__logo-mark" aria-hidden>
+            <MarginLogoMark />
+          </span>
+          <span className="ds-top__logo-text">
+            <span className="ds-top__logo-name">Margin</span>
+            <span className="ds-top__logo-tag">magasin</span>
+          </span>
+        </Link>
+      </div>
 
+      <div className="ds-top__right">
         {actions}
 
         {onNotificationsClick ? (

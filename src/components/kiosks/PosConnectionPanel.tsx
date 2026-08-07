@@ -306,33 +306,48 @@ function PosSetupBody({
         )}
       </ol>
 
-      <section className="dash-card dash-card--light space-y-3">
-        <p className="hub-section-title">1. Votre logiciel de caisse</p>
-        <p className="hub-section-lead">
-          Sélectionnez celui installé en magasin.
-        </p>
-        <div className="pos-vendor-grid" data-guide-action="pos">
+      <section className="dash-card dash-card--light pos-pick">
+        <header className="pos-pick__head">
+          <p className="hub-section-title">Votre logiciel de caisse</p>
+          <p className="hub-section-lead">
+            {selectedVendor
+              ? `${POS_VENDOR_LABELS[selectedVendor]} sélectionné — suite juste en dessous.`
+              : "Choisissez celui installé en magasin. Un clic suffit."}
+          </p>
+        </header>
+        <ul className="pos-pick__list" data-guide-action="pos">
           {POS_PICKER_VENDORS.map((v) => {
             const active = selectedVendor === v;
             const count = connections.filter((c) => c.vendor === v).length;
+            const linked = count > 0;
             return (
-              <button
-                key={v}
-                type="button"
-                onClick={() => pickVendor(v)}
-                className={`pos-vendor${active ? " is-on" : ""}`}
-                data-guide-action="pos"
-              >
-                <strong>{POS_VENDOR_LABELS[v]}</strong>
-                <span>
-                  {count
-                    ? `${count} lien${count > 1 ? "s" : ""}`
-                    : "Pas encore lié"}
-                </span>
-              </button>
+              <li key={v}>
+                <button
+                  type="button"
+                  onClick={() => pickVendor(v)}
+                  className={`pos-pick__row${active ? " is-on" : ""}${
+                    linked ? " is-linked" : ""
+                  }`}
+                  data-guide-action="pos"
+                  aria-pressed={active}
+                >
+                  <span className="pos-pick__name">
+                    {POS_VENDOR_LABELS[v]}
+                  </span>
+                  <span className="pos-pick__meta">
+                    {linked
+                      ? count > 1
+                        ? `${count} liens`
+                        : "Lié"
+                      : active
+                        ? "Sélectionné"
+                        : "Choisir"}
+                  </span>
+                </button>
+              </li>
             );
           })}
-        </div>
+        </ul>
       </section>
 
       {selectedVendor ? (
@@ -351,7 +366,7 @@ function PosSetupBody({
           </details>
 
           <section className="dash-card dash-card--light space-y-3">
-            <p className="hub-section-title">2. Créer / gérer le lien</p>
+            <p className="hub-section-title">Créer / gérer le lien</p>
             <p className="hub-section-lead">
               Margin génère une adresse sécurisée pour{" "}
               {POS_VENDOR_LABELS[vendor]}. En Franchise, on branche pour vous.
@@ -582,7 +597,7 @@ function PosSetupBody({
           </section>
 
           <section className="dash-card dash-card--light space-y-2">
-            <p className="hub-section-title">3. Brancher & vérifier</p>
+            <p className="hub-section-title">Brancher & vérifier</p>
             <p className="hub-section-lead">
               Collez l’adresse dans la caisse. Utilisez{" "}
               <strong>Tester une vente</strong> (local) pour vérifier sans

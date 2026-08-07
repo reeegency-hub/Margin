@@ -8,7 +8,6 @@ import {
   deliveryOrderStatusLabel,
 } from "@/lib/channels";
 import { BrandPage } from "@/components/brand/BrandCard";
-import { FeatureSection } from "@/components/ui/FeatureSection";
 import { setDeliveryStatusAction } from "@/app/actions";
 import { DeliveryIntegrationsPanel } from "@/components/delivery/DeliveryIntegrationsPanel";
 import Link from "next/link";
@@ -72,6 +71,7 @@ export default async function DeliveryPage({
     (c) => c.status === "CONNECTED"
   ).length;
   const channelTotal = byChannel.reduce((s, c) => s + c.amount, 0);
+  const needsOnline = Boolean(outage || offline);
 
   const panelConnections = PLATFORMS.map((p) => {
     const c = connections.find((x) => x.platform === p.key);
@@ -84,10 +84,26 @@ export default async function DeliveryPage({
     };
   });
 
+  const inkTitle = needsOnline
+    ? outages.length > 0
+      ? `${outages.length} coupure${outages.length > 1 ? "s" : ""}`
+      : "Plateforme hors ligne"
+    : connectedCount === 0
+      ? "Livraison optionnelle"
+      : "Plateformes OK";
+
+  const inkDetail = needsOnline
+    ? "Remettez en ligne Uber / Deliveroo si vous livrez aujourd’hui."
+    : connectedCount === 0
+      ? "Pas obligatoire pour le stock. Configurez Uber / Deliveroo seulement si vous les utilisez."
+      : `${connectedCount}/${connections.length} connectée${
+          connectedCount > 1 ? "s" : ""
+        } · ${activeDrivers} livreur${activeDrivers !== 1 ? "s" : ""}.`;
+
   return (
     <BrandPage
       question="Livraison (optionnel)"
-      guide="Uber / Deliveroo et livreurs si vous en avez. Pas le stock ni les produits."
+      guide="Uber / Deliveroo et livreurs si vous en avez. Pas le stock."
     >
       {params.saved ? <p className="flash">Clés enregistrées.</p> : null}
       {params.driver ? <p className="flash">Livreur ajouté.</p> : null}
@@ -96,6 +112,31 @@ export default async function DeliveryPage({
           {decodeURIComponent(params.msg || "Connexion OK")}
         </p>
       ) : null}
+
+      <div className="dash-card dash-card--dark hub-now">
+        <p className="hub-now__eyebrow">À faire maintenant</p>
+        <p className="hub-now__title">{inkTitle}</p>
+        <p className="hub-now__detail">{inkDetail}</p>
+        <div className="hub-now__actions">
+          {needsOnline ? (
+            <form action={setDeliveryStatusAction}>
+              <input
+                type="hidden"
+                name="platform"
+                value={outage?.platform || offline?.platform}
+              />
+              <input type="hidden" name="status" value="CONNECTED" />
+              <button type="submit" className="btn-lime">
+                Remettre en ligne
+              </button>
+            </form>
+          ) : (
+            <Link href="/kiosks" className="btn-ghost">
+              Voir la caisse
+            </Link>
+          )}
+        </div>
+      </div>
 
       <div className="status-strip">
         <div>
@@ -119,8 +160,11 @@ export default async function DeliveryPage({
       </div>
 
       <div className="phone-hide">
-        <FeatureSection title="Intégrations & livreurs" subtitle="Clés API et équipe livraison." />
-        <div className="dash-card dash-card--dark">
+        <div className="dash-card dash-card--light">
+          <p className="hub-section-title">Intégrations & livreurs</p>
+          <p className="hub-section-lead mb-4">
+            Clés API et équipe livraison.
+          </p>
           <DeliveryIntegrationsPanel
             connections={panelConnections}
             drivers={drivers.map((d) => ({
@@ -142,31 +186,26 @@ export default async function DeliveryPage({
       </aside>
 
       {deliveryOrders.length ? (
-        <>
-          <FeatureSection next title="Commandes récentes" subtitle="Les dernières commandes delivery." />
-          <div className="dash-card dash-card--light">
-            {deliveryOrders.map((o) => (
-              <div key={o.id} className="supplier-row">
-                <div className="supplier-row__name">
-                  #{o.externalOrderId.slice(-6)}
-                </div>
-                <div className="supplier-row__detail text-[var(--text-secondary-light)]">
-                  {CHANNEL_LABELS[o.platform] ?? o.platform}
-                </div>
-                <div className="supplier-row__amount">
-                  {deliveryOrderStatusLabel(o.status)}
-                </div>
+        <div className="dash-card dash-card--light">
+          <p className="hub-section-title">Commandes récentes</p>
+          {deliveryOrders.map((o) => (
+            <div key={o.id} className="supplier-row">
+              <div className="supplier-row__name">
+                #{o.externalOrderId.slice(-6)}
               </div>
-            ))}
-          </div>
-        </>
+              <div className="supplier-row__detail text-[var(--text-secondary-light)]">
+                {CHANNEL_LABELS[o.platform] ?? o.platform}
+              </div>
+              <div className="supplier-row__amount">
+                {deliveryOrderStatusLabel(o.status)}
+              </div>
+            </div>
+          ))}
+        </div>
       ) : null}
 
-      <FeatureSection next title="État des plateformes" subtitle="Couper / relancer." />
       <div className="dash-card dash-card--light">
-        <p className="mb-3 text-[13px] font-semibold text-[var(--text-primary-light)]">
-          Plateformes
-        </p>
+        <p className="hub-section-title">État des plateformes</p>
         {connections.map((c) => (
           <div key={c.id} className="supplier-row">
             <div className="supplier-row__name">
@@ -177,32 +216,11 @@ export default async function DeliveryPage({
             </div>
           </div>
         ))}
-        <div className="mt-4">
-          {outage || offline ? (
-            <form action={setDeliveryStatusAction}>
-              <input
-                type="hidden"
-                name="platform"
-                value={outage?.platform || offline?.platform}
-              />
-              <input type="hidden" name="status" value="CONNECTED" />
-              <button type="submit" className="btn-lime btn-lime--sm">
-                Remettre en ligne
-              </button>
-            </form>
-          ) : (
-            <p className="text-[13px] text-[var(--text-muted)]">
-              Toutes les plateformes suivies sont OK.
-            </p>
-          )}
-        </div>
       </div>
 
-      <div className="phone-hide mt-4">
-        <div className="dash-card dash-card--dark">
-          <p className="dash-detail-label" style={{ marginTop: 0 }}>
-            Ventes par canal
-          </p>
+      <div className="phone-hide">
+        <div className="dash-card dash-card--light">
+          <p className="hub-section-title">Ventes par canal</p>
           {byChannel.map((c) => (
             <div
               key={c.channel}

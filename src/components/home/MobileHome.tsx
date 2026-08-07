@@ -5,9 +5,11 @@ import Link from "next/link";
 import type { HomeData } from "./types";
 import { euro } from "@/lib/dashboard";
 import { SegmentedControl } from "@/components/ui";
-import { DayFocus, type DayFocusItem } from "@/components/home/DayFocus";
-import { AlertCard } from "@/components/home/AlertCard";
+import type { DayFocusItem } from "@/components/home/DayFocus";
+import { BrandPage } from "@/components/brand/BrandCard";
 import { useHomeAlerts } from "@/components/dashboard/HomeAlertsContext";
+import { FOCUS_ID_TO_GUIDE_ACTION } from "@/lib/guide-anchors";
+import { validateOrderAction } from "@/app/actions";
 
 function buildForecast(days: HomeData["caLast7Days"]) {
   if (!days.length) return null;
@@ -25,9 +27,14 @@ function buildForecast(days: HomeData["caLast7Days"]) {
   };
 }
 
+const CADENCE: Record<DayFocusItem["cadence"], string> = {
+  day: "Jour",
+  week: "Semaine",
+  month: "Mois",
+};
+
 /**
- * Accueil mobile — priorités + KPIs (CA, coûts, raccourcis).
- * Le parcours démarrage vit dans le dock FirstHourGuide.
+ * Accueil mobile — une priorité (hub-now), puis pouls CA / signaux coûts.
  */
 export function MobileHome({
   data,
@@ -52,8 +59,11 @@ export function MobileHome({
   const [period, setPeriod] = useState<"today" | "week" | "month">("today");
   const homeAlerts = useHomeAlerts();
   const showInlineAlert = Boolean(data.alert) && !homeAlerts?.hideInlineAlert;
-  const initial = data.restaurantName.trim().charAt(0).toUpperCase() || "R";
+
   const focusList = focuses?.length ? focuses : dayFocus ? [dayFocus] : [];
+  const openFocuses = focusList.filter((f) => !f.done);
+  const primary = openFocuses[0] ?? focusList[0] ?? null;
+  const queue = openFocuses.slice(1);
 
   const caValue = useMemo(() => {
     if (period === "week") return data.caWeek;
@@ -73,160 +83,216 @@ export function MobileHome({
     [data.caLast7Days]
   );
 
-  const topBars =
-    data.topDishes?.length > 0 ? data.topDishes.slice(0, 3) : [];
+  const topLine =
+    data.topDishes?.length > 0
+      ? data.topDishes
+          .slice(0, 3)
+          .map((d) => `${d.label} ${d.pct}%`)
+          .join(" · ")
+      : null;
 
   const hikeCount = costKpis
     ? costKpis.hikesToday || costKpis.hikesWeek
     : 0;
 
+  const primaryAction = primary
+    ? FOCUS_ID_TO_GUIDE_ACTION[primary.id]
+    : undefined;
+
   return (
-    <div className="mobile-home">
-      <div className="mobile-home__inner">
-        <header className="mobile-home__header module-page-header">
-          <div className="mobile-home__identity">
-            <div className="mobile-home__avatar" aria-hidden>
-              {initial}
-            </div>
-            <div>
-              <p className="mobile-home__hello">Bonjour</p>
-              <h1 className="mobile-home__name module-page-title">
-                {data.restaurantName}
-              </h1>
-            </div>
-          </div>
-          <p className="module-page-lead">
-            Priorités du magasin, puis les indicateurs clés.
-          </p>
-        </header>
-
-        <div className="mobile-home__block" data-tour="home-focus-wrap">
-          {showInlineAlert && data.alert ? (
-            <AlertCard alert={data.alert} />
-          ) : (
-            <DayFocus
-              focuses={focusList}
-              eyebrow="À faire maintenant"
-              ariaLabel="Priorités du jour"
-            />
-          )}
-        </div>
-
-        <section
-          className="mobile-home__block"
-          data-tour="home-activity"
-          aria-label="Activité"
-        >
-          <div className="mobile-home__section-row">
-            <h2 className="mobile-home__section">Activité</h2>
-            <SegmentedControl
-              value={period}
-              onChange={(v) => setPeriod(v as "today" | "week" | "month")}
-              options={[
-                { value: "today", label: "Jour" },
-                { value: "week", label: "Sem." },
-                { value: "month", label: "Mois" },
-              ]}
-            />
-          </div>
-          <div className="mobile-home__ca">
-            <p className="mobile-home__ca-label">{caTitle}</p>
-            <p className="mobile-home__ca-value">{euro(caValue)}</p>
-            <p className="mobile-home__ca-sub">
-              {forecast
-                ? `Moy. 7 j · ${euro(forecast.avg)}`
-                : "Les ventes apparaîtront ici"}
-            </p>
-          </div>
-          {forecast && forecast.bars.length > 0 ? (
-            <div className="mobile-home__forecast" aria-hidden>
-              <div className="mobile-home__forecast-bars">
-                {forecast.bars.map((b) => (
-                  <div key={b.label} className="mobile-home__forecast-col">
-                    <i
-                      className="mobile-home__forecast-bar"
-                      style={{ height: `${b.height}%` }}
-                    />
-                    <span className="mobile-home__forecast-day">{b.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : null}
-          {topBars.length ? (
-            <ul className="mobile-home__tops mobile-home__tops--compact">
-              {topBars.map((d) => (
-                <li key={d.label}>
-                  <span>{d.label}</span>
-                  <strong>{d.pct}%</strong>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </section>
-
-        {costKpis ? (
-          <section
-            className="mobile-home__block"
-            data-tour="home-costs"
-            aria-label="Coûts"
-          >
-            <h2 className="mobile-home__section">Coûts</h2>
-            <ul className="mobile-home__cost-grid">
-              <li>
-                <Link href="/costs#hausses">
-                  <span>Hausses</span>
-                  <strong>{hikeCount}</strong>
-                </Link>
-              </li>
-              <li>
+    <BrandPage
+      question={data.restaurantName}
+      guide="Une priorité à traiter, puis le pouls du magasin."
+    >
+      <div className="home-now dash-card dash-card--dark hub-now" data-tour="home-focus">
+        {showInlineAlert && data.alert ? (
+          <>
+            <p className="hub-now__eyebrow">{data.alert.badgeLabel}</p>
+            <p className="hub-now__title">{data.alert.message}</p>
+            <div className="hub-now__actions">
+              {data.alert.orderId ? (
+                <form action={validateOrderAction}>
+                  <input type="hidden" name="id" value={data.alert.orderId} />
+                  <button type="submit" className="btn-lime">
+                    {data.alert.ctaLabel}
+                  </button>
+                </form>
+              ) : (
                 <Link
-                  href={
-                    costKpis.needsInventory ? "/inventory" : "/costs#pertes"
-                  }
+                  href={data.alert.ctaHref || "/orders"}
+                  className="btn-lime"
                 >
-                  <span>Pertes</span>
-                  <strong>
-                    {costKpis.needsInventory
-                      ? "À faire"
-                      : euro(costKpis.lossEur)}
-                  </strong>
+                  {data.alert.ctaLabel}
                 </Link>
-              </li>
-              <li>
-                <Link href="/costs#matiere">
-                  <span>Matière</span>
-                  <strong>
-                    {costKpis.avgFoodCostPct != null
-                      ? `${costKpis.avgFoodCostPct.toFixed(0)} %`
-                      : "—"}
-                  </strong>
-                </Link>
-              </li>
-              <li>
-                <Link href="/costs#negocier">
-                  <span>Négocier</span>
-                  <strong>
-                    {costKpis.savingsPotential > 0
-                      ? euro(costKpis.savingsPotential)
-                      : "—"}
-                  </strong>
-                </Link>
-              </li>
-            </ul>
-          </section>
-        ) : null}
-
-        <nav
-          className="mobile-home__calm-links mobile-home__calm-links--row"
-          aria-label="Raccourcis"
-        >
-          <Link href="/costs">Coûts</Link>
-          <Link href="/orders">Courses</Link>
-          <Link href="/inventory">Vérification</Link>
-          <Link href="/ingredients">Stock</Link>
-        </nav>
+              )}
+            </div>
+          </>
+        ) : primary && !primary.done ? (
+          <>
+            <p className="hub-now__eyebrow">
+              À faire maintenant · {CADENCE[primary.cadence]}
+              {primary.urgency === "high" ? " · Urgent" : ""}
+            </p>
+            <p className="hub-now__title">{primary.title}</p>
+            <p className="hub-now__detail">{primary.message}</p>
+            <div className="hub-now__actions">
+              <Link
+                href={primary.ctaHref}
+                className="btn-lime"
+                {...(primaryAction
+                  ? { "data-guide-action": primaryAction }
+                  : {})}
+              >
+                {primary.ctaLabel}
+              </Link>
+              {queue.length > 0 ? (
+                <p className="hub-now__hint">
+                  +{queue.length} autre{queue.length > 1 ? "s" : ""} en dessous
+                </p>
+              ) : null}
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="hub-now__eyebrow">À faire maintenant</p>
+            <p className="hub-now__title">Rien d’urgent</p>
+            <p className="hub-now__detail">
+              Le magasin est à jour — CA et signaux coûts juste en dessous.
+            </p>
+            <div className="hub-now__actions">
+              <Link href="/orders" className="btn-ghost">
+                Courses
+              </Link>
+              <Link href="/inventory" className="btn-ghost">
+                Vérification
+              </Link>
+            </div>
+          </>
+        )}
       </div>
-    </div>
+
+      {queue.length > 0 ? (
+        <ul className="home-queue" aria-label="Autres priorités">
+          {queue.map((item) => {
+            const action = FOCUS_ID_TO_GUIDE_ACTION[item.id];
+            return (
+              <li key={item.id}>
+                <Link
+                  href={item.ctaHref}
+                  className={`home-queue__row${
+                    item.urgency === "high" ? " is-urgent" : ""
+                  }`}
+                  {...(action ? { "data-guide-action": action } : {})}
+                >
+                  <span className="home-queue__cadence">
+                    {CADENCE[item.cadence]}
+                  </span>
+                  <span className="home-queue__body">
+                    <strong>{item.title}</strong>
+                    <span>{item.message}</span>
+                  </span>
+                  <span className="home-queue__cta" aria-hidden>
+                    →
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+
+      <section className="home-pulse" data-tour="home-activity" aria-label="Activité">
+        <div className="home-pulse__head">
+          <h2 className="home-pulse__section">Pouls</h2>
+          <SegmentedControl
+            value={period}
+            onChange={(v) => setPeriod(v as "today" | "week" | "month")}
+            options={[
+              { value: "today", label: "Jour" },
+              { value: "week", label: "Sem." },
+              { value: "month", label: "Mois" },
+            ]}
+          />
+        </div>
+        <p className="home-pulse__label">{caTitle}</p>
+        <p className="home-pulse__value">{euro(caValue)}</p>
+        <p className="home-pulse__sub">
+          {forecast
+            ? `Moyenne 7 j · ${euro(forecast.avg)}`
+            : "Les ventes apparaîtront ici"}
+        </p>
+        {forecast && forecast.bars.length > 0 ? (
+          <div className="home-pulse__bars" aria-hidden>
+            {forecast.bars.map((b, i) => (
+              <div key={`${b.label}-${i}`} className="home-pulse__col">
+                <i
+                  className="home-pulse__bar"
+                  style={{ ["--bar-h" as string]: `${b.height}%` }}
+                />
+                <span>{b.label}</span>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {topLine ? (
+          <p className="home-pulse__tops">Top · {topLine}</p>
+        ) : null}
+      </section>
+
+      {costKpis ? (
+        <section className="home-signals" data-tour="home-costs" aria-label="Coûts">
+          <h2 className="home-pulse__section">Signaux coûts</h2>
+          <ul className="home-signals__list">
+            <li>
+              <Link href="/costs#hausses">
+                <span>Hausses</span>
+                <strong>{hikeCount}</strong>
+              </Link>
+            </li>
+            <li>
+              <Link
+                href={
+                  costKpis.needsInventory ? "/inventory" : "/costs#pertes"
+                }
+              >
+                <span>Pertes</span>
+                <strong>
+                  {costKpis.needsInventory
+                    ? "À faire"
+                    : euro(costKpis.lossEur)}
+                </strong>
+              </Link>
+            </li>
+            <li>
+              <Link href="/costs#matiere">
+                <span>Matière</span>
+                <strong>
+                  {costKpis.avgFoodCostPct != null
+                    ? `${costKpis.avgFoodCostPct.toFixed(0)} %`
+                    : "—"}
+                </strong>
+              </Link>
+            </li>
+            <li>
+              <Link href="/costs#negocier">
+                <span>Négocier</span>
+                <strong>
+                  {costKpis.savingsPotential > 0
+                    ? euro(costKpis.savingsPotential)
+                    : "—"}
+                </strong>
+              </Link>
+            </li>
+          </ul>
+        </section>
+      ) : null}
+
+      <nav className="home-jump" aria-label="Raccourcis">
+        <Link href="/orders">Courses</Link>
+        <Link href="/inventory">Vérification</Link>
+        <Link href="/ingredients">Stock</Link>
+        <Link href="/costs">Coûts</Link>
+      </nav>
+    </BrandPage>
   );
 }

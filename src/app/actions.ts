@@ -1430,6 +1430,12 @@ export async function adminCreateStoreAction(formData: FormData) {
     redirect("/admin?error=email");
   }
 
+  const { assertCanAddStore } = await import("@/lib/plan-limits");
+  const storeGate = await assertCanAddStore(email, prisma);
+  if (!storeGate.ok) {
+    redirect(`/admin?error=${encodeURIComponent(storeGate.error)}`);
+  }
+
   const bcrypt = await import("bcryptjs");
   const restaurant = await prisma.restaurant.create({
     data: {
@@ -1685,22 +1691,35 @@ export async function signupAndCheckoutAction(input: {
         process.env.NEXTAUTH_URL?.replace(/\/$/, "") ||
         process.env.WEBHOOK_BASE_URL?.replace(/\/$/, "") ||
         "http://localhost:3020";
+      const { affiliateCheckoutDiscounts } = await import(
+        "@/lib/stripe/affiliate-discount"
+      );
+      const discounts = await affiliateCheckoutDiscounts(
+        stripe,
+        Boolean(referredByRestaurantId)
+      );
       const checkout = await stripe.checkout.sessions.create({
         mode: "subscription",
         customer_email: email,
         line_items: [{ price: priceId, quantity: 1 }],
+        ...(discounts ? { discounts } : {}),
         success_url: `${base}/login?paid=1&email=${encodeURIComponent(email)}`,
-        cancel_url: `${base}/signup?plan=${plan}&billing=${billingPeriod}`,
+        cancel_url: `${base}/signup?plan=${plan}&billing=${billingPeriod}${
+          referralCode ? `&ref=${encodeURIComponent(referralCode)}` : ""
+        }`,
         metadata: {
           plan,
           billingPeriod,
           restaurantId: restaurant.id,
+          affiliateDiscount: discounts ? "1" : "0",
+          referredByRestaurantId: referredByRestaurantId || "",
         },
         subscription_data: {
           metadata: {
             plan,
             billingPeriod,
             restaurantId: restaurant.id,
+            referredByRestaurantId: referredByRestaurantId || "",
           },
         },
       });

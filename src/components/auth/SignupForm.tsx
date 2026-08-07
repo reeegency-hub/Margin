@@ -29,7 +29,9 @@ export function SignupForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
-  const [channel, setChannel] = useState<"email" | "sms">("email");
+  const [channel, setChannel] = useState<"email" | "sms">(
+    smsAvailable ? "sms" : "email"
+  );
   /** Honeypot — les bots le remplissent, les humains ne le voient pas */
   const [website, setWebsite] = useState("");
   const [newsletterOptIn, setNewsletterOptIn] = useState(true);
@@ -136,21 +138,35 @@ export function SignupForm({
         className="brand-card brand-card--dark-card relative w-full max-w-md space-y-3"
       >
         <h1 className="brand-card__title">Créer mon magasin</h1>
-        <p className="brand-card__proof">
-          {step === "form"
-            ? "Vérification anti-bot : un code à usage unique avant création. "
-            : "Entrez le code reçu, puis on finalise. "}
-          {planMeta
-            ? `Formule ${planMeta.name} · ${
-                billingPeriod === "yearly"
-                  ? "annuel"
-                  : `${planMeta.priceMonthly} €/mois`
-              } HT.`
-            : null}
-          {referralCode
-            ? ` Parrainage actif : −${AFFILIATE.discountPercentReferee} % le 1er mois.`
-            : null}
-        </p>
+        {planMeta ? (
+          <p className="brand-card__proof">
+            <strong className="signup-plan-name">{planMeta.name}</strong>
+            {" — "}
+            {planMeta.bestFor}.{" "}
+            {billingPeriod === "yearly" ? "Facturation annuelle" : `${planMeta.priceMonthly} €/mois`}{" "}
+            HT.
+            {referralCode
+              ? ` Parrainage : −${AFFILIATE.discountPercentReferee} % le 1er mois.`
+              : null}
+            {step === "form" ? (
+              <span className="signup-plan-note">
+                {" "}
+                Un code à usage unique confirme votre email avant le paiement.
+              </span>
+            ) : (
+              <span className="signup-plan-note">
+                {" "}
+                Entrez le code reçu, puis on finalise.
+              </span>
+            )}
+          </p>
+        ) : (
+          <p className="brand-card__proof">
+            {step === "form"
+              ? "Un code à usage unique avant création."
+              : "Entrez le code reçu, puis on finalise."}
+          </p>
+        )}
 
         {step === "form" ? (
           <>
@@ -360,10 +376,10 @@ export function SignupForm({
         <button type="submit" className="brand-cta w-full" disabled={loading}>
           {loading
             ? step === "form"
-              ? "Envoi du code…"
+              ? "Envoi…"
               : "Création…"
             : step === "form"
-              ? "Recevoir le code"
+              ? "Commencer"
               : "Créer mon compte"}
         </button>
         <p className="text-center text-[13px] opacity-70">

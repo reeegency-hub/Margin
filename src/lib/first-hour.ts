@@ -241,7 +241,7 @@ function buildCourses(p: Progress): SectionGuide {
       label: "Préparer une liste",
       done: p.orderCount > 0,
       href: "/orders",
-      cta: "Créer une liste",
+      cta: "Ouvrir les courses",
       hint: "À partir du stock bas — besoins détectés sur la page Courses.",
     },
     {
@@ -373,8 +373,8 @@ function buildHome(p: Progress): SectionGuide {
       label: "Première liste de courses",
       done: p.orderCount > 0,
       href: "/orders",
-      cta: "Créer une liste",
-      hint: "Réassort test après la caisse — stock bas → liste → fait.",
+      cta: "Ouvrir les courses",
+      hint: "Réassort après stock bas → liste → marquer comme fait.",
     },
     {
       id: "home-products",
@@ -487,7 +487,7 @@ function buildHome(p: Progress): SectionGuide {
     section: "home",
     badge: "Accueil",
     title: "Mettre le magasin au point",
-    lead: "Tous les gestes pour être vraiment opérationnel — cliquez chaque CTA.",
+    lead: "Le Copilote à droite + tous les gestes pour être opérationnel — cliquez chaque CTA.",
     items,
     active: requiredOpen,
   };

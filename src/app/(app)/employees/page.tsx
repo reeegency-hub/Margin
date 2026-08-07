@@ -10,11 +10,9 @@ import {
   clockInAction,
   markAbsentAction,
   planTodayShiftsAction,
-  renameEmployeeAction,
 } from "@/app/actions";
 import Link from "next/link";
-import { Field, inputClass } from "@/components/ui";
-import { euro } from "@/lib/dashboard";
+import { TeamSecondaryBlocks } from "@/components/employees/TeamSecondaryBlocks";
 
 function isStubName(name: string) {
   return /^(Salle|Cuisine|Livreur) \d+$/.test(name);
@@ -78,7 +76,7 @@ export default async function EmployeesPage({
   return (
     <BrandPage
       question="Qui travaille aujourd’hui ?"
-      guide="Pointer Présent ou Absent. WhatsApp : Julie 18:05."
+      guide="Pointer Présent ou Absent."
     >
       {params.renamed ? <p className="flash">Nom mis à jour.</p> : null}
       {params.planned ? (
@@ -98,17 +96,17 @@ export default async function EmployeesPage({
             </form>
           ) : null}
           {employees.length === 0 ? (
-            <Link href="/employees/planning" className="btn-ghost">
-              Voir le planning
-            </Link>
-          ) : null}
-          {shifts.length > 0 && pending === 0 ? (
-            <Link href="/employees/planning" className="btn-ghost">
-              Voir le planning
+            <Link href="/onboarding" className="btn-lime">
+              Ajouter l’équipe
             </Link>
           ) : null}
           {shifts.length > 0 && pending > 0 ? (
             <p className="hub-now__hint">Pointez dans la liste ci-dessous.</p>
+          ) : null}
+          {shifts.length > 0 && pending === 0 ? (
+            <p className="hub-now__hint">
+              Planning de la semaine en bas de page.
+            </p>
           ) : null}
         </div>
       </div>
@@ -117,7 +115,7 @@ export default async function EmployeesPage({
         <div className="dash-card dash-card--light hub-empty">
           <p>
             {employees.length === 0
-              ? "Aucun membre d’équipe pour l’instant."
+              ? "Aucun membre d’équipe pour l’instant. Ajoutez des prénoms (ou terminez l’onboarding), puis planifiez la journée."
               : `${employees.length} personne${employees.length > 1 ? "s" : ""} en équipe, mais aucun créneau aujourd’hui.`}
           </p>
           <div className="hub-empty__actions">
@@ -127,7 +125,11 @@ export default async function EmployeesPage({
                   Planifier aujourd’hui
                 </button>
               </form>
-            ) : null}
+            ) : (
+              <Link href="/onboarding" className="pill-btn pill-btn--primary">
+                Ajouter l’équipe
+              </Link>
+            )}
             <Link href="/employees/planning" className="pill-btn pill-btn--ghost">
               Planning de la semaine
             </Link>
@@ -228,87 +230,7 @@ export default async function EmployeesPage({
         </ul>
       </div>
 
-      <div className="dash-card dash-card--dark team-payroll">
-        <p className="team-payroll__head">
-          Heures & salaires — {payroll.periodLabel}
-        </p>
-        <p className="team-payroll__sub">
-          Estimé = heures pointées × taux. Pas une fiche de paie.
-        </p>
-        {payroll.rows.length === 0 ? (
-          <p className="text-[15px] opacity-70">Aucun membre d’équipe.</p>
-        ) : (
-          <div className="team-payroll__scroll">
-            <table className="team-payroll__table">
-              <thead>
-                <tr>
-                  <th>Personne</th>
-                  <th>Poste</th>
-                  <th>Jours</th>
-                  <th>Heures</th>
-                  <th>€/h</th>
-                  <th>Estimé</th>
-                </tr>
-              </thead>
-              <tbody>
-                {payroll.rows.map((r) => (
-                  <tr key={r.employeeId}>
-                    <td>{r.name}</td>
-                    <td>{ROLE_LABEL[r.role] || r.role}</td>
-                    <td className="tabular-nums">{r.daysPresent}</td>
-                    <td className="tabular-nums">{r.hours.toFixed(1)} h</td>
-                    <td className="tabular-nums">{euro(r.hourlyRate)}</td>
-                    <td className="tabular-nums">
-                      <strong>{euro(r.estimatedPay)}</strong>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td colSpan={3}>Total mois</td>
-                  <td className="tabular-nums">
-                    {payroll.totalHours.toFixed(1)} h
-                  </td>
-                  <td />
-                  <td className="tabular-nums">
-                    <strong>{euro(payroll.totalPay)}</strong>
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {stubs.length > 0 ? (
-        <div className="dash-card dash-card--light space-y-4">
-          <p className="hub-section-title">Donner un vrai prénom</p>
-          <p className="hub-section-lead">
-            Remplacez les postes génériques par les prénoms.
-          </p>
-          {stubs.map((e) => (
-            <form
-              key={e.id}
-              action={renameEmployeeAction}
-              className="flex flex-wrap items-end gap-2"
-            >
-              <input type="hidden" name="employeeId" value={e.id} />
-              <Field label={e.name}>
-                <input
-                  name="name"
-                  className={inputClass}
-                  placeholder="Prénom Nom"
-                  required
-                />
-              </Field>
-              <button type="submit" className="pill-btn pill-btn--primary">
-                Renommer
-              </button>
-            </form>
-          ))}
-        </div>
-      ) : null}
+      <TeamSecondaryBlocks payroll={payroll} stubs={stubs} />
     </BrandPage>
   );
 }

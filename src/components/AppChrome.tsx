@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useCallback, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { AppShell } from "@/components/layout/AppShell";
@@ -13,7 +13,11 @@ import { PageTitleProvider, usePageTitleValue } from "@/components/PageTitle";
 import { FirstHourGuide } from "@/components/home/FirstHourGuide";
 import { GuideFocusBanner } from "@/components/home/GuideFocusBanner";
 import { PageFirstVisitTour } from "@/components/home/PageFirstVisitTour";
-import { MarginAssistant } from "@/components/assistant/MarginAssistant";
+import {
+  MarginAssistant,
+  readExpandedDefault,
+} from "@/components/assistant/MarginAssistant";
+import { AssistantTopbarSpotlight } from "@/components/assistant/AssistantTopbarSpotlight";
 import type { FirstHourState } from "@/lib/first-hour";
 import { MarginLogo } from "@/components/brand/MarginLogo";
 import { SidebarWhatsApp } from "@/components/TopbarClient";
@@ -193,7 +197,20 @@ function ShellInner({
   const hideFirstHour = pathname.startsWith("/admin");
   const isFranchise = plan === "reseau";
   const [guideMinimized, setGuideMinimized] = useState(false);
-  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [assistantExpanded, setAssistantExpanded] = useState(true);
+
+  useEffect(() => {
+    setAssistantExpanded(readExpandedDefault());
+  }, []);
+
+  useEffect(() => {
+    function onOpen() {
+      setAssistantExpanded(true);
+    }
+    window.addEventListener("margin:open-assistant", onOpen);
+    return () => window.removeEventListener("margin:open-assistant", onOpen);
+  }, []);
+
   const guideLive = Boolean(firstHour?.bundle);
   const showFullscreenGuide =
     !hideFirstHour &&
@@ -262,7 +279,7 @@ function ShellInner({
     <div
       className={`ds-chrome${forceMobile ? " ds-chrome--force-mobile" : ""}${
         showGuideDock ? " ds-chrome--with-guide" : ""
-      }`}
+      }${assistantExpanded ? " ds-chrome--asst-open" : " ds-chrome--asst-collapsed"}`}
     >
       <AppShell
         brand={brand}
@@ -278,7 +295,15 @@ function ShellInner({
         topbarTitle={topbarTitle}
         user={{ name: restaurantName }}
         userMenu={userMenu}
-        onAssistantClick={() => setAssistantOpen(true)}
+        onAssistantClick={() =>
+          setAssistantExpanded((v) => !v)
+        }
+        assistantPanel={
+          <MarginAssistant
+            expanded={assistantExpanded}
+            onExpandedChange={setAssistantExpanded}
+          />
+        }
       >
         {forceMobile ? (
           <div className="force-mobile-bar">
@@ -334,9 +359,10 @@ function ShellInner({
         <StockRuptureRecapModal summary={pendingStockRecap} />
       ) : null}
 
-      <MarginAssistant
-        open={assistantOpen}
-        onClose={() => setAssistantOpen(false)}
+      <AssistantTopbarSpotlight
+        restaurantId={restaurantId}
+        enabled={isHome && !showFullscreenGuide}
+        onOpenAssistant={() => setAssistantExpanded(true)}
       />
     </div>
   );

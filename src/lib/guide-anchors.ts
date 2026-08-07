@@ -87,7 +87,7 @@ const NEGOTIATE: GuideAnchor = {
 
 const POS: GuideAnchor = {
   anchor:
-    '[data-guide-action="pos"], .pos-create input[name="name"], .pos-create input[name="apiKey"], .pos-vendor-grid .pos-vendor.is-on, .pos-vendor-grid .pos-vendor, .pos-panel button[type="submit"]',
+    '[data-guide-action="pos"], .pos-create input[name="name"], .pos-create input[name="apiKey"], .pos-pick__row.is-on, .pos-pick__row, .pos-vendor-grid .pos-vendor.is-on, .pos-vendor-grid .pos-vendor, .pos-panel button[type="submit"]',
   placement: "bottom",
 };
 
@@ -255,11 +255,11 @@ export const GUIDE_WORK_TARGETS: Record<string, string> = {
   "home-foodcost": '#matiere, [data-guide-action="costs-food"]',
   "costs-hikes": '#hausses, [data-guide-action="costs-hikes"]',
 
-  pos: '[data-guide-action="pos"], .pos-create input[name="name"], .pos-create input[name="apiKey"], .pos-vendor.is-on, .pos-vendor-grid .pos-vendor',
+  pos: '[data-guide-action="pos"], .pos-create input[name="name"], .pos-create input[name="apiKey"], .pos-pick__row.is-on, .pos-pick__row, .pos-vendor.is-on, .pos-vendor-grid .pos-vendor',
   "shop-pos":
-    '[data-guide-action="pos"], .pos-create input[name="name"], .pos-create input[name="apiKey"], .pos-vendor.is-on, .pos-vendor-grid .pos-vendor',
+    '[data-guide-action="pos"], .pos-create input[name="name"], .pos-create input[name="apiKey"], .pos-pick__row.is-on, .pos-pick__row, .pos-vendor.is-on, .pos-vendor-grid .pos-vendor',
   "home-pos":
-    '[data-guide-action="pos"], .pos-create input[name="name"], .pos-create input[name="apiKey"], .pos-vendor.is-on, .pos-vendor-grid .pos-vendor',
+    '[data-guide-action="pos"], .pos-create input[name="name"], .pos-create input[name="apiKey"], .pos-pick__row.is-on, .pos-pick__row, .pos-vendor.is-on, .pos-vendor-grid .pos-vendor',
 
   delivery:
     '#guide-work-delivery, [data-guide-form="delivery"] input[name="apiKey"], [data-guide-action="delivery"]',

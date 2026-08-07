@@ -301,17 +301,16 @@ export function GuideFocusBanner({
 
   return (
     <>
-      <aside className="guide-coach guide-coach--compact" aria-label="Coach du guide">
-        <div className="guide-coach__glow" aria-hidden />
+      <aside className="ms-spot__card guide-coach guide-coach--compact" aria-label="Coach du guide">
         <div className="guide-coach__main">
-          <p className="guide-coach__eyebrow">
+          <p className="ms-spot__eyebrow">
             {focus.sectionTitle
               ? `Étape · ${focus.sectionTitle}`
               : "Étape en cours"}
           </p>
-          <h2 className="guide-coach__title">{focus.label}</h2>
+          <h2 className="ms-spot__title">{focus.label}</h2>
           {focus.hint ? (
-            <p className="guide-coach__why">
+            <p className="ms-spot__lead">
               <strong>Pourquoi :</strong> {focus.hint}
             </p>
           ) : null}
@@ -325,7 +324,6 @@ export function GuideFocusBanner({
                   const fd = new FormData(e.currentTarget);
                   const wa = String(fd.get("whatsappTo") || "").trim();
                   if (wa) {
-                    // Masque tout de suite ; le serveur confirmera au refresh
                     window.setTimeout(() => dismissAll(), 400);
                   }
                 }}
@@ -342,10 +340,10 @@ export function GuideFocusBanner({
                   autoComplete="tel"
                   inputMode="tel"
                 />
-                <div className="guide-coach__form-row">
+                <div className="ms-spot__actions">
                   <button
                     type="submit"
-                    className="guide-coach__cta"
+                    className="btn-lime"
                     data-guide-action="wa-save"
                   >
                     Enregistrer
@@ -353,11 +351,11 @@ export function GuideFocusBanner({
                 </div>
               </form>
               <form action={testWhatsApp}>
-                <button type="submit" className="guide-coach__ghost">
+                <button type="submit" className="ms-spot__later">
                   <WaSendLabel kind="test" />
                 </button>
               </form>
-              <p className="guide-coach__legal">
+              <p className="ms-spot__hint">
                 En enregistrant, vous acceptez de recevoir des messages Margin
                 liés au magasin.{" "}
                 <a href="/legal/confidentialite">Confidentialité</a>
@@ -365,14 +363,14 @@ export function GuideFocusBanner({
             </div>
           ) : null}
 
-          <p className="guide-coach__foot">
+          <p className="ms-spot__hint">
             Suivez la bulle près du bouton.{" "}
             <Link href="/">Retour au parcours</Link>
           </p>
         </div>
         <button
           type="button"
-          className="guide-coach__dismiss"
+          className="ms-spot__close"
           aria-label="Masquer le coach"
           onClick={dismissAll}
         >

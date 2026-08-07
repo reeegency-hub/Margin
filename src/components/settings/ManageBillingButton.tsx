@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 
-export function ManageBillingButton() {
+export function ManageBillingButton({
+  label = "Facturation (factures / carte / annuler)",
+  className = "btn",
+}: {
+  label?: string;
+  className?: string;
+} = {}) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,11 +38,11 @@ export function ManageBillingButton() {
     <div>
       <button
         type="button"
-        className="btn"
+        className={className}
         disabled={loading}
         onClick={() => void openPortal()}
       >
-        {loading ? "Ouverture…" : "Mettre à jour ma carte"}
+        {loading ? "Ouverture…" : label}
       </button>
       {error ? <p className="mt-1 text-[13px] text-red-700">{error}</p> : null}
     </div>

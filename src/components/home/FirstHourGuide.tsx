@@ -302,6 +302,42 @@ export function FirstHourGuide({
   });
 
   const [openSectionId, setOpenSectionId] = useState<string | null>(null);
+  const dockStorageKey = `margin:guide-dock-open:${restaurantId || "shop"}`;
+  const [dockOpen, setDockOpen] = useState(true);
+
+  useEffect(() => {
+    if (resolvedMode !== "dock") return;
+    try {
+      const raw = localStorage.getItem(dockStorageKey);
+      if (raw === "0") setDockOpen(false);
+      if (raw === "1") setDockOpen(true);
+    } catch {
+      /* ignore */
+    }
+  }, [dockStorageKey, resolvedMode]);
+
+  useEffect(() => {
+    if (resolvedMode !== "dock") return;
+    try {
+      localStorage.setItem(dockStorageKey, dockOpen ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+    document.documentElement.classList.toggle(
+      "ms-guide-dock-open",
+      dockOpen
+    );
+    document.documentElement.classList.toggle(
+      "ms-guide-dock-hidden",
+      !dockOpen
+    );
+    return () => {
+      document.documentElement.classList.remove(
+        "ms-guide-dock-open",
+        "ms-guide-dock-hidden"
+      );
+    };
+  }, [dockOpen, dockStorageKey, resolvedMode]);
 
   useEffect(() => {
     if (!onboarding.nextTask) return;
@@ -370,53 +406,87 @@ export function FirstHourGuide({
     />
   );
 
-  /* Dock = uniquement la barre tout en bas (jamais de panneau ouvert) */
+  /* Dock = nuage en bas, flèche pour afficher / masquer */
   if (resolvedMode === "dock") {
     return (
       <>
-        <aside className="sg-dock" aria-label="Guide de démarrage" data-tour="home-dock">
-          <div
-            className="sg-dock__track"
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={Math.round(progress * 100)}
-            aria-label="Progression du guide"
-          >
-            <i style={{ width: `${Math.max(4, progress * 100)}%` }} />
-          </div>
-          <div className="sg-dock__bar">
-            <button
-              type="button"
-              className="sg-dock__expand"
-              onClick={() => {
-                onExpand?.();
-                if (pathname !== "/") router.push("/");
-              }}
+        <div
+          className={`sg-dock-float${dockOpen ? " is-open" : " is-hidden"}`}
+        >
+          {dockOpen ? (
+            <aside
+              className="sg-dock sg-dock--bottom"
+              aria-label="Guide de démarrage"
+              data-tour="home-dock"
             >
-              <span className="sg-dock__title">
-                Guide
-                {next ? (
-                  <em className="sg-dock__next-label"> · {next.label}</em>
-                ) : null}
-              </span>
-            </button>
-            {next && !(onCaisse && nextIsCaisse) ? (
               <button
                 type="button"
-                className="sg-dock__cta"
-                onClick={() => onboarding.openTask(next.id)}
+                className="sg-dock__chevron"
+                aria-label="Masquer le guide"
+                title="Masquer"
+                onClick={() => setDockOpen(false)}
               >
-                Continuer
-                <span aria-hidden> →</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
               </button>
-            ) : next && onCaisse && nextIsCaisse ? (
-              <p className="sg-dock__done">Branchez la caisse ci-dessus</p>
-            ) : (
-              <p className="sg-dock__done">Magasin prêt. Beau travail.</p>
-            )}
-          </div>
-        </aside>
+              <div className="sg-dock__panel">
+                <div
+                  className="sg-dock__track"
+                  role="progressbar"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={Math.round(progress * 100)}
+                  aria-label="Progression du guide"
+                >
+                  <i style={{ width: `${Math.max(4, progress * 100)}%` }} />
+                </div>
+                <div className="sg-dock__bar">
+                  <button
+                    type="button"
+                    className="sg-dock__expand"
+                    onClick={() => {
+                      onExpand?.();
+                      if (pathname !== "/") router.push("/");
+                    }}
+                  >
+                    <span className="sg-dock__eyebrow">Guide</span>
+                    <span className="sg-dock__title">
+                      {next ? next.label : "Magasin prêt"}
+                    </span>
+                  </button>
+                  {next && !(onCaisse && nextIsCaisse) ? (
+                    <button
+                      type="button"
+                      className="sg-dock__cta"
+                      onClick={() => onboarding.openTask(next.id)}
+                    >
+                      Continuer
+                      <span aria-hidden> →</span>
+                    </button>
+                  ) : next && onCaisse && nextIsCaisse ? (
+                    <p className="sg-dock__done">Caisse ci-dessus</p>
+                  ) : (
+                    <p className="sg-dock__done">Terminé</p>
+                  )}
+                </div>
+              </div>
+            </aside>
+          ) : (
+            <button
+              type="button"
+              className="sg-dock__peek"
+              aria-label="Afficher le guide"
+              title="Afficher le guide"
+              onClick={() => setDockOpen(true)}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+                <path d="M18 15l-6-6-6 6" />
+              </svg>
+              <span>Guide</span>
+            </button>
+          )}
+        </div>
         {modal}
       </>
     );
@@ -434,9 +504,9 @@ export function FirstHourGuide({
               <span> Ensuite, le magasin tourne tout seul.</span>
             </h1>
             <p className="sg-full__lead">
-              Stock, équipe, courses, coûts, caisse — chaque étape coche une
-              vraie pièce de votre quotidien. Suivez le parcours : plus rien à
-              bricoler techniquement après.
+              Stock, équipe, courses, coûts, caisse — et le{" "}
+              <strong>Copilote</strong> à droite pour vous guider. Chaque étape
+              coche une vraie pièce de votre quotidien.
             </p>
             <ul className="sg-full__promises">
               <li>Alertes WhatsApp quand ça casse</li>
@@ -448,6 +518,28 @@ export function FirstHourGuide({
             <ProgressRing value={progress} />
           </div>
         </header>
+
+        <aside className="sg-full__copilot ms-spot__card" aria-label="Copilote Margin">
+          <div className="sg-full__copilot-copy">
+            <p className="ms-spot__eyebrow">Produit à part entière</p>
+            <h2 className="ms-spot__title">Copilote Margin</h2>
+            <p className="ms-spot__lead">
+              Toujours ouvert à droite : il configure le magasin (inventaire,
+              équipe, WhatsApp), lit vos CSV/PDF, et répond sur stock, courses et
+              coûts — avec aperçu avant toute écriture. Pas un gadget : c’est le
+              fil conducteur du produit.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="sg-full__copilot-cta"
+            onClick={() => {
+              window.dispatchEvent(new Event("margin:open-assistant"));
+            }}
+          >
+            Voir le Copilote →
+          </button>
+        </aside>
 
         {next ? (
           <div className="sg-full__next">
@@ -581,8 +673,10 @@ export function FirstHourGuide({
 
         <footer className="sg-full__foot">
           <p>
-            Astuce : chaque CTA vous emmène sur la bonne page avec la checklist
-            sous les yeux. L’étape se valide toute seule dès que c’est fait.
+            Astuce : le <strong>Copilote</strong> reste à droite pendant tout le
+            parcours — posez-lui une question ou joignez un fichier. Chaque CTA
+            du guide vous emmène sur la bonne page ; l’étape se valide dès que
+            c’est fait.
           </p>
           {next ? (
             <button

@@ -26,22 +26,23 @@ const PREVIEW = 6;
 
 /**
  * Planning : filtres + liste courte avec Voir plus / moins.
- * Semaine = dates à venir (≥ demain), pas le passé.
+ * Semaine = dates ≥ aujourd’hui (aujourd’hui + à venir).
  */
 export function PlanningWeekList({ shifts }: { shifts: PlanningShiftRow[] }) {
   const [filter, setFilter] = useState<"tous" | "today" | "week">("today");
   const [expanded, setExpanded] = useState(false);
 
-  const upcoming = useMemo(
-    () => shifts.filter((s) => (s.isUpcoming != null ? s.isUpcoming : !s.isToday)),
+  // Semaine = aujourd’hui + à venir uniquement (jamais le passé)
+  const weekShifts = useMemo(
+    () => shifts.filter((s) => s.isToday || s.isUpcoming === true),
     [shifts]
   );
 
   const filtered = useMemo(() => {
     if (filter === "today") return shifts.filter((s) => s.isToday);
-    if (filter === "week") return upcoming;
+    if (filter === "week") return weekShifts;
     return shifts;
-  }, [shifts, filter, upcoming]);
+  }, [shifts, filter, weekShifts]);
 
   const visible = expanded ? filtered : filtered.slice(0, PREVIEW);
   const canToggle = filtered.length > PREVIEW;
@@ -66,7 +67,7 @@ export function PlanningWeekList({ shifts }: { shifts: PlanningShiftRow[] }) {
             f.key === "today"
               ? shifts.filter((s) => s.isToday).length
               : f.key === "week"
-                ? upcoming.length
+                ? weekShifts.length
                 : shifts.length;
           return (
             <button
@@ -94,7 +95,7 @@ export function PlanningWeekList({ shifts }: { shifts: PlanningShiftRow[] }) {
           {filter === "today"
             ? "Rien aujourd’hui — ajoutez un créneau ci-dessous."
             : filter === "week"
-              ? "Rien de prévu plus tard cette semaine."
+              ? "Rien de prévu cette semaine."
               : "Aucun créneau dans ce filtre."}
         </p>
       ) : (

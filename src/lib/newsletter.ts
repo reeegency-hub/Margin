@@ -4,15 +4,23 @@ import { prisma } from "@/lib/db";
 export type NewsletterSource = "signup" | "landing" | "admin" | "import";
 
 function appBaseUrl(): string {
-  return (
-    process.env.NEXTAUTH_URL?.replace(/\/$/, "") ||
-    process.env.WEBHOOK_BASE_URL?.replace(/\/$/, "") ||
-    "http://localhost:3020"
-  );
-}
-
-function fromEmail(): string {
-  return process.env.NEWSLETTER_FROM_EMAIL || "Margin <contact@marginshop.app>";
+  const candidates = [
+    process.env.NEXTAUTH_URL,
+    process.env.WEBHOOK_BASE_URL,
+    "https://margin-shop.vercel.app",
+  ];
+  for (const raw of candidates) {
+    const v = (raw || "").trim().replace(/\/$/, "");
+    if (
+      v &&
+      /^https?:\/\//i.test(v) &&
+      !v.includes("[SENSITIVE]") &&
+      !v.includes("VOTRE-DOMAINE")
+    ) {
+      return v;
+    }
+  }
+  return "https://margin-shop.vercel.app";
 }
 
 export function unsubscribeUrl(token: string): string {
@@ -171,31 +179,12 @@ async function sendEmail(opts: {
     return { sent: false, reason: "no_provider" };
   }
 
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${key}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: fromEmail(),
-        to: [opts.to],
-        subject: opts.subject,
-        html: opts.html,
-        text: opts.text,
-      }),
-    });
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      console.error(`[newsletter] Resend ${res.status}: ${body.slice(0, 300)}`);
-      return { sent: false, reason: `resend_${res.status}` };
-    }
-    return { sent: true };
-  } catch (err) {
-    console.error("[newsletter] send failed", err);
-    return { sent: false, reason: "network" };
+  const { sendResendEmail } = await import("@/lib/resend-from");
+  const sent = await sendResendEmail(opts);
+  if (!sent.ok) {
+    return { sent: false, reason: sent.error };
   }
+  return { sent: true };
 }
 
 function escapeHtml(s: string): string {

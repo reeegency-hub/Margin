@@ -6,6 +6,13 @@ import { OrderSplitPanel } from "@/components/dashboard/OrderSplitPanel";
 import { computeShoppingNeeds } from "@/lib/orders-engine";
 import { orderStatusLabel } from "@/lib/order-labels";
 import { euro } from "@/lib/dashboard";
+import {
+  completeShoppingListAction,
+  generateOrders,
+} from "@/app/actions";
+import { buildWaMeLink, shoppingListWaMessage } from "@/lib/wa-link";
+import { WaSendLabel } from "@/components/ui/WhatsAppIcon";
+import Link from "next/link";
 
 export default async function OrdersPage({
   searchParams,
@@ -52,6 +59,19 @@ export default async function OrdersPage({
   const missing = needs.filter((n) => n.reason === "missing").length;
   const soon = needs.filter((n) => n.reason === "soon").length;
 
+  const waHref =
+    buildWaMeLink(
+      restaurant.whatsappTo,
+      shoppingListWaMessage(
+        restaurant.name,
+        lines.map((l) => ({
+          name: l.name,
+          quantityLabel: l.quantityLabel,
+        }))
+      )
+    ) || "/settings?error=nonumber";
+  const waExternal = waHref.startsWith("https://");
+
   return (
     <BrandPage
       question="Courses"
@@ -65,7 +85,7 @@ export default async function OrdersPage({
         <p className="hub-now__title">
           {lines.length === 0
             ? "Rien à racheter"
-            : `${lines.length} produit${lines.length > 1 ? "s" : ""} à faire`}
+            : `${lines.length} ligne${lines.length > 1 ? "s" : ""} à faire`}
         </p>
         <p className="hub-now__detail">
           {lines.length === 0
@@ -79,20 +99,60 @@ export default async function OrdersPage({
                 .filter(Boolean)
                 .join(" · ")}
         </p>
+        <div className="hub-now__actions">
+          {lines.length > 0 ? (
+            <>
+              {waExternal ? (
+                <a
+                  href={waHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-lime"
+                  data-guide-action="courses-do"
+                >
+                  <WaSendLabel kind="list" />
+                </a>
+              ) : (
+                <Link
+                  href={waHref}
+                  className="btn-lime"
+                  data-guide-action="courses-do"
+                >
+                  <WaSendLabel kind="list" />
+                </Link>
+              )}
+              <form action={completeShoppingListAction}>
+                <button type="submit" className="btn-ghost">
+                  Marquer comme fait
+                </button>
+              </form>
+            </>
+          ) : (
+            <form action={generateOrders} data-guide-form="courses-create">
+              <button
+                type="submit"
+                className="btn-ghost"
+                data-guide-action="courses-create"
+              >
+                Actualiser
+              </button>
+            </form>
+          )}
+        </div>
       </div>
 
       <OrderSplitPanel
         lines={lines}
         restaurantName={restaurant.name}
         whatsappTo={restaurant.whatsappTo}
+        primaryActionsInInk
         orders={orders.map((o) => ({
           id: o.id,
           supplierName: o.supplier.name,
           status: o.status,
           statusLabel: orderStatusLabel(o.status),
           totalAmount: o.totalAmount,
-          amountLabel:
-            o.totalAmount > 0 ? euro(o.totalAmount) : "",
+          amountLabel: o.totalAmount > 0 ? euro(o.totalAmount) : "",
           lineCount: o.lines.length,
           linesLabel: o.lines
             .map(

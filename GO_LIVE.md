@@ -1,5 +1,31 @@
 # Go-live — checklist audit Margin Shop
 
+## Pilote Ops demain (recommandé) — 2026-08-06
+
+**GO** magasins créés à la main via `/admin`. **NO-GO** `/signup` public.
+
+### Toi (ops) — dans l’ordre
+1. Vercel Production : `DEMO_AUTO_LOGIN` = `0` ou absent (pas `1`)
+2. Neon : backup / snapshot quotidien activé
+3. Login fondateur → `/admin` → créer 1 magasin test (email + mdp gérant, `active`, skip onboarding si tu configures)
+4. Fenêtre privée : login gérant → pas d’erreur billing
+5. `/kiosks` : logiciel → lien → 1 vente test → produits / stock OK
+6. Si widget démo vide : ajouter `NEXT_PUBLIC_CALENDLY_URL` sur Vercel + redeploy
+7. Demain : landing + Calendly ; chaque client = création `/admin` (pas signup)
+
+### Déjà OK en prod (vérifié 2026-08-06)
+- Postgres / Neon branché (`DATABASE_URL`)
+- `CRON_SECRET`, `NEXTAUTH_*`, `ADMIN_EMAILS`, `WEBHOOK_BASE_URL`
+- Twilio WhatsApp présent
+- Stripe secret présent — **webhook secret manquant** (OK pour pilote Ops ; bloquant self-serve)
+
+### Bloquant self-serve (sprint suivant)
+- `STRIPE_WEBHOOK_SECRET` + test paiement → accès app
+- OTP email fiable
+- Ne pas promettre signup public demain
+
+---
+
 ## Audit code (2026-08-03) — OK côté repo
 - [x] Prisma `postgresql` + champs Stripe / `active`
 - [x] Demo-login gated (`DEMO_AUTO_LOGIN`) ; formulaire login prod

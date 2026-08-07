@@ -13,6 +13,7 @@ import {
   resolveGuideTaskElement,
   setGuideHandoff,
 } from "@/lib/guide-anchors";
+import { MsSpotBubble, MsSpotRing } from "@/components/ui/MsSpotBubble";
 
 type Spot = {
   top: number;
@@ -53,7 +54,6 @@ function computeBubble(
     left = spot.left - bubbleW - gap;
   }
 
-  // Recentre horizontalement sur la cible
   left = spot.left + spot.width / 2 - bubbleW / 2;
 
   if (top + bubbleH > vh - pad) {
@@ -68,7 +68,7 @@ function computeBubble(
 }
 
 /**
- * Bulle collée à l’action du guide + pulse sur le contrôle cible.
+ * Bulle collée à l’action du guide — même UI que l’intro Assistant.
  */
 export function GuideActionSpotlight({
   taskId,
@@ -207,80 +207,46 @@ export function GuideActionSpotlight({
 
   if (!found || !spot || !bubble) {
     return (
-      <div className="guide-spot-layer" aria-live="polite">
-        <div
-          ref={panelRef}
-          className="page-tour page-tour--anchor guide-spot-pop guide-spot-pop--searching"
-          role="status"
-          aria-labelledby={titleId}
-        >
-          <p className="guide-spot-searching">
-            Recherche de l’étape… faites défiler si besoin.
-          </p>
-          <h2 id={titleId} className="page-tour__title">
-            {title}
-          </h2>
-        </div>
+      <div className="ms-spot ms-spot--layer" aria-live="polite">
+        <MsSpotBubble
+          panelRef={panelRef}
+          className="ms-spot__bubble--searching"
+          titleId={titleId}
+          eyebrow="Guide"
+          title={title}
+          lead="Recherche de l’étape… faites défiler si besoin."
+          style={{
+            top: 88,
+            left: 16,
+            width: Math.min(
+              300,
+              typeof window !== "undefined" ? window.innerWidth - 32 : 300
+            ),
+          }}
+        />
       </div>
     );
   }
 
   return (
-    <div className="guide-spot-layer" aria-live="polite">
-      <div
-        className="page-tour-spot guide-spot-ring"
-        style={{
-          top: spot.top - 10,
-          left: spot.left - 10,
-          width: spot.width + 20,
-          height: spot.height + 20,
-        }}
-        aria-hidden
-      />
-
-      <div
-        ref={panelRef}
-        className={`page-tour page-tour--anchor guide-spot-pop page-tour--${bubble.placement} is-anchored`}
-        role="dialog"
-        aria-modal="false"
-        aria-labelledby={titleId}
-        style={{ top: bubble.top, left: bubble.left }}
-      >
-        <div
-          className={`guide-spot-arrow guide-spot-arrow--${bubble.placement}`}
-          aria-hidden
-        />
-        <header className="page-tour__head">
-          <div className="page-tour__kicker">
-            <span className="page-tour__pill">À faire ici</span>
-          </div>
-          {onDismiss ? (
-            <button
-              type="button"
-              className="page-tour__close"
-              aria-label="Masquer l’aide"
-              onClick={onDismiss}
-            >
-              ×
+    <div className="ms-spot ms-spot--layer" aria-live="polite">
+      <MsSpotRing {...spot} pad={10} />
+      <MsSpotBubble
+        panelRef={panelRef}
+        titleId={titleId}
+        eyebrow="À faire ici"
+        title={title}
+        list={lines}
+        hint={footer}
+        style={{ top: bubble.top, left: bubble.left, width: Math.min(320, window.innerWidth - 24) }}
+        actions={
+          onDismiss ? (
+            <button type="button" className="ms-spot__later" onClick={onDismiss}>
+              Masquer l’aide
             </button>
-          ) : null}
-        </header>
-
-        <div className="page-tour__body">
-          <h2 id={titleId} className="page-tour__title">
-            {title}
-          </h2>
-          <ol className="guide-spot-steps">
-            {lines.map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ol>
-        </div>
-
-        <footer className="page-tour__foot">
-          <p className="guide-spot-hint">{footer}</p>
-        </footer>
-      </div>
+          ) : null
+        }
+      />
     </div>
   );
 }

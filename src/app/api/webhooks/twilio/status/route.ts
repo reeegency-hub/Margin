@@ -57,6 +57,10 @@ export async function POST(req: NextRequest) {
 export async function GET() {
   return NextResponse.json({
     ok: true,
-    hint: "Twilio statusCallback POST endpoint",
+    service: "twilio-status-callback",
+    method: "POST only",
+    hint:
+      "Endpoint OK. Dans Twilio, collez cette URL comme Status Callback (HTTP POST) sur le sender WhatsApp / SMS — ne l’ouvrez pas dans le navigateur.",
+    url: "https://margin-shop.vercel.app/api/webhooks/twilio/status",
   });
 }

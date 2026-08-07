@@ -2,9 +2,10 @@
  * Accès app selon abonnement Stripe + délai de grâce.
  * Règle : `active` seul ne suffit plus — un statut Stripe bloquant coupe l’accès.
  */
+const _graceRaw = Number(process.env.STRIPE_GRACE_DAYS || 7);
 export const STRIPE_GRACE_DAYS = Math.min(
   14,
-  Math.max(1, Number(process.env.STRIPE_GRACE_DAYS || 7))
+  Math.max(1, Number.isFinite(_graceRaw) ? _graceRaw : 7)
 );
 
 export type AccessRestaurant = {

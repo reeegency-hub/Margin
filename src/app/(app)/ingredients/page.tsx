@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { requireSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { formatKitchenQty } from "@/lib/units";
@@ -55,11 +56,65 @@ export default async function IngredientsPage() {
       ing.stockTheoretical <= ing.criticalThreshold,
   }));
 
+  const inkTitle =
+    ingredients.length === 0
+      ? "Aucun produit"
+      : critical.length > 0
+        ? `${critical.length} sous seuil`
+        : catalogIssues.length > 0
+          ? `${catalogIssues.length} à nettoyer`
+          : "Stock sous contrôle";
+
+  const inkDetail =
+    ingredients.length === 0
+      ? "Ajoutez des produits ou branchez la caisse pour découvrir le catalogue."
+      : critical.length > 0
+        ? `${critical[0]!.name}${
+            critical.length > 1 ? ` et ${critical.length - 1} autre(s)` : ""
+          } — ouvrez Courses, puis vérifiez le rayon si besoin.`
+        : catalogIssues.length > 0
+          ? "Doublons ou fiches à corriger dans l’onglet Qualité."
+          : `${ingredients.length} produit${
+              ingredients.length > 1 ? "s" : ""
+            } · rien d’urgent.`;
+
   return (
     <BrandPage
       question="Stock"
       guide="Quantités en magasin — si ça ne colle pas, vérification."
     >
+      <div className="dash-card dash-card--dark hub-now">
+        <p className="hub-now__eyebrow">À faire maintenant</p>
+        <p className="hub-now__title">{inkTitle}</p>
+        <p className="hub-now__detail">{inkDetail}</p>
+        <div className="hub-now__actions">
+          {ingredients.length === 0 ? (
+            <Link href="/kiosks" className="btn-lime">
+              Brancher la caisse
+            </Link>
+          ) : null}
+          {critical.length > 0 ? (
+            <Link href="/orders" className="btn-lime">
+              Ouvrir les courses
+            </Link>
+          ) : null}
+          {critical.length > 0 || ingredients.length > 0 ? (
+            <Link
+              href="/inventory"
+              className={critical.length > 0 ? "btn-ghost" : "btn-lime"}
+            >
+              Vérifier le rayon
+            </Link>
+          ) : null}
+        </div>
+      </div>
+
+      <p className="hub-secondary-link">
+        <Link href="/orders">Courses →</Link>
+        {" · "}
+        <Link href="/inventory">Vérification →</Link>
+      </p>
+
       <Suspense
         fallback={
           <p className="text-[14px] text-[var(--text-secondary-light)]">

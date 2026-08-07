@@ -9,6 +9,7 @@ import {
   absoluteReferralUrl,
   codeFromRestaurantId,
 } from "@/lib/affiliate";
+import { getTenantLlmStatus } from "@/lib/llm/router";
 
 const SETTINGS_PLATFORMS = [
   { key: "uber_eats", label: "Uber Eats" },
@@ -24,6 +25,7 @@ export default async function SettingsPage({
     error?: string;
     connected?: string;
     msg?: string;
+    tab?: string;
   }>;
 }) {
   const session = await requireSession();
@@ -40,7 +42,7 @@ export default async function SettingsPage({
     });
   }
 
-  const [restaurantRaw, openai, connections, referralCount] =
+  const [restaurantRaw, openai, connections, referralCount, llm] =
     await Promise.all([
       prisma.restaurant.findUniqueOrThrow({ where: { id: rid } }),
       getOpenAIConfig(rid),
@@ -48,6 +50,13 @@ export default async function SettingsPage({
         where: { restaurantId: rid },
       }),
       prisma.restaurant.count({ where: { referredByRestaurantId: rid } }),
+      getTenantLlmStatus(rid).catch(() => ({
+        configured: false,
+        provider: null as null,
+        status: "none" as const,
+        fingerprintDisplay: null as null,
+        source: null as null,
+      })),
     ]);
 
   let restaurant = restaurantRaw;
@@ -81,10 +90,32 @@ export default async function SettingsPage({
     };
   });
 
+  const needsWa = !restaurant.whatsappTo;
+  const billingWarn = Boolean(
+    restaurant.paymentFailedAt &&
+      restaurant.accessGraceUntil &&
+      restaurant.accessGraceUntil.getTime() > Date.now()
+  );
+
+  const inkTitle = billingWarn
+    ? "Paiement à mettre à jour"
+    : needsWa
+      ? "WhatsApp du magasin"
+      : "Réglages OK";
+
+  const inkDetail = billingWarn
+    ? `Accès maintenu jusqu’au ${restaurant.accessGraceUntil!.toLocaleDateString(
+        "fr-FR",
+        { day: "numeric", month: "long" }
+      )} — mettez à jour la carte.`
+    : needsWa
+      ? "Ajoutez le numéro pour envoyer listes et alertes."
+      : "WhatsApp, facturation et options du magasin.";
+
   return (
     <BrandPage
       question="Vos réglages"
-      guide="WhatsApp du magasin et options utiles."
+      guide="Chaque onglet a un guide popup — cliquez « Comprendre cet onglet » si besoin."
     >
       {params.saved ? <p className="flash">Enregistré.</p> : null}
       {params.tested === "1" ? (
@@ -107,33 +138,61 @@ export default async function SettingsPage({
         </p>
       ) : null}
 
-      {restaurant.paymentFailedAt &&
-      restaurant.accessGraceUntil &&
-      restaurant.accessGraceUntil.getTime() > Date.now() ? (
+      <div className="dash-card dash-card--dark hub-now">
+        <p className="hub-now__eyebrow">À faire maintenant</p>
+        <p className="hub-now__title">{inkTitle}</p>
+        <p className="hub-now__detail">{inkDetail}</p>
+        <div className="hub-now__actions">
+          {billingWarn ? (
+            <ManageBillingButton
+              label="Mettre à jour la carte"
+              className="btn-lime"
+            />
+          ) : null}
+          {needsWa && !billingWarn ? (
+            <p className="hub-now__hint">Numéro dans l’onglet Simple ci-dessous.</p>
+          ) : null}
+          {!needsWa && !billingWarn ? (
+            <p className="hub-now__hint">Rien d’urgent — changez un réglage si besoin.</p>
+          ) : null}
+        </div>
+      </div>
+
+      {billingWarn ? (
         <div className="flash flash-warn mb-4 space-y-2">
           <p>
             Paiement en échec — accès maintenu jusqu’au{" "}
-            {restaurant.accessGraceUntil.toLocaleDateString("fr-FR", {
+            {restaurant.accessGraceUntil!.toLocaleDateString("fr-FR", {
               day: "numeric",
               month: "long",
               year: "numeric",
             })}{" "}
-            (grâce {STRIPE_GRACE_DAYS} jours). Mettez à jour votre carte pour
-            éviter la coupure.
+            (grâce {STRIPE_GRACE_DAYS} jours).
           </p>
           <ManageBillingButton />
         </div>
       ) : null}
 
       <SettingsTabs
+        restaurantId={rid}
         whatsappTo={restaurant.whatsappTo ?? ""}
         webhookUrl={webhookUrl}
+        showBilling={Boolean(restaurant.stripeCustomerId)}
+        initialTab={
+          params.tab === "avance" ||
+          params.tab === "affiliation" ||
+          params.tab === "connexions" ||
+          params.tab === "simple"
+            ? params.tab
+            : undefined
+        }
         openai={{
           configured: openai.configured,
           source: openai.source,
           maskedKey: openai.maskedKey,
           model: openai.model,
         }}
+        llm={llm}
         platforms={platforms}
         affiliate={{
           referralCode: restaurant.referralCode!,

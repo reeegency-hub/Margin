@@ -194,35 +194,33 @@ export function AlertsNowModal({
             if (e.target === e.currentTarget) closeForSession();
           }}
         >
-          <div className="alerts-now-pop">
-            <header className="alerts-now-pop__head">
-              <p className="alerts-now-pop__step">
-                {step}/{totalStart}
-              </p>
-              <button
-                type="button"
-                className="alerts-now-pop__close"
-                aria-label="Fermer"
-                onClick={closeForSession}
-              >
-                ×
-              </button>
-            </header>
+          <div className="ms-spot__card alerts-now-pop">
+            <p className="ms-spot__eyebrow">
+              Alerte {step}/{totalStart}
+            </p>
+            <button
+              type="button"
+              className="ms-spot__close"
+              aria-label="Fermer"
+              onClick={closeForSession}
+            >
+              ×
+            </button>
 
-            <h2 id="alerts-now-title" className="alerts-now-pop__title">
+            <h2 id="alerts-now-title" className="ms-spot__title">
               {alert.title}
             </h2>
-            <p className="alerts-now-pop__detail">{alert.constat}</p>
+            <p className="ms-spot__lead">{alert.constat}</p>
             {alert.action ? (
-              <p className="alerts-now-pop__action">→ {alert.action}</p>
+              <p className="ms-spot__hint">→ {alert.action}</p>
             ) : null}
 
-            <div className="alerts-now-pop__actions">
+            <div className="ms-spot__actions">
               {isStockAlert(alert) ? (
                 <>
                   <button
                     type="button"
-                    className="alerts-now-pop__btn alerts-now-pop__btn--primary wa-send-btn"
+                    className="btn-lime wa-send-btn"
                     onClick={() => onSend(alert)}
                     disabled={pending}
                   >
@@ -230,7 +228,7 @@ export function AlertsNowModal({
                   </button>
                   <button
                     type="button"
-                    className="alerts-now-pop__btn"
+                    className="ms-spot__later"
                     onClick={() => onCopy(alert)}
                     disabled={pending}
                   >
@@ -238,7 +236,7 @@ export function AlertsNowModal({
                   </button>
                   <button
                     type="button"
-                    className="alerts-now-pop__btn"
+                    className="ms-spot__later"
                     onClick={() => onRefuse(alert)}
                     disabled={pending}
                   >
@@ -249,14 +247,14 @@ export function AlertsNowModal({
                 <>
                   <Link
                     href={alertHref(alert)}
-                    className="alerts-now-pop__btn alerts-now-pop__btn--primary"
+                    className="btn-lime"
                     onClick={closeForSession}
                   >
                     Traiter
                   </Link>
                   <button
                     type="button"
-                    className="alerts-now-pop__btn"
+                    className="ms-spot__later"
                     onClick={() => onRefuse(alert)}
                     disabled={pending}
                   >
@@ -268,7 +266,7 @@ export function AlertsNowModal({
 
             <button
               type="button"
-              className="alerts-now-pop__later"
+              className="ms-spot__later"
               onClick={closeForSession}
             >
               Plus tard

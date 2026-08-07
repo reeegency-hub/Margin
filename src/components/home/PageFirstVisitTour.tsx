@@ -13,6 +13,7 @@ import {
   markPageTourSeen,
 } from "@/components/home/page-tour-storage";
 import { readGuideFocus } from "@/components/home/guide-focus";
+import { MsSpotBubble, MsSpotRing } from "@/components/ui/MsSpotBubble";
 
 function guideFocusBlocksTour(pathname: string): boolean {
   const stored = readGuideFocus();
@@ -41,30 +42,25 @@ function computeBubble(
   bubbleW: number,
   bubbleH: number
 ): BubblePos {
-  const gap = 12;
+  const gap = 14;
   const pad = 12;
   const vw = window.innerWidth;
   const vh = window.innerHeight;
 
   let top = spot.top + spot.height + gap;
-  let left = spot.left;
+  let left = spot.left + spot.width / 2 - bubbleW / 2;
   let place = placement;
 
   if (placement === "top") {
     top = spot.top - bubbleH - gap;
-    left = spot.left;
   } else if (placement === "right") {
     top = spot.top;
     left = spot.left + spot.width + gap;
   } else if (placement === "left") {
     top = spot.top;
     left = spot.left - bubbleW - gap;
-  } else {
-    top = spot.top + spot.height + gap;
-    left = spot.left;
   }
 
-  // Garde dans le viewport
   if (top + bubbleH > vh - pad) {
     top = Math.max(pad, spot.top - bubbleH - gap);
     place = "top";
@@ -77,7 +73,7 @@ function computeBubble(
 }
 
 /**
- * Première visite : bulle collée à l’action (sans flou).
+ * Première visite : bulle collée à l’action (style ms-spot).
  * Forcer : ?tour=1
  */
 export function PageFirstVisitTour({
@@ -163,7 +159,6 @@ export function PageFirstVisitTour({
     function measure() {
       const el = resolveAnchor(step!.anchor);
       if (!el) {
-        // Fallback coin bas-droit si ancre absente
         const fallback: Spot = {
           top: window.innerHeight - 120,
           left: Math.max(16, window.innerWidth - 360),
@@ -187,7 +182,6 @@ export function PageFirstVisitTour({
       };
       setSpot(s);
 
-      // Mesure bulle après paint
       requestAnimationFrame(() => {
         const bw = panelRef.current?.offsetWidth || 320;
         const bh = panelRef.current?.offsetHeight || 180;
@@ -206,30 +200,18 @@ export function PageFirstVisitTour({
 
   useEffect(() => {
     if (!open) return;
-    panelRef.current?.querySelector<HTMLElement>(".page-tour__next")?.focus();
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        finish();
-      }
-    }
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    panelRef.current
+      ?.querySelector<HTMLElement>(".btn-lime, .ms-spot__later")
+      ?.focus();
   }, [open, stepIndex]);
-
-  function stripTourParam() {
-    if (!forceTour) return;
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("tour");
-    const q = params.toString();
-    router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false });
-  }
 
   function finish() {
     if (pageKey) markPageTourSeen(rid, pageKey);
     setOpen(false);
-    stripTourParam();
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("tour");
+    const q = params.toString();
+    router.replace(q ? `${pathname}?${q}` : pathname);
   }
 
   function next() {
@@ -244,86 +226,40 @@ export function PageFirstVisitTour({
   if (!ready || !open || !tour || !step || disabled) return null;
 
   const total = tour.steps.length;
-  const pct = Math.round(((stepIndex + 1) / total) * 100);
   const isLast = stepIndex >= total - 1;
+  const bubbleW = Math.min(
+    320,
+    typeof window !== "undefined" ? window.innerWidth - 24 : 320
+  );
 
   return (
-    <div className="page-tour-layer" aria-live="polite">
-      {spot ? (
-        <div
-          className="page-tour-spot"
-          style={{
-            top: spot.top - 6,
-            left: spot.left - 6,
-            width: spot.width + 12,
-            height: spot.height + 12,
-          }}
-          aria-hidden
-        />
-      ) : null}
-
-      <div
-        ref={panelRef}
-        className={`page-tour page-tour--anchor page-tour--${bubble?.placement || "bottom"}`}
-        role="dialog"
-        aria-modal="false"
-        aria-labelledby={titleId}
+    <div className="ms-spot ms-spot--layer" aria-live="polite">
+      {spot ? <MsSpotRing {...spot} /> : null}
+      <MsSpotBubble
+        panelRef={panelRef}
+        titleId={titleId}
+        eyebrow={`${tour.label} · ${stepIndex + 1}/${total}`}
+        title={step.title}
+        lead={step.body}
         style={
           bubble
-            ? { top: bubble.top, left: bubble.left }
-            : { top: 24, left: 24 }
+            ? { top: bubble.top, left: bubble.left, width: bubbleW }
+            : { top: 24, left: 24, width: bubbleW }
         }
-      >
-        <header className="page-tour__head">
-          <div className="page-tour__kicker">
-            <span className="page-tour__pill">{tour.label}</span>
-          </div>
-          <button
-            type="button"
-            className="page-tour__close"
-            aria-label="Fermer"
-            onClick={finish}
-          >
-            ×
-          </button>
-        </header>
-
-        <div
-          className="page-tour__progress"
-          role="progressbar"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={pct}
-          aria-label="Progression de la visite"
-        >
-          <i style={{ width: `${pct}%` }} />
-        </div>
-
-        <div className="page-tour__body">
-          <h2 id={titleId} className="page-tour__title">
-            {step.title}
-          </h2>
-          <p className="page-tour__text">{step.body}</p>
-        </div>
-
-        <footer className="page-tour__foot">
-          {!isLast ? (
-            <button
-              type="button"
-              className="page-tour__skip"
-              onClick={finish}
-            >
-              Passer
+        actions={
+          <>
+            <button type="button" className="btn-lime" onClick={next}>
+              {isLast ? "C’est compris" : "Suivant"}
             </button>
-          ) : (
-            <span className="page-tour__spacer" />
-          )}
-          <button type="button" className="page-tour__next" onClick={next}>
-            {isLast ? "C’est compris" : "Suivant"}
-            {!isLast ? <span aria-hidden> →</span> : null}
-          </button>
-        </footer>
-      </div>
+            {!isLast ? (
+              <button type="button" className="ms-spot__later" onClick={finish}>
+                Passer
+              </button>
+            ) : null}
+          </>
+        }
+        hint={!isLast ? `Étape ${stepIndex + 1} sur ${total}` : undefined}
+      />
     </div>
   );
 }

@@ -67,10 +67,13 @@ function ShoppingListCard({
   lines,
   restaurantName,
   whatsappTo,
+  primaryActionsInInk,
 }: {
   lines: ShoppingLine[];
   restaurantName: string;
   whatsappTo: string | null;
+  /** CTAs principaux déjà dans le bloc ink de la page */
+  primaryActionsInInk?: boolean;
 }) {
   const href =
     buildWaMeLink(
@@ -94,30 +97,38 @@ function ShoppingListCard({
         <p className="shop-list__hint">
           Quantité fausse → <Link href="/inventory">Vérification</Link>
         </p>
-        <div className="shop-list__actions" data-tour="courses-actions">
-          <form action={generateOrders} data-guide-form="courses-create">
-            <button
-              type="submit"
-              className="btn-ghost"
-              data-guide-action="courses-create"
-            >
-              Actualiser
-            </button>
-          </form>
-        </div>
+        {!primaryActionsInInk ? (
+          <div className="shop-list__actions" data-tour="courses-actions">
+            <form action={generateOrders} data-guide-form="courses-create">
+              <button
+                type="submit"
+                className="btn-ghost"
+                data-guide-action="courses-create"
+              >
+                Actualiser
+              </button>
+            </form>
+          </div>
+        ) : null}
       </article>
     );
   }
 
+  const cardTone = primaryActionsInInk
+    ? "dash-card dash-card--light shop-list"
+    : "dash-card dash-card--dark shop-list";
+
   return (
-    <article className="dash-card dash-card--dark shop-list">
+    <article className={cardTone}>
       <header className="shop-list__head">
         <div>
-          <p className="shop-list__eyebrow">À faire</p>
+          {!primaryActionsInInk ? (
+            <p className="shop-list__eyebrow">À faire</p>
+          ) : null}
           <h3 className="shop-list__title">Liste de courses</h3>
         </div>
         <span className="shop-list__count">
-          {lines.length} produit{lines.length > 1 ? "s" : ""}
+          {lines.length} ligne{lines.length > 1 ? "s" : ""}
         </span>
       </header>
 
@@ -146,48 +157,61 @@ function ShoppingListCard({
       </ul>
 
       <p className="shop-list__hint">
-        Quantité fausse → un employé vérifie dans{" "}
-        <Link href="/inventory">Vérification</Link>
+        Quantité fausse → <Link href="/inventory">Vérification</Link>
       </p>
 
       <div className="shop-list__actions" data-tour="courses-actions">
-        <form action={completeShoppingListAction}>
-          <button
-            type="submit"
-            className="btn-lime"
-            data-guide-action="courses-do"
-          >
-            Marquer comme fait
-          </button>
-        </form>
-        <form action={generateOrders} data-guide-form="courses-create">
-          <button
-            type="submit"
-            className="btn-ghost"
-            data-guide-action="courses-create"
-          >
-            Actualiser
-          </button>
-        </form>
-        {external ? (
-          <a
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="wa-pill wa-send-btn"
-          >
-            <span className="wa-dot" />
-            <WaSendLabel kind="list" />
-          </a>
+        {primaryActionsInInk ? (
+          <form action={generateOrders} data-guide-form="courses-create">
+            <button
+              type="submit"
+              className="btn-ghost"
+              data-guide-action="courses-create"
+            >
+              Actualiser
+            </button>
+          </form>
         ) : (
-          <Link
-            href={href}
-            className="wa-pill wa-send-btn"
-            title="Ajoutez votre numéro WhatsApp dans Réglages"
-          >
-            <span className="wa-dot" />
-            <WaSendLabel kind="list" />
-          </Link>
+          <>
+            <form action={completeShoppingListAction}>
+              <button
+                type="submit"
+                className="btn-lime"
+                data-guide-action="courses-do"
+              >
+                Marquer comme fait
+              </button>
+            </form>
+            <form action={generateOrders} data-guide-form="courses-create">
+              <button
+                type="submit"
+                className="btn-ghost"
+                data-guide-action="courses-create"
+              >
+                Actualiser
+              </button>
+            </form>
+            {external ? (
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="wa-pill wa-send-btn"
+              >
+                <span className="wa-dot" />
+                <WaSendLabel kind="list" />
+              </a>
+            ) : (
+              <Link
+                href={href}
+                className="wa-pill wa-send-btn"
+                title="Ajoutez votre numéro WhatsApp dans Réglages"
+              >
+                <span className="wa-dot" />
+                <WaSendLabel kind="list" />
+              </Link>
+            )}
+          </>
         )}
       </div>
     </article>
@@ -274,11 +298,13 @@ export function OrderSplitPanel({
   orders,
   restaurantName,
   whatsappTo,
+  primaryActionsInInk,
 }: {
   lines: ShoppingLine[];
   orders: OrderRow[];
   restaurantName: string;
   whatsappTo: string | null;
+  primaryActionsInInk?: boolean;
 }) {
   const history = orders.filter((o) => isHistory(o.status));
   const [tab, setTab] = useState<"todo" | "history">(
@@ -308,6 +334,7 @@ export function OrderSplitPanel({
             lines={lines}
             restaurantName={restaurantName}
             whatsappTo={whatsappTo}
+            primaryActionsInInk={primaryActionsInInk}
           />
         </div>
       ) : (

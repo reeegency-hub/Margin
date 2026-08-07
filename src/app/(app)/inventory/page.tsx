@@ -34,30 +34,63 @@ export default async function InventoryListPage({
       i.criticalThreshold > 0 && i.stockTheoretical <= i.criticalThreshold
   );
 
+  const inkTitle = draft
+    ? "Vérification en cours"
+    : critical.length > 0
+      ? `${critical.length} à compter d’abord`
+      : ingredients.length === 0
+        ? "Pas encore de stock"
+        : "Compter le rayon";
+
+  const inkDetail = draft
+    ? `${draft.lines.length} produit${
+        draft.lines.length > 1 ? "s" : ""
+      } — reprenez pour corriger le stock.`
+    : critical.length > 0
+      ? "Priorité aux références sous seuil, puis validez."
+      : ingredients.length === 0
+        ? "Ajoutez des produits ou branchez la caisse avant de compter."
+        : "Indiquez ce qu’il y a vraiment. Valider corrige le stock.";
+
   return (
     <BrandPage question="Vérification" guide="Vérifiez le rayon, puis validez.">
       {params.validated ? <p className="flash">Stock corrigé.</p> : null}
 
-      <section
-        className={`dash-card dash-card--dark count-hub${draft ? " count-hub--active" : ""}`}
-      >
-        <div className="count-hub__top">
-          <span className="count-hub__badge">
-            {draft ? "En cours" : "Prêt"}
-          </span>
-          {draft ? (
-            <span className="count-hub__meta">
-              {draft.lines.length} produit
-              {draft.lines.length > 1 ? "s" : ""}
-            </span>
-          ) : null}
+      <div className="dash-card dash-card--dark hub-now">
+        <p className="hub-now__eyebrow">À faire maintenant</p>
+        <p className="hub-now__title">{inkTitle}</p>
+        <p className="hub-now__detail">{inkDetail}</p>
+        <div className="hub-now__actions">
+          {ingredients.length === 0 ? (
+            <Link href="/ingredients" className="btn-lime">
+              Ouvrir le stock
+            </Link>
+          ) : draft ? (
+            <Link href={`/inventory/${draft.id}`} className="btn-lime">
+              Continuer
+            </Link>
+          ) : (
+            <form action={startInventory}>
+              <button type="submit" className="btn-lime">
+                Commencer
+              </button>
+            </form>
+          )}
+          {critical.length > 0 ? (
+            <Link href="/orders" className="btn-ghost">
+              Courses
+            </Link>
+          ) : (
+            <Link href="/ingredients" className="btn-ghost">
+              Voir le stock
+            </Link>
+          )}
         </div>
+      </div>
 
-        <h2 className="count-hub__title">
-          {draft ? "Reprendre" : "Compter le rayon"}
-        </h2>
-
-        {critical.length > 0 ? (
+      {critical.length > 0 ? (
+        <div className="dash-card dash-card--light">
+          <p className="hub-section-title">À vérifier d’abord</p>
           <ul className="count-hub__priority" aria-label="À vérifier d’abord">
             {critical.slice(0, 5).map((i) => (
               <li key={i.id}>
@@ -76,39 +109,30 @@ export default async function InventoryListPage({
               </li>
             ) : null}
           </ul>
-        ) : (
-          <p className="count-hub__hint">
-            Indiquez ce qu’il y a vraiment. Valider corrige le stock.
-          </p>
-        )}
-
-        <div className="count-hub__cta">
-          {draft ? (
-            <Link href={`/inventory/${draft.id}`} className="count-hub__btn">
-              Continuer
-            </Link>
-          ) : (
-            <form action={startInventory} className="count-hub__form">
-              <button type="submit" className="count-hub__btn">
-                Commencer
-              </button>
-            </form>
-          )}
-          <Link href="/ingredients" className="count-hub__link">
-            Voir le stock
-          </Link>
         </div>
-      </section>
+      ) : null}
+
+      <p className="hub-secondary-link">
+        <Link href="/ingredients">Stock →</Link>
+        {" · "}
+        <Link href="/orders">Courses →</Link>
+      </p>
 
       {history.length > 0 ? (
-        <section className="dash-card dash-card--light count-history" aria-label="Historique">
+        <section
+          className="dash-card dash-card--light count-history"
+          aria-label="Historique"
+        >
           <p className="count-history__label">Dernières vérifications</p>
           <ul className="count-history__list">
             {history.map((inv) => {
               const done = inv.status === "VALIDATED";
               return (
                 <li key={inv.id}>
-                  <Link href={`/inventory/${inv.id}`} className="count-history__row">
+                  <Link
+                    href={`/inventory/${inv.id}`}
+                    className="count-history__row"
+                  >
                     <span
                       className={`count-history__status${
                         done ? " is-done" : ""

@@ -92,7 +92,7 @@ export const PAGE_TOURS: PageTour[] = [
       {
         id: "courses-2",
         title: "Créez puis validez",
-        body: "Créer une liste, puis Marquer comme fait (stock mis à jour).",
+        body: "Ouvrir les courses, puis Marquer comme fait (stock mis à jour).",
         anchor:
           '[data-tour="courses-actions"], .shop-list__actions, .shop-list__empty-cta',
         placement: "top",

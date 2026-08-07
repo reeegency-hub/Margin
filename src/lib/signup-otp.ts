@@ -205,8 +205,6 @@ async function sendOtpEmail(
   code: string
 ): Promise<{ ok: true; via: "resend" | "console" } | { ok: false; error: string }> {
   const key = process.env.RESEND_API_KEY?.trim();
-  const from =
-    process.env.NEWSLETTER_FROM_EMAIL || "Margin <contact@marginshop.app>";
   const subject = `${code} — code Margin`;
   const text = `Votre code de vérification Margin : ${code}\nValable 10 minutes.\nSi vous n’êtes pas à l’origine de cette demande, ignorez cet email.`;
   const html = `
@@ -222,25 +220,16 @@ async function sendOtpEmail(
     return { ok: true, via: "console" };
   }
 
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${key}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ from, to: [email], subject, html, text }),
-    });
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      console.error(`[signup-otp] Resend ${res.status}: ${body.slice(0, 300)}`);
-      return { ok: false, error: "Impossible d’envoyer l’email. Réessayez." };
-    }
-    return { ok: true, via: "resend" };
-  } catch (err) {
-    console.error("[signup-otp] email failed", err);
-    return { ok: false, error: "Impossible d’envoyer l’email. Réessayez." };
+  const { sendResendEmail } = await import("@/lib/resend-from");
+  const sent = await sendResendEmail({ to: email, subject, html, text });
+  if (!sent.ok) {
+    return {
+      ok: false,
+      error:
+        "Email indisponible tant que le domaine Resend n’est pas vérifié. Utilisez le SMS, ou l’adresse liée au compte Resend.",
+    };
   }
+  return { ok: true, via: "resend" };
 }
 
 async function sendOtpSms(

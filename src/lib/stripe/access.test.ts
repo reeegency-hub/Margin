@@ -1,5 +1,10 @@
 import assert from "node:assert/strict";
-import { hasAppAccess, isPaidAccessStatus } from "@/lib/stripe/access";
+import {
+  hasAppAccess,
+  isPaidAccessStatus,
+  STRIPE_GRACE_DAYS,
+  computeGraceUntil,
+} from "@/lib/stripe/access";
 
 assert.equal(isPaidAccessStatus("active"), true);
 assert.equal(isPaidAccessStatus("trialing"), true);
@@ -70,5 +75,8 @@ assert.equal(
   }),
   false
 );
+
+assert.ok(Number.isFinite(STRIPE_GRACE_DAYS) && STRIPE_GRACE_DAYS >= 1);
+assert.ok(!Number.isNaN(computeGraceUntil().getTime()));
 
 console.log("access.test.ts ok");

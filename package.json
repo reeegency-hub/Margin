@@ -25,7 +25,7 @@
     "cron:stripe": "curl -s \"http://localhost:3020/api/cron/stripe-sync${CRON_SECRET:+?secret=$CRON_SECRET}\"",
     "test:load:pos": "tsx scripts/load-test-pos.ts",
     "drp:drill": "bash scripts/drp-restore-drill.sh",
-    "test:unit": "tsx src/lib/stock-engine.test.ts && tsx src/lib/voice-intent.test.ts && tsx src/lib/whatsapp/config.test.ts && tsx src/lib/catalog/validate.test.ts && tsx src/lib/stripe/access.test.ts && tsx src/lib/pos/idempotence.test.ts && tsx src/lib/plan-limits.test.ts && tsx src/lib/signup-otp.test.ts && npm run test:tenant",
+    "test:unit": "tsx src/lib/stock-engine.test.ts && tsx src/lib/voice-intent.test.ts && tsx src/lib/whatsapp/config.test.ts && tsx src/lib/catalog/validate.test.ts && tsx src/lib/stripe/access.test.ts && tsx src/lib/stripe/affiliate-discount.test.ts && tsx src/lib/resend-from.test.ts && tsx src/lib/pos/idempotence.test.ts && tsx src/lib/plan-limits.test.ts && tsx src/lib/signup-otp.test.ts && tsx src/lib/assistant/assistant-setup.test.ts && tsx src/lib/llm/validateFormat.test.ts && npm run test:tenant",
     "test:tenant": "tsx scripts/check-tenant-isolation.ts",
     "test:loop": "tsx scripts/test-loop.ts",
     "check:prod-env": "tsx scripts/check-prod-env.ts",

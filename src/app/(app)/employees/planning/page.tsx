@@ -31,6 +31,7 @@ export default async function EmployeesPlanningPage({
   const todayCount = week.filter((s) => isSameDay(s.date, today)).length;
 
   const shiftRows = week.map((s) => {
+    const day = startOfDay(s.date);
     const isToday = isSameDay(s.date, today);
     return {
       id: s.id,
@@ -44,7 +45,8 @@ export default async function EmployeesPlanningPage({
       startTime: s.startTime,
       endTime: s.endTime,
       isToday,
-      isUpcoming: !isToday,
+      /** Après aujourd’hui (même fenêtre getWeekShifts) */
+      isUpcoming: day.getTime() > today.getTime(),
     };
   });
 
@@ -91,10 +93,13 @@ export default async function EmployeesPlanningPage({
       {employees.length === 0 ? (
         <div className="dash-card dash-card--light hub-empty">
           <p>
-            Aucun membre d’équipe. Terminez l’onboarding ou contactez Margin
-            pour peupler l’équipe, puis revenez ici pour planifier.
+            Aucun membre d’équipe. Ajoutez l’équipe d’abord, puis revenez ici
+            pour planifier la semaine.
           </p>
           <div className="hub-empty__actions">
+            <Link href="/employees" className="pill-btn pill-btn--primary">
+              Ajouter l’équipe
+            </Link>
             <Link href="/employees" className="pill-btn pill-btn--ghost">
               Retour à aujourd’hui
             </Link>

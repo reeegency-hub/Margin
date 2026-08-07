@@ -30,6 +30,7 @@ export function AppShell({
   onAssistantClick,
   helpPanel,
   hideMenuOnDesktop = false,
+  assistantPanel,
   children,
 }: {
   brand?: ReactNode;
@@ -41,7 +42,7 @@ export function AppShell({
   helpLabel?: string;
   sidebarFooter?: ReactNode;
   topbarTitle?: string;
-  topbarGuide?: string;
+  topbarGuide?: ReactNode;
   breadcrumbs?: BreadcrumbItem[];
   notificationCount?: number;
   onNotificationsClick?: () => void;
@@ -53,6 +54,8 @@ export function AppShell({
   helpPanel?: ReactNode;
   /** Sidebar rail desktop — masque le hamburger ≥768 */
   hideMenuOnDesktop?: boolean;
+  /** Panneau assistant docké (style Cursor) */
+  assistantPanel?: ReactNode;
   children: ReactNode;
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -96,7 +99,9 @@ export function AppShell({
 
   return (
     <div
-      className={`ds-shell${hideMenuOnDesktop ? " ds-shell--rail" : ""}`}
+      className={`ds-shell${hideMenuOnDesktop ? " ds-shell--rail" : ""}${
+        assistantPanel ? " ds-shell--with-asst" : ""
+      }`}
     >
       {banner ? <div className="ds-shell__banner">{banner}</div> : null}
 
@@ -119,7 +124,6 @@ export function AppShell({
             title={topbarTitle}
             breadcrumbs={breadcrumbs}
             onMenuClick={() => setDrawerOpen(true)}
-            onAssistantClick={onAssistantClick ? openAssistant : undefined}
             notificationCount={notificationCount}
             onNotificationsClick={onNotificationsClick}
             user={user}
@@ -128,6 +132,8 @@ export function AppShell({
           />
           <div className="ds-shell__content">{children}</div>
         </div>
+
+        {assistantPanel}
       </div>
 
       {helpPanel}

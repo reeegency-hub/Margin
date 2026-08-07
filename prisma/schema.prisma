@@ -97,6 +97,89 @@ model Restaurant {
   posWebhookEvents            PosWebhookEvent[]
   posReconciliationRuns       PosReconciliationRun[]
   newsletterSubscribers       NewsletterSubscriber[]
+  assistantDrafts             AssistantDraft[]
+  assistantCommits            AssistantCommit[]
+  llmCredentials              LlmProviderCredential[]
+}
+
+/// BYOK — clé LLM chiffrée par tenant (jamais en clair côté client)
+model LlmProviderCredential {
+  id              String   @id @default(cuid())
+  restaurantId    String
+  restaurant      Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  /// anthropic | openai
+  provider        String
+  /// Blob chiffré (AES-GCM, IV embarqué) — NULL après révocation
+  encryptedKey    String?
+  /// Réservé (compat schéma spec) — IV déjà dans encryptedKey
+  encryptionIv    String?
+  /// Empreinte affichage (hash derniers caractères)
+  keyFingerprint  String
+  /// untested | valid | invalid | revoked
+  status          String   @default("untested")
+  lastValidatedAt DateTime?
+  lastError       String?
+  createdByUserId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  events          LlmProviderCredentialEvent[]
+
+  @@unique([restaurantId, provider])
+  @@index([restaurantId, status])
+}
+
+model LlmProviderCredentialEvent {
+  id           String   @id @default(cuid())
+  credentialId String
+  credential   LlmProviderCredential @relation(fields: [credentialId], references: [id], onDelete: Cascade)
+  /// created | validated | validation_failed | revoked | used
+  eventType    String
+  actorId      String?
+  createdAt    DateTime @default(now())
+
+  @@index([credentialId, createdAt])
+}
+
+/// Brouillon setup agent (LLM propose → client confirme → commit)
+model AssistantDraft {
+  id             String     @id @default(cuid())
+  restaurantId   String
+  restaurant     Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  createdByUserId String?
+  /// import_inventory | upsert_team | set_whatsapp
+  kind           String
+  /// draft | preview | confirmed | committed | expired | cancelled
+  status         String     @default("draft")
+  sourceFileName String?
+  sourceFileId   String?
+  /// JSON payload candidat (rows / employees / phone…)
+  payloadJson    String
+  /// JSON flags d’ambiguïté (jamais devinés silencieusement)
+  flagsJson      String     @default("[]")
+  expiresAt      DateTime
+  committedAt    DateTime?
+  commitId       String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@index([restaurantId, status, createdAt])
+  @@index([expiresAt])
+}
+
+/// Audit : draft → commit (traçabilité setup)
+model AssistantCommit {
+  id             String     @id @default(cuid())
+  restaurantId   String
+  restaurant     Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  draftId        String
+  kind           String
+  createdByUserId String?
+  /// Résumé JSON (counts, ids…)
+  resultJson     String
+  createdAt      DateTime   @default(now())
+
+  @@index([restaurantId, createdAt])
+  @@index([draftId])
 }
 
 /// Journal idempotent des événements Stripe (event.id unique)

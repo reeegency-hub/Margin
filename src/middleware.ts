@@ -6,6 +6,12 @@ const MOBILE_COOKIE = "margin_mobile";
 export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
+
+    // Racine publique : amis / téléphone → landing, pas l’écran login
+    if (!token && req.nextUrl.pathname === "/") {
+      return NextResponse.redirect(new URL("/welcome", req.nextUrl.origin));
+    }
+
     // JWT vide après un seed / reset → forcer login (évite boucle / ↔ onboarding)
     if (token && (!token.restaurantId || !token.id)) {
       const login = new URL("/login", req.nextUrl.origin);
@@ -59,7 +65,11 @@ export default withAuth(
   {
     pages: { signIn: "/login" },
     callbacks: {
-      authorized: ({ token }) => Boolean(token),
+      authorized: ({ token, req }) => {
+        // Autoriser le passage sur / sans session → redirect /welcome ci-dessus
+        if (req.nextUrl.pathname === "/") return true;
+        return Boolean(token);
+      },
     },
   }
 );

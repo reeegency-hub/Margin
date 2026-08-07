@@ -1,10 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { euro, pctDelta } from "@/lib/dashboard";
-import { StatCard, SegmentedControl, PillButton } from "@/components/ui";
+import { SegmentedControl } from "@/components/ui";
 import type { DashboardAlert } from "./dashboard-alert";
-import { DayFocus, type DayFocusItem } from "@/components/home/DayFocus";
+import type { DayFocusItem } from "@/components/home/DayFocus";
+import { BrandPage } from "@/components/brand/BrandCard";
+import { FOCUS_ID_TO_GUIDE_ACTION } from "@/lib/guide-anchors";
 
 export type CostHomeKpis = {
   hikesToday: number;
@@ -44,9 +47,14 @@ export type DashboardViewProps = {
   costKpis: CostHomeKpis;
 };
 
+const CADENCE: Record<DayFocusItem["cadence"], string> = {
+  day: "Jour",
+  week: "Semaine",
+  month: "Mois",
+};
+
 /**
- * Accueil desktop — DayFocus + KPIs complets.
- * Le parcours démarrage reste dans le dock FirstHourGuide.
+ * Accueil desktop — hub priorité + pouls, aligné mobile.
  */
 export function DashboardView(props: DashboardViewProps) {
   const [period, setPeriod] = useState<"today" | "week" | "month">("today");
@@ -73,10 +81,13 @@ export function DashboardView(props: DashboardViewProps) {
       : period === "month"
         ? "CA du mois"
         : "CA du jour";
-  const caUp = caDelta != null ? !String(caDelta).startsWith("-") : null;
 
-  const hasCourses =
-    props.ordersToValidate > 0 || props.purchaseOrders.length > 0;
+  const openFocuses = props.focuses.filter((f) => !f.done);
+  const primary = openFocuses[0] ?? props.focuses[0] ?? null;
+  const queue = openFocuses.slice(1);
+  const primaryAction = primary
+    ? FOCUS_ID_TO_GUIDE_ACTION[primary.id]
+    : undefined;
 
   const topLine = useMemo(() => {
     if (!props.topDishes.length) return null;
@@ -88,183 +99,226 @@ export function DashboardView(props: DashboardViewProps) {
 
   const hikeCount =
     props.costKpis.hikesToday || props.costKpis.hikesWeek;
-  const hikeDelta =
-    props.costKpis.hikesToday > 0
-      ? `${props.costKpis.hikesToday} aujourd’hui`
-      : props.costKpis.hikesWeek > 0
-        ? `${props.costKpis.hikesWeek} cette semaine`
-        : "Aucune ≥ 5 %";
+
+  const forecast = useMemo(() => {
+    const days = props.caLast7Days;
+    if (!days.length) return null;
+    const values = days.map((d) => d.y);
+    const avg = values.reduce((a, b) => a + b, 0) / values.length;
+    const maxBar = Math.max(1, ...values);
+    return {
+      avg: Math.round(avg),
+      bars: days.map((d) => ({
+        label: d.label,
+        height: Math.max(8, Math.round((d.y / maxBar) * 100)),
+      })),
+    };
+  }, [props.caLast7Days]);
+
+  void props.whatsappTo;
+  void props.alerts;
 
   return (
-    <div className="dashboard-view ds-stack">
-      <header className="module-page-header">
-        <h1 className="module-page-title">Accueil</h1>
-        <p className="module-page-lead">
-          Priorités à traiter, puis les indicateurs clés du magasin.
-        </p>
-      </header>
-
-      <DayFocus
-        focuses={props.focuses}
-        eyebrow="À faire maintenant"
-        ariaLabel="Priorités du jour"
-      />
-
-      <div className="dashboard-view__kpi-head">
-        <h2 className="dashboard-view__section">Activité</h2>
-        <SegmentedControl
-          value={period}
-          onChange={(v) => setPeriod(v as "today" | "week" | "month")}
-          options={[
-            { value: "today", label: "Aujourd’hui" },
-            { value: "week", label: "Semaine" },
-            { value: "month", label: "Mois" },
-          ]}
-        />
+    <BrandPage
+      question={props.restaurantName}
+      guide="Une priorité à traiter, puis le pouls du magasin."
+    >
+      <div className="home-now dash-card dash-card--dark hub-now" data-tour="home-focus">
+        {primary && !primary.done ? (
+          <>
+            <p className="hub-now__eyebrow">
+              À faire maintenant · {CADENCE[primary.cadence]}
+              {primary.urgency === "high" ? " · Urgent" : ""}
+            </p>
+            <p className="hub-now__title">{primary.title}</p>
+            <p className="hub-now__detail">{primary.message}</p>
+            <div className="hub-now__actions">
+              <Link
+                href={primary.ctaHref}
+                className="btn-lime"
+                {...(primaryAction
+                  ? { "data-guide-action": primaryAction }
+                  : {})}
+              >
+                {primary.ctaLabel}
+              </Link>
+              {queue.length > 0 ? (
+                <p className="hub-now__hint">
+                  +{queue.length} autre{queue.length > 1 ? "s" : ""} en file
+                </p>
+              ) : null}
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="hub-now__eyebrow">À faire maintenant</p>
+            <p className="hub-now__title">Rien d’urgent</p>
+            <p className="hub-now__detail">
+              Magasin à jour — activité et coûts juste en dessous.
+            </p>
+            <div className="hub-now__actions">
+              <Link href="/orders" className="btn-ghost">
+                Courses
+              </Link>
+              <Link href="/inventory" className="btn-ghost">
+                Vérification
+              </Link>
+            </div>
+          </>
+        )}
       </div>
 
-      <div
-        className="ds-grid ds-grid--stats ds-grid--stats-compact"
-        data-tour="home-activity"
-      >
-        <StatCard
-          tone="lime"
-          label={caLabel}
-          value={euro(caValue)}
-          delta={
-            caDelta
-              ? `${caDelta} vs préc.`
-              : period === "today"
-                ? `${props.salesTodayCount} vente(s)`
-                : "—"
-          }
-          deltaUp={caUp}
-        />
-        <StatCard
-          tone="white"
-          label="Courses"
-          value={String(props.ordersToValidate)}
-          delta={
-            props.ordersToValidate > 0 ? "Listes en attente" : "Rien à faire"
-          }
-          href="/orders"
-        />
-        <StatCard
-          className="phone-hide"
-          tone="white"
-          label="Ticket moyen"
-          value={euro(props.ticketMoyen)}
-          delta={
-            pctDelta(props.ticketMoyen, props.ticketYesterday)
-              ? `${pctDelta(props.ticketMoyen, props.ticketYesterday)} vs hier`
-              : "—"
-          }
-          deltaUp={(() => {
-            const d = pctDelta(props.ticketMoyen, props.ticketYesterday);
-            return d != null ? !String(d).startsWith("-") : null;
-          })()}
-        />
-        {props.offlineKiosks > 0 || props.openOutages > 0 ? (
-          <StatCard
-            tone="white"
-            label="Caisse"
-            value={
-              props.offlineKiosks > 0
-                ? `${props.offlineKiosks} hors ligne`
-                : `${props.openOutages} alerte(s)`
-            }
-            delta="À vérifier"
-            href="/kiosks"
-          />
-        ) : null}
-      </div>
-
-      <h2 className="dashboard-view__section">Coûts · KPI</h2>
-      <div
-        className="ds-grid ds-grid--stats ds-grid--stats-compact"
-        data-tour="home-costs"
-      >
-        <StatCard
-          tone={hikeCount > 0 ? "lime" : "white"}
-          label="Hausses prix"
-          value={String(hikeCount)}
-          delta={hikeDelta}
-          href="/costs#hausses"
-        />
-        <StatCard
-          tone={props.costKpis.needsInventory ? "lime" : "white"}
-          label="Pertes semaine"
-          value={
-            props.costKpis.needsInventory
-              ? "À faire"
-              : euro(props.costKpis.lossEur)
-          }
-          delta={
-            props.costKpis.needsInventory
-              ? "Inventaire hebdo"
-              : props.costKpis.pricedLineCount > 0
-                ? `${props.costKpis.pricedLineCount} prix saisis`
-                : "Importer factures"
-          }
-          href={
-            props.costKpis.needsInventory ? "/inventory" : "/costs#pertes"
-          }
-        />
-        <StatCard
-          tone="white"
-          label="Coût matière"
-          value={
-            props.costKpis.avgFoodCostPct != null
-              ? `${props.costKpis.avgFoodCostPct.toFixed(0)} %`
-              : "—"
-          }
-          delta={
-            props.costKpis.avgFoodCostPct != null
-              ? "Moy. best-sellers"
-              : "Après factures + ventes"
-          }
-          href="/costs#matiere"
-        />
-        <StatCard
-          tone="white"
-          label="Négociation"
-          value={
-            props.costKpis.savingsPotential > 0
-              ? euro(props.costKpis.savingsPotential)
-              : "—"
-          }
-          delta={
-            props.costKpis.savingsPotential > 0
-              ? "€ / unité à récupérer"
-              : "Comparer fournisseurs"
-          }
-          href="/costs#negocier"
-        />
-      </div>
-
-      {topLine ? (
-        <p className="dashboard-view__tops">Top ventes · {topLine}</p>
+      {queue.length > 0 ? (
+        <ul className="home-queue" aria-label="Autres priorités">
+          {queue.map((item) => {
+            const action = FOCUS_ID_TO_GUIDE_ACTION[item.id];
+            return (
+              <li key={item.id}>
+                <Link
+                  href={item.ctaHref}
+                  className={`home-queue__row${
+                    item.urgency === "high" ? " is-urgent" : ""
+                  }`}
+                  {...(action ? { "data-guide-action": action } : {})}
+                >
+                  <span className="home-queue__cadence">
+                    {CADENCE[item.cadence]}
+                  </span>
+                  <span className="home-queue__body">
+                    <strong>{item.title}</strong>
+                    <span>{item.message}</span>
+                  </span>
+                  <span className="home-queue__cta" aria-hidden>
+                    →
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       ) : null}
 
-      <div className="home-actions-row">
-        <PillButton href="/costs" variant="primary">
-          Coûts & factures
-        </PillButton>
-        {hasCourses ? (
-          <PillButton href="/orders" variant="ghost">
-            Voir les courses
-          </PillButton>
+      <section
+        className="home-pulse home-pulse--desktop"
+        data-tour="home-activity"
+        aria-label="Activité"
+      >
+        <div className="home-pulse__head">
+          <h2 className="home-pulse__section">Pouls</h2>
+          <SegmentedControl
+            value={period}
+            onChange={(v) => setPeriod(v as "today" | "week" | "month")}
+            options={[
+              { value: "today", label: "Aujourd’hui" },
+              { value: "week", label: "Semaine" },
+              { value: "month", label: "Mois" },
+            ]}
+          />
+        </div>
+        <div className="home-pulse__grid">
+          <div>
+            <p className="home-pulse__label">{caLabel}</p>
+            <p className="home-pulse__value">{euro(caValue)}</p>
+            <p className="home-pulse__sub">
+              {caDelta
+                ? `${caDelta} vs préc.`
+                : period === "today"
+                  ? `${props.salesTodayCount} vente(s)`
+                  : forecast
+                    ? `Moy. 7 j · ${euro(forecast.avg)}`
+                    : "—"}
+            </p>
+          </div>
+          <div className="home-pulse__side">
+            <p className="home-pulse__label">Ticket moyen</p>
+            <p className="home-pulse__side-value">{euro(props.ticketMoyen)}</p>
+            <p className="home-pulse__sub">
+              {props.ordersToValidate > 0
+                ? `${props.ordersToValidate} course(s) à valider`
+                : "Aucune course en attente"}
+            </p>
+            {props.offlineKiosks > 0 || props.openOutages > 0 ? (
+              <Link href="/kiosks" className="home-pulse__warn">
+                {props.offlineKiosks > 0
+                  ? `${props.offlineKiosks} caisse(s) hors ligne`
+                  : `${props.openOutages} alerte(s) caisse`}
+              </Link>
+            ) : null}
+          </div>
+        </div>
+        {forecast && forecast.bars.length > 0 ? (
+          <div className="home-pulse__bars" aria-hidden>
+            {forecast.bars.map((b, i) => (
+              <div key={`${b.label}-${i}`} className="home-pulse__col">
+                <i
+                  className="home-pulse__bar"
+                  style={{ ["--bar-h" as string]: `${b.height}%` }}
+                />
+                <span>{b.label}</span>
+              </div>
+            ))}
+          </div>
         ) : null}
-        <PillButton href="/ingredients" variant="ghost">
-          Stock
-        </PillButton>
-        <PillButton href="/inventory" variant="ghost">
-          Vérification
-        </PillButton>
-        <PillButton href="/employees" variant="ghost">
-          Équipe
-        </PillButton>
-      </div>
-    </div>
+        {topLine ? (
+          <p className="home-pulse__tops">Top · {topLine}</p>
+        ) : null}
+      </section>
+
+      <section className="home-signals" data-tour="home-costs" aria-label="Coûts">
+        <h2 className="home-pulse__section">Signaux coûts</h2>
+        <ul className="home-signals__list home-signals__list--wide">
+          <li>
+            <Link href="/costs#hausses">
+              <span>Hausses</span>
+              <strong>{hikeCount}</strong>
+            </Link>
+          </li>
+          <li>
+            <Link
+              href={
+                props.costKpis.needsInventory
+                  ? "/inventory"
+                  : "/costs#pertes"
+              }
+            >
+              <span>Pertes</span>
+              <strong>
+                {props.costKpis.needsInventory
+                  ? "À faire"
+                  : euro(props.costKpis.lossEur)}
+              </strong>
+            </Link>
+          </li>
+          <li>
+            <Link href="/costs#matiere">
+              <span>Matière</span>
+              <strong>
+                {props.costKpis.avgFoodCostPct != null
+                  ? `${props.costKpis.avgFoodCostPct.toFixed(0)} %`
+                  : "—"}
+              </strong>
+            </Link>
+          </li>
+          <li>
+            <Link href="/costs#negocier">
+              <span>Négocier</span>
+              <strong>
+                {props.costKpis.savingsPotential > 0
+                  ? euro(props.costKpis.savingsPotential)
+                  : "—"}
+              </strong>
+            </Link>
+          </li>
+        </ul>
+      </section>
+
+      <nav className="home-jump" aria-label="Raccourcis">
+        <Link href="/orders">Courses</Link>
+        <Link href="/inventory">Vérification</Link>
+        <Link href="/ingredients">Stock</Link>
+        <Link href="/costs">Coûts</Link>
+        <Link href="/employees">Équipe</Link>
+      </nav>
+    </BrandPage>
   );
 }

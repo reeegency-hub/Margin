@@ -62,7 +62,7 @@ export function buildDayWeekFocuses(input: {
       message: `${critical[0]!.name}${
         critical.length > 1 ? ` et ${critical.length - 1} autre(s)` : ""
       } sous le seuil — préparez la liste.`,
-      ctaLabel: "Préparer la liste",
+      ctaLabel: "Ouvrir les courses",
       ctaHref: "/orders",
     });
   }
@@ -243,7 +243,7 @@ export function buildStockFocuses(input: {
       message: `${input.criticalName || "Des produits"}${
         input.criticalCount > 1 ? ` et ${input.criticalCount - 1} autre(s)` : ""
       } sous le seuil.`,
-      ctaLabel: "Préparer la liste",
+      ctaLabel: "Ouvrir les courses",
       ctaHref: "/orders",
     });
   }
@@ -301,9 +301,9 @@ export function buildCoursesFocuses(input: {
       id: "courses-needs",
       cadence: "day",
       urgency: "high",
-      title: "Créer une liste de courses",
-      message: `${input.needsCount} besoin${input.needsCount > 1 ? "s" : ""} détecté${input.needsCount > 1 ? "s" : ""} — générez la liste avant d’acheter.`,
-      ctaLabel: "Créer une liste",
+      title: "Courses à préparer",
+      message: `${input.needsCount} produit${input.needsCount > 1 ? "s" : ""} manquant${input.needsCount > 1 ? "s" : ""} ou à risque — ouvrez la liste.`,
+      ctaLabel: "Ouvrir les courses",
       ctaHref: "/orders",
     });
   }
@@ -322,7 +322,7 @@ export function buildCoursesFocuses(input: {
       id: "courses-list",
       cadence: "day",
       title: "Besoins à jour",
-      message: "Ouvrez Courses pour créer ou actualiser la liste depuis le stock bas.",
+      message: "Ouvrez Courses pour actualiser la liste depuis le stock bas.",
       ctaLabel: "Ouvrir les courses",
       ctaHref: "/orders",
     });
@@ -330,9 +330,9 @@ export function buildCoursesFocuses(input: {
   return orClear(items, {
     id: "courses-ok",
     cadence: "day",
-    title: "Rien à acheter",
-    message: "Pas de besoins détectés. Créez quand même une liste si vous anticipez.",
-    ctaLabel: "Créer une liste",
+    title: "Rien à racheter",
+    message: "Stock OK pour les 2–3 prochains jours. Actualisez seulement si vous venez de compter.",
+    ctaLabel: "Voir les courses",
     ctaHref: "/orders",
     done: true,
   });

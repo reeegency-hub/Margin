@@ -154,6 +154,7 @@ export async function handleInvoicePaymentFailed(
       accessGraceUntil: true,
       dunningLastNotifiedAt: true,
       stripeCustomerId: true,
+      users: { select: { email: true }, take: 1, orderBy: { createdAt: "asc" } },
     },
   });
   if (!restaurant) return;
@@ -177,6 +178,7 @@ export async function handleInvoicePaymentFailed(
     restaurant,
     invoice,
     accessGraceUntil,
+    email: restaurant.users[0]?.email,
   });
   if (notified) {
     await prisma.restaurant.update({

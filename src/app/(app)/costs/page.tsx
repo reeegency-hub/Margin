@@ -5,10 +5,7 @@ import { euro } from "@/lib/dashboard";
 import Link from "next/link";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { DayFocus } from "@/components/home/DayFocus";
-import { buildCostsFocuses } from "@/lib/home-focus";
-import { PageTitleSync } from "@/components/PageTitle";
-import { ModulePageHeader } from "@/components/ui/ModulePageHeader";
+import { BrandPage } from "@/components/brand/BrandCard";
 import { InvoiceImportPanel } from "@/components/costs/InvoiceImportPanel";
 
 export const metadata: Metadata = {
@@ -74,26 +71,60 @@ export default async function CostsPage({
   }
 
   const hikeCount = snapshot.hikesWeek.length;
-  const focuses = buildCostsFocuses(snapshot);
   const foodReady = snapshot.topDishCosts.length > 0;
   const compareReady = snapshot.supplierCompare.length > 0;
 
-  return (
-    <div className="costs-page ds-stack">
-      <PageTitleSync
-        title="Coûts"
-        guide="Factures → hausses → négocier. Matière = ventes + fiches + factures."
-      />
-      <ModulePageHeader
-        title="Coûts"
-        lead="Importez les factures, suivez les hausses, négociez. Les pertes en € sont ici après une vérification."
-      />
+  const inkTitle =
+    snapshot.pricedLineCount === 0
+      ? "Importer une facture"
+      : hikeCount > 0
+        ? `${hikeCount} hausse${hikeCount > 1 ? "s" : ""} cette semaine`
+        : snapshot.weeklyLoss.needsInventory
+          ? "Inventaire dû"
+          : "Coûts à jour";
 
-      <DayFocus
-        focuses={focuses}
-        eyebrow="Coûts · à gérer"
-        ariaLabel="Priorités Coûts"
-      />
+  const inkDetail =
+    snapshot.pricedLineCount === 0
+      ? "Sans prix d’achat : pas de hausses ni de coût matière."
+      : hikeCount > 0
+        ? "Regardez les hausses, puis négociez si un écart apparaît."
+        : snapshot.weeklyLoss.needsInventory
+          ? "Une vérification calcule les pertes en €."
+          : `Pertes ${euro(snapshot.weeklyLoss.lossEur)} · potentiel ${euro(
+              snapshot.monthlySavingsPotential
+            )}.`;
+
+  return (
+    <BrandPage
+      question="Coûts"
+      guide="Factures → hausses → négocier. Pertes après vérification."
+    >
+      {sp.received ? <p className="flash">Facture importée.</p> : null}
+
+      <div className="dash-card dash-card--dark hub-now">
+        <p className="hub-now__eyebrow">À faire maintenant</p>
+        <p className="hub-now__title">{inkTitle}</p>
+        <p className="hub-now__detail">{inkDetail}</p>
+        <div className="hub-now__actions">
+          {snapshot.pricedLineCount === 0 ? (
+            <a href="#facture" className="btn-lime">
+              Importer
+            </a>
+          ) : hikeCount > 0 ? (
+            <a href="#hausses" className="btn-lime">
+              Voir les hausses
+            </a>
+          ) : snapshot.weeklyLoss.needsInventory ? (
+            <Link href="/inventory" className="btn-lime">
+              Lancer la vérification
+            </Link>
+          ) : (
+            <a href="#facture" className="btn-ghost">
+              Nouvelle facture
+            </a>
+          )}
+        </div>
+      </div>
 
       <nav
         className="costs-page__tabs"
@@ -128,25 +159,12 @@ export default async function CostsPage({
         </div>
       </div>
 
-      {sp.received ? (
-        <p className="costs-page__flash" role="status">
-          Facture importée.
-        </p>
-      ) : null}
-
-      {/* ——— Facture ——— */}
       <section
         id="facture"
         className="costs-panel"
         data-tour="costs-invoice"
       >
         <header className="costs-panel__head">
-          <span className="costs-panel__icon" aria-hidden>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-              <path d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z" />
-              <path d="M14 3v5h5M9 13h6M9 17h4" />
-            </svg>
-          </span>
           <div className="costs-panel__titles">
             <h2>Facture</h2>
             <StatusPill tone={recentReceipts.length ? "ok" : "warn"}>
@@ -181,15 +199,13 @@ export default async function CostsPage({
         ) : null}
       </section>
 
-      {/* ——— Hausses ——— */}
-      <section id="hausses" className="costs-panel" data-tour="costs-hikes" data-guide-action="costs-hikes">
+      <section
+        id="hausses"
+        className="costs-panel"
+        data-tour="costs-hikes"
+        data-guide-action="costs-hikes"
+      >
         <header className="costs-panel__head">
-          <span className="costs-panel__icon" aria-hidden>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-              <path d="M4 18l6-6 4 4 6-8" />
-              <path d="M16 8h4v4" />
-            </svg>
-          </span>
           <div className="costs-panel__titles">
             <h2>Hausses</h2>
             <StatusPill tone={hikeCount ? "warn" : "ok"}>
@@ -219,15 +235,8 @@ export default async function CostsPage({
         )}
       </section>
 
-      {/* ——— Matière ——— */}
       <section id="matiere" className="costs-panel">
         <header className="costs-panel__head">
-          <span className="costs-panel__icon" aria-hidden>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-              <circle cx="12" cy="12" r="8" />
-              <path d="M12 8v4l3 2" />
-            </svg>
-          </span>
           <div className="costs-panel__titles">
             <h2>Matière</h2>
             <StatusPill tone={foodReady ? "ok" : "idle"}>
@@ -265,14 +274,12 @@ export default async function CostsPage({
         )}
       </section>
 
-      {/* ——— Pertes ——— */}
-      <section id="pertes" className="costs-panel" data-guide-action="costs-losses">
+      <section
+        id="pertes"
+        className="costs-panel"
+        data-guide-action="costs-losses"
+      >
         <header className="costs-panel__head">
-          <span className="costs-panel__icon" aria-hidden>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-              <path d="M4 20h16M7 20V10M12 20V4M17 20v-6" />
-            </svg>
-          </span>
           <div className="costs-panel__titles">
             <h2>Pertes</h2>
             <StatusPill
@@ -308,15 +315,12 @@ export default async function CostsPage({
         </Link>
       </section>
 
-      {/* ——— Négocier ——— */}
-      <section id="negocier" className="costs-panel" data-guide-action="negotiate">
+      <section
+        id="negocier"
+        className="costs-panel"
+        data-guide-action="negotiate"
+      >
         <header className="costs-panel__head">
-          <span className="costs-panel__icon" aria-hidden>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-              <path d="M7 10h10M7 14h6" />
-              <path d="M4 6h16v12H4z" />
-            </svg>
-          </span>
           <div className="costs-panel__titles">
             <h2>Négocier</h2>
             <StatusPill tone={compareReady ? "warn" : "idle"}>
@@ -347,6 +351,6 @@ export default async function CostsPage({
           </div>
         )}
       </section>
-    </div>
+    </BrandPage>
   );
 }
