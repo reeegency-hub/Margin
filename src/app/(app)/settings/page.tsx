@@ -100,7 +100,7 @@ export default async function SettingsPage({
   const inkTitle = billingWarn
     ? "Paiement à mettre à jour"
     : needsWa
-      ? "WhatsApp du magasin"
+      ? "WhatsApp du commerce"
       : "Réglages OK";
 
   const inkDetail = billingWarn
@@ -110,7 +110,7 @@ export default async function SettingsPage({
       )} — mettez à jour la carte.`
     : needsWa
       ? "Ajoutez le numéro pour envoyer listes et alertes."
-      : "WhatsApp, facturation et options du magasin.";
+      : "WhatsApp, facturation et options du commerce.";
 
   return (
     <BrandPage
@@ -135,6 +135,11 @@ export default async function SettingsPage({
       {params.error === "nonumber" ? (
         <p className="flash flash-warn">
           Pour envoyer sur WhatsApp, ajoutez d’abord votre numéro ci-dessous.
+        </p>
+      ) : null}
+      {params.error === "whatsapp_taken" ? (
+        <p className="flash flash-warn">
+          Ce numéro est déjà utilisé par un autre compte.
         </p>
       ) : null}
 
