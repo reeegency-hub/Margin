@@ -2,7 +2,7 @@
  * Autorisation par rôle DB (User.role) + fallback email founder (migration).
  */
 import { getServerSession } from "next-auth";
-import type { User, UserRole } from "@prisma/client";
+import type { Prisma, User, UserRole } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { isAdminEmail } from "@/lib/admin";
@@ -73,7 +73,10 @@ export async function writeAdminAudit(opts: {
       actorId: opts.actorId,
       action: opts.action,
       targetId: opts.targetId ?? null,
-      metadata: meta ?? undefined,
+      metadata:
+        meta === undefined
+          ? undefined
+          : (meta as Prisma.InputJsonValue),
     },
   });
 }

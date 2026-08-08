@@ -39,7 +39,10 @@ export function tenantScopedClient(
       create: (args: Prisma.IngredientCreateArgs) =>
         db.ingredient.create({
           ...args,
-          data: { ...args.data, restaurantId },
+          data: {
+            ...(args.data as Prisma.IngredientUncheckedCreateInput),
+            restaurantId,
+          },
         }),
       updateMany: (args: Prisma.IngredientUpdateManyArgs) =>
         db.ingredient.updateMany({
@@ -72,7 +75,10 @@ export function tenantScopedClient(
       create: (args: Prisma.AlertCreateArgs) =>
         db.alert.create({
           ...args,
-          data: { ...args.data, restaurantId },
+          data: {
+            ...(args.data as Prisma.AlertUncheckedCreateInput),
+            restaurantId,
+          },
         }),
     },
 

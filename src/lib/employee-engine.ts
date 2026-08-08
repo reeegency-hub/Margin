@@ -429,6 +429,12 @@ export async function clockInByName(
     shift.id,
     clockIn
   );
+  if (!attendance) {
+    return {
+      ok: false as const,
+      error: `Pointage impossible pour ${employee.name}.`,
+    };
+  }
 
   return {
     ok: true as const,
