@@ -200,39 +200,47 @@ function ShellInner({
   const pathname = usePathname();
   const pageTitle = usePageTitleValue();
   const isMobile = device === "mobile";
+  const threeTabApp = isFeatureEnabled("mobileThreeTabApp", device);
 
   const isHome = pathname === "/";
   const hideFirstHour = pathname.startsWith("/admin");
   const isFranchise = plan === "reseau";
   const [guideMinimized, setGuideMinimized] = useState(false);
   const [assistantExpanded, setAssistantExpanded] = useState(() =>
-    isFeatureEnabled("copilotFullscreen", device)
+    threeTabApp ? false : isFeatureEnabled("copilotFullscreen", device)
   );
 
   useEffect(() => {
+    if (threeTabApp) {
+      setAssistantExpanded(false);
+      return;
+    }
     if (isFeatureEnabled("copilotFullscreen", device)) {
       setAssistantExpanded(true);
       return;
     }
     setAssistantExpanded(readExpandedDefault());
-  }, [device]);
+  }, [device, threeTabApp]);
 
   useEffect(() => {
+    if (threeTabApp) return;
     function onOpen() {
       setAssistantExpanded(true);
     }
     window.addEventListener("margin:open-assistant", onOpen);
     return () => window.removeEventListener("margin:open-assistant", onOpen);
-  }, []);
+  }, [threeTabApp]);
 
   const guideLive = Boolean(firstHour?.bundle);
   const showFullscreenGuide =
+    !threeTabApp &&
     !hideFirstHour &&
     guideLive &&
     Boolean(firstHour?.active) &&
     isHome &&
     !guideMinimized;
   const showGuideDock =
+    !threeTabApp &&
     !hideFirstHour &&
     Boolean(firstHour?.bundle) &&
     Boolean(firstHour?.active) &&
@@ -244,8 +252,11 @@ function ShellInner({
   );
 
   const showUpgrade = isFeatureEnabled("upgradeCta", device);
-  const showBottomNav = isFeatureEnabled("bottomNav", device);
-  const showSpotlight = isFeatureEnabled("topbarSpotlight", device);
+  const showBottomNav =
+    isFeatureEnabled("bottomNav", device) && !threeTabApp;
+  const showDockedAssistant = !threeTabApp;
+  const showSpotlight =
+    isFeatureEnabled("topbarSpotlight", device) && !threeTabApp;
 
   const brand = (
     <div className="ds-chrome-brand">
@@ -294,11 +305,17 @@ function ShellInner({
     <div
       className={`ds-chrome${isMobile ? " ds-chrome--force-mobile" : ""}${
         showGuideDock ? " ds-chrome--with-guide" : ""
-      }${assistantExpanded ? " ds-chrome--asst-open" : " ds-chrome--asst-collapsed"}${
-        isFeatureEnabled("copilotFullscreen", device)
+      }${
+        showDockedAssistant
+          ? assistantExpanded
+            ? " ds-chrome--asst-open"
+            : " ds-chrome--asst-collapsed"
+          : ""
+      }${
+        !threeTabApp && isFeatureEnabled("copilotFullscreen", device)
           ? " ds-chrome--copilot-focus"
           : ""
-      }`}
+      }${threeTabApp ? " ds-chrome--mapp-three" : ""}`}
       data-device={device}
     >
       <AppShell
@@ -317,12 +334,18 @@ function ShellInner({
         user={{ name: restaurantName }}
         userMenu={userMenu}
         hideMenuOnDesktop={isFeatureEnabled("sidebarNav", device)}
-        onAssistantClick={() => setAssistantExpanded((v) => !v)}
+        onAssistantClick={
+          showDockedAssistant
+            ? () => setAssistantExpanded((v) => !v)
+            : undefined
+        }
         assistantPanel={
-          <MarginAssistant
-            expanded={assistantExpanded}
-            onExpandedChange={setAssistantExpanded}
-          />
+          showDockedAssistant ? (
+            <MarginAssistant
+              expanded={assistantExpanded}
+              onExpandedChange={setAssistantExpanded}
+            />
+          ) : undefined
         }
       >
         {forceMobileOverride ? (

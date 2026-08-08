@@ -2,13 +2,15 @@
 
 import { ChromeShell } from "@/components/shared/ChromeShell";
 import type { AppShellProps } from "@/components/shared/shell-types";
+import { isFeatureEnabled } from "@/config/features";
+import { MobileNavTabs } from "@/components/mobile/app/MobileNavTabs";
 
-/**
- * Shell mobile — copilote mis en avant, bottom nav, features réduites.
- * Bundle chargé uniquement quand le layout serveur choisit mobile.
- */
 export function MobileShell(props: AppShellProps) {
-  return <ChromeShell {...props} device="mobile" />;
+  const threeTab = isFeatureEnabled("mobileThreeTabApp", "mobile");
+  return (
+    <>
+      <ChromeShell {...props} device="mobile" />
+      {threeTab ? <MobileNavTabs /> : null}
+    </>
+  );
 }
-
-export default MobileShell;

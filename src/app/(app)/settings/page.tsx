@@ -10,6 +10,8 @@ import {
   codeFromRestaurantId,
 } from "@/lib/affiliate";
 import { getTenantLlmStatus } from "@/lib/llm/router";
+import { getDeviceType } from "@/lib/device";
+import { isFeatureEnabled } from "@/config/features";
 
 const SETTINGS_PLATFORMS = [
   { key: "uber_eats", label: "Uber Eats" },
@@ -26,11 +28,15 @@ export default async function SettingsPage({
     connected?: string;
     msg?: string;
     tab?: string;
+    full?: string;
   }>;
 }) {
   const session = await requireSession();
   const params = await searchParams;
   const rid = session.user.restaurantId;
+  const device = await getDeviceType();
+  const mobileMinimal =
+    isFeatureEnabled("mobileThreeTabApp", device) && params.full !== "1";
 
   for (const p of SETTINGS_PLATFORMS) {
     await prisma.deliveryPlatformConnection.upsert({
@@ -66,6 +72,25 @@ export default async function SettingsPage({
       where: { id: rid },
       data: { referralCode: code },
     });
+  }
+
+  if (mobileMinimal) {
+    const { SettingsScreen } = await import(
+      "@/components/mobile/app/SettingsScreen"
+    );
+    const { PLANS } = await import("@/lib/plans");
+    const planLabel =
+      PLANS.find((p) => p.id === restaurant.plan)?.name || "Commerce";
+    return (
+      <SettingsScreen
+        userName={session.user.name || ""}
+        userEmail={session.user.email || ""}
+        restaurantName={session.user.restaurantName}
+        planLabel={planLabel}
+        whatsappTo={restaurant.whatsappTo}
+        showBilling={Boolean(restaurant.stripeCustomerId)}
+      />
+    );
   }
 
   const webhookUrl = process.env.WEBHOOK_BASE_URL

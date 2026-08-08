@@ -27,6 +27,11 @@ export const FEATURES = {
   desktopLanding: { mobile: false, desktop: true },
   /** Landing mobile minimale (brief) */
   mobileLanding: { mobile: true, desktop: false },
+  /**
+   * App mobile post-login à 3 onglets (Dashboard / Copilote / Réglages).
+   * Pas de BottomNav multi-modules, pas de copilote docké — page /assistant.
+   */
+  mobileThreeTabApp: { mobile: true, desktop: false },
 } as const;
 
 export type FeatureKey = keyof typeof FEATURES;

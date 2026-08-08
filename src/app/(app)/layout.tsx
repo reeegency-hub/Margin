@@ -116,6 +116,8 @@ export default async function AppLayout({
 
   const shellProps = {
     restaurantName: session.user.restaurantName,
+    userName: session.user.name || "",
+    userEmail: session.user.email || "",
     restaurantId: session.user.restaurantId,
     planLabel,
     plan: restaurant.plan,

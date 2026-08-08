@@ -105,9 +105,12 @@ function readExpandedDefault(): boolean {
 export function MarginAssistant({
   expanded,
   onExpandedChange,
+  layout = "dock",
 }: {
   expanded: boolean;
   onExpandedChange: (next: boolean) => void;
+  /** page = onglet mobile plein cadre (pas de collapse dock) */
+  layout?: "dock" | "page";
 }) {
   const pathname = usePathname() || "/";
   const router = useRouter();
@@ -142,6 +145,23 @@ export function MarginAssistant({
     if (!expanded) return;
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, expanded, pending]);
+
+  useEffect(() => {
+    if (layout !== "page") return;
+    onExpandedChange(true);
+  }, [layout, onExpandedChange]);
+
+  useEffect(() => {
+    function onPrefill(e: Event) {
+      const detail = (e as CustomEvent<{ text?: string }>).detail;
+      const text = String(detail?.text || "").trim();
+      if (!text) return;
+      setInput(text);
+      onExpandedChange(true);
+    }
+    window.addEventListener("margin:assistant-prefill", onPrefill);
+    return () => window.removeEventListener("margin:assistant-prefill", onPrefill);
+  }, [onExpandedChange]);
 
   useEffect(() => {
     let cancelled = false;
@@ -374,21 +394,26 @@ export function MarginAssistant({
     });
   }
 
+  const isPage = layout === "page";
+  const effectiveExpanded = isPage ? true : expanded;
+
   return (
     <aside
       ref={panelRef}
-      className={`margin-asst-pane${expanded ? " is-expanded" : " is-collapsed"}`}
+      className={`margin-asst-pane${effectiveExpanded ? " is-expanded" : " is-collapsed"}${
+        isPage ? " margin-asst-pane--page" : ""
+      }`}
       aria-label="Copilote Margin"
-      aria-expanded={expanded}
+      aria-expanded={effectiveExpanded}
       onDragOver={(e) => {
-        if (!expanded) return;
+        if (!effectiveExpanded) return;
         e.preventDefault();
         setDragOver(true);
       }}
       onDragLeave={() => setDragOver(false)}
       onDrop={onDrop}
     >
-      {!expanded ? (
+      {!effectiveExpanded ? (
         <button
           type="button"
           className="margin-asst-pane__tab"
@@ -405,7 +430,7 @@ export function MarginAssistant({
           <header className="margin-asst-pane__head">
             <div className="margin-asst-pane__titles">
               <p className="ms-spot__eyebrow margin-asst-pane__eyebrow">
-                Toujours à droite
+                {isPage ? "Toujours avec vous" : "Toujours à droite"}
               </p>
               <h2 id={titleId} className="ms-spot__title margin-asst-pane__title">
                 Copilote
@@ -420,15 +445,17 @@ export function MarginAssistant({
                   {llmLabel}
                 </Link>
               ) : null}
-              <button
-                type="button"
-                className="ms-spot__close margin-asst-pane__close"
-                aria-label="Fermer le Copilote"
-                title="Fermer (⌘J)"
-                onClick={() => onExpandedChange(false)}
-              >
-                ×
-              </button>
+              {!isPage ? (
+                <button
+                  type="button"
+                  className="ms-spot__close margin-asst-pane__close"
+                  aria-label="Fermer le Copilote"
+                  title="Fermer (⌘J)"
+                  onClick={() => onExpandedChange(false)}
+                >
+                  ×
+                </button>
+              ) : null}
             </div>
           </header>
 

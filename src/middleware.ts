@@ -143,5 +143,7 @@ export const config = {
     "/admin",
     "/admin/:path*",
     "/costs/:path*",
+    "/assistant",
+    "/assistant/:path*",
   ],
 };

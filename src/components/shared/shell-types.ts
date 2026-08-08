@@ -5,6 +5,9 @@ import type { DeviceType } from "@/lib/device";
 
 export type AppShellProps = {
   restaurantName: string;
+  /** Prénom / nom utilisateur (salutation mobile) */
+  userName?: string;
+  userEmail?: string;
   restaurantId?: string;
   planLabel: string;
   plan?: string | null;
