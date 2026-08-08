@@ -21,9 +21,16 @@ export const metadata: Metadata = {
  * Switch device — un seul bundle landing chargé.
  * DesktopLanding : figée (aucune modif chantier mobile).
  * MobileLanding : expérience minimale validée brief.
+ * `?mobile=1` force la landing mobile (middleware pose aussi le cookie).
  */
-export default async function WelcomePage() {
-  const device = await getLandingDeviceType();
+export default async function WelcomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ mobile?: string }>;
+}) {
+  const sp = await searchParams;
+  const device =
+    sp.mobile === "1" ? "mobile" : await getLandingDeviceType();
 
   if (device === "mobile") {
     const { default: MobileLanding } = await import(

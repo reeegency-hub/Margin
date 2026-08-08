@@ -117,7 +117,11 @@ export default withAuth(
     pages: { signIn: "/login" },
     callbacks: {
       authorized: ({ token, req }) => {
-        if (req.nextUrl.pathname === "/") return true;
+        const p = req.nextUrl.pathname;
+        // Landing publique (desktop + mobile + tarifs)
+        if (p === "/" || p === "/welcome" || p.startsWith("/welcome/")) {
+          return true;
+        }
         return Boolean(token);
       },
     },
@@ -127,6 +131,8 @@ export default withAuth(
 export const config = {
   matcher: [
     "/",
+    "/welcome",
+    "/welcome/:path*",
     "/onboarding",
     "/ingredients/:path*",
     "/dishes/:path*",
