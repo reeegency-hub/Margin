@@ -8,14 +8,52 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum UserRole {
+  MEMBER
+  MANAGER
+  FOUNDER
+}
+
 model User {
   id           String     @id @default(cuid())
   email        String     @unique
   name         String
   passwordHash String
+  /// MEMBER | MANAGER | FOUNDER — FOUNDER = accès Ops /admin
+  role         UserRole   @default(MEMBER)
   restaurantId String
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   createdAt    DateTime   @default(now())
+  adminAuditLogs AdminAuditLog[]
+}
+
+/// Journal actions admin sensibles (jamais de secrets dans metadata)
+model AdminAuditLog {
+  id        String   @id @default(cuid())
+  actorId   String
+  actor     User     @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  action    String
+  targetId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([actorId])
+  @@index([createdAt])
+  @@index([action])
+}
+
+/// Compteur quotidien usage fallback LLM plateforme (MARGIN_PLATFORM_LLM)
+model PlatformLlmUsage {
+  id        String   @id @default(cuid())
+  tenantId  String
+  /// Jour UTC (00:00)
+  date      DateTime
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, date])
+  @@index([date])
 }
 
 /// Tenant root (entreprise / magasin). id = tenant_id.

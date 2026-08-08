@@ -75,23 +75,31 @@ type ActiveCred = {
 async function getActiveCredential(
   tenantId: string
 ): Promise<ActiveCred | null> {
-  const row = await prisma.llmProviderCredential.findFirst({
-    where: {
-      restaurantId: tenantId,
-      status: { in: ["untested", "valid"] },
-      encryptedKey: { not: null },
-    },
-    orderBy: { updatedAt: "desc" },
-  });
-  if (row?.encryptedKey) {
-    return {
-      id: row.id,
-      provider: row.provider as LlmProvider,
-      encryptedKey: row.encryptedKey,
-      encryptionIv: row.encryptionIv,
-      status: row.status,
-      source: "byok",
-    };
+  try {
+    const row = await prisma.llmProviderCredential.findFirst({
+      where: {
+        restaurantId: tenantId,
+        status: { in: ["untested", "valid"] },
+        encryptedKey: { not: null },
+      },
+      orderBy: { updatedAt: "desc" },
+    });
+    if (row?.encryptedKey) {
+      return {
+        id: row.id,
+        provider: row.provider as LlmProvider,
+        encryptedKey: row.encryptedKey,
+        encryptionIv: row.encryptionIv,
+        status: row.status,
+        source: "byok",
+      };
+    }
+  } catch (err) {
+    // Table absente (db push non fait) → traiter comme « pas de clé »
+    const msg = err instanceof Error ? err.message : String(err);
+    if (!/LlmProviderCredential|P2021|does not exist/i.test(msg)) {
+      throw err;
+    }
   }
 
   // Legacy : clé OpenAI sur Restaurant (pré-BYOK)
@@ -252,6 +260,16 @@ export async function callTenantLLM(req: LLMRequest): Promise<LLMResponse> {
     if (!platformKey) {
       throw new LLMNotConfiguredError(req.tenantId);
     }
+    const {
+      logPlatformFallbackUsed,
+      incrementPlatformFallbackUsage,
+      estimateTokensRough,
+    } = await import("@/lib/llm/platform-quota");
+    await logPlatformFallbackUsed({
+      tenantId: req.tenantId,
+      estimatedTokens: estimateTokensRough(req.messages),
+    });
+    await incrementPlatformFallbackUsage(req.tenantId);
     const model =
       (process.env.OPENAI_MODEL || "gpt-4o-mini").trim() || "gpt-4o-mini";
     const message = await callOpenAI(platformKey, model, req);

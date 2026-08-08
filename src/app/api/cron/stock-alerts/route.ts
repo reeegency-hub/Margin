@@ -67,6 +67,14 @@ export async function GET(request: Request) {
 
   const waFlush = await flushAllPendingStockBatches();
 
+  const { checkPlatformFallbackAnomaly } = await import(
+    "@/lib/llm/platform-quota"
+  );
+  const platformLlm = await checkPlatformFallbackAnomaly().catch(() => ({
+    total: 0,
+    alerted: false,
+  }));
+
   return NextResponse.json({
     ok: true,
     scanned: results.length,
@@ -74,6 +82,7 @@ export async function GET(request: Request) {
     whatsappFlush: waFlush,
     catalog,
     velocityRan: runVelocity,
+    platformLlm,
     results,
   });
 }

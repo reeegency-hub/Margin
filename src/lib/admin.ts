@@ -13,7 +13,8 @@ export function getAdminEmails(): string[] {
 }
 
 /**
- * Accès fondateur — FOUNDER_EMAIL + ADMIN_EMAILS (env).
+ * Accès fondateur — emails allowlist (transition) + User.role FOUNDER (DB).
+ * Préférer `requireRole("FOUNDER")` pour les nouvelles routes.
  */
 export function isAdminEmail(email: string | null | undefined): boolean {
   if (!email) return false;
@@ -23,8 +24,17 @@ export function isAdminEmail(email: string | null | undefined): boolean {
 
 export async function requireAdminSession() {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.email || !isAdminEmail(session.user.email)) {
-    return null;
+  if (!session?.user?.id) return null;
+
+  try {
+    const { requireRole } = await import("@/lib/auth/require-role");
+    await requireRole("FOUNDER");
+    return session;
+  } catch {
+    // Fallback allowlist email pendant migration rôle
+    if (!session.user.email || !isAdminEmail(session.user.email)) {
+      return null;
+    }
+    return session;
   }
-  return session;
 }
