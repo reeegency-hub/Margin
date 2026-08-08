@@ -2,7 +2,8 @@ import { CookieBanner } from "@/components/legal/CookieBanner";
 import { MobileLandingHero } from "./MobileLandingHero";
 import { MobileLandingProof } from "./MobileLandingProof";
 import { MobileLandingBenefits } from "./MobileLandingBenefits";
-import { MobileLandingPricingLink } from "./MobileLandingPricingLink";
+import { MobileLandingTeam } from "./MobileLandingTeam";
+import { MobileLandingPricing } from "./MobileLandingPricing";
 import { MobileLandingOffer } from "./MobileLandingOffer";
 import { MobileLandingFooter } from "./MobileLandingFooter";
 import "./mobile-landing.css";
@@ -15,14 +16,17 @@ export default function MobileLanding() {
   return (
     <div className="mland">
       <CookieBanner />
-      <MobileLandingHero />
-      <main className="mland-main">
-        <MobileLandingProof />
-        <MobileLandingBenefits />
-        <MobileLandingPricingLink />
-        <MobileLandingOffer />
-      </main>
-      <MobileLandingFooter />
+      <div className="mland-frame">
+        <MobileLandingHero />
+        <main className="mland-main">
+          <MobileLandingBenefits />
+          <MobileLandingOffer />
+          <MobileLandingProof />
+          <MobileLandingPricing />
+          <MobileLandingTeam />
+        </main>
+        <MobileLandingFooter />
+      </div>
     </div>
   );
 }
