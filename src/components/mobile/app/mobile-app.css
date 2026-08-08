@@ -394,13 +394,6 @@
   display: none !important;
 }
 
-/* Menu tiroir : pas de sous-sections / liens secondaires */
-.ds-chrome--mapp-three .ds-side__child,
-.ds-chrome--mapp-three .ds-side__help,
-.ds-chrome--mapp-three .ds-chrome-foot {
-  display: none !important;
-}
-
 .ds-chrome--mapp-three .app-shell--force-mobile .main {
   padding-bottom: 1rem;
 }
