@@ -21,13 +21,17 @@ export async function sendResendEmail(opts: {
   subject: string;
   html?: string;
   text: string;
-}): Promise<{ ok: true; from: string } | { ok: false; error: string }> {
+}): Promise<
+  | { ok: true; from: string }
+  | { ok: false; error: string; userMessage?: string }
+> {
   const key = process.env.RESEND_API_KEY?.trim();
   if (!key) {
     return { ok: false, error: "no_provider" };
   }
 
   let lastError = "send_failed";
+  let userMessage: string | undefined;
   for (const from of resendFromCandidates()) {
     try {
       const res = await fetch("https://api.resend.com/emails", {
@@ -50,20 +54,36 @@ export async function sendResendEmail(opts: {
       const body = await res.text().catch(() => "");
       lastError = `resend_${res.status}`;
       console.error(
-        `[resend] ${res.status} from=${from}: ${body.slice(0, 200)}`
+        `[resend] ${res.status} from=${from}: ${body.slice(0, 300)}`
       );
-      // Domaine non vérifié → essayer le from suivant
-      if (res.status === 403 && body.includes("not verified")) {
+      const lower = body.toLowerCase();
+      if (
+        res.status === 403 &&
+        (lower.includes("not verified") || lower.includes("domain"))
+      ) {
+        userMessage =
+          "Domaine email pas encore vérifié chez Resend. Vérifiez marginshop.app, ou utilisez le SMS.";
         continue;
       }
-      // Autre erreur : pas la peine d’insister avec le même payload
+      if (
+        lower.includes("only send testing") ||
+        lower.includes("you can only send") ||
+        lower.includes("testing emails")
+      ) {
+        userMessage =
+          "Resend est encore en mode test : l’email n’arrive que sur l’adresse du compte Resend. Vérifiez le domaine, ou utilisez le SMS.";
+        break;
+      }
       if (res.status === 422 || res.status === 400) {
+        userMessage =
+          "Adresse email refusée par le fournisseur. Vérifiez l’orthographe ou essayez le SMS.";
         break;
       }
     } catch (err) {
       lastError = "network";
+      userMessage = "Réseau email indisponible. Réessayez dans une minute.";
       console.error("[resend] network", err);
     }
   }
-  return { ok: false, error: lastError };
+  return { ok: false, error: lastError, userMessage };
 }

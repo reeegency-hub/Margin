@@ -5,12 +5,14 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Field, inputClass } from "@/components/ui";
+import { MarginLogo } from "@/components/brand/MarginLogo";
 import { PLANS, type BillingPeriod, type PlanId } from "@/lib/plans";
 import { AFFILIATE } from "@/lib/affiliate";
 import {
   requestSignupOtpAction,
   signupAndCheckoutAction,
 } from "@/app/actions";
+import "@/components/auth/auth-shell.css";
 
 export function SignupForm({
   smsAvailable = false,
@@ -29,10 +31,7 @@ export function SignupForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
-  const [channel, setChannel] = useState<"email" | "sms">(
-    smsAvailable ? "sms" : "email"
-  );
-  /** Honeypot — les bots le remplissent, les humains ne le voient pas */
+  const [channel, setChannel] = useState<"email" | "sms">("email");
   const [website, setWebsite] = useState("");
   const [newsletterOptIn, setNewsletterOptIn] = useState(true);
   const [otpCode, setOtpCode] = useState("");
@@ -49,10 +48,8 @@ export function SignupForm({
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const planMeta = useMemo(
-    () => PLANS.find((p) => p.id === plan),
-    [plan]
-  );
+  const planMeta = useMemo(() => PLANS.find((p) => p.id === plan), [plan]);
+  const useSms = channel === "sms" && smsAvailable;
 
   async function sendOtp() {
     setLoading(true);
@@ -60,8 +57,8 @@ export function SignupForm({
     setInfo(null);
     const res = await requestSignupOtpAction({
       email,
-      channel: channel === "sms" && smsAvailable ? "sms" : "email",
-      phone: channel === "sms" ? phone : undefined,
+      channel: useSms ? "sms" : "email",
+      phone: useSms ? phone : undefined,
       website,
     });
     setLoading(false);
@@ -75,7 +72,7 @@ export function SignupForm({
     setInfo(
       res.channel === "sms"
         ? "Code envoyé par SMS — valable 10 min."
-        : "Code envoyé par email — valable 10 min."
+        : "Code envoyé par email — valable 10 min. Pensez aux indésirables."
     );
   }
 
@@ -86,7 +83,7 @@ export function SignupForm({
         setError("Nom, email et mot de passe (8+ caractères) requis.");
         return;
       }
-      if (channel === "sms" && smsAvailable && !phone.trim()) {
+      if (useSms && !phone.trim()) {
         setError("Indiquez votre numéro pour recevoir le SMS.");
         return;
       }
@@ -132,42 +129,37 @@ export function SignupForm({
   }
 
   return (
-    <div className="marketing flex min-h-screen items-center justify-center px-4 py-10">
-      <form
-        onSubmit={onSubmit}
-        className="brand-card brand-card--dark-card relative w-full max-w-md space-y-3"
-      >
-        <h1 className="brand-card__title">Démarrez avec Margin</h1>
-        {planMeta ? (
-          <p className="brand-card__proof">
-            <strong className="signup-plan-name">{planMeta.name}</strong>
-            {" — "}
-            {planMeta.bestFor}. Sans changer de caisse · −
-            {AFFILIATE.discountPercentReferee}&nbsp;% le premier mois.
-            {referralCode
-              ? ` Parrainage appliqué.`
-              : null}
-            {step === "form" ? (
-              <span className="signup-plan-note">
-                {" "}
-                Un code à usage unique confirme votre email avant le paiement.
-              </span>
-            ) : (
-              <span className="signup-plan-note">
-                {" "}
-                Entrez le code reçu, puis on finalise.
-              </span>
-            )}
-          </p>
-        ) : (
-          <p className="brand-card__proof">
-            Sans changer de caisse · −{AFFILIATE.discountPercentReferee}&nbsp;% le
-            premier mois.
-          </p>
-        )}
+    <div className="auth-shell">
+      <div className="auth-shell__glow" aria-hidden />
+      <form onSubmit={onSubmit} className="auth-panel">
+        <MarginLogo tone="light" href="/welcome" className="auth-panel__logo" />
+        <h1 className="auth-panel__title">
+          {step === "form" ? "Créer mon compte" : "Vérification"}
+        </h1>
+        <p className="auth-panel__lead">
+          {step === "form" ? (
+            <>
+              {planMeta ? (
+                <>
+                  <strong>{planMeta.name}</strong> — {planMeta.bestFor}. −
+                  {AFFILIATE.discountPercentReferee}&nbsp;% le 1<sup>er</sup>{" "}
+                  mois.
+                  {referralCode ? " Parrainage appliqué." : null}
+                </>
+              ) : (
+                <>Sans changer de caisse.</>
+              )}
+            </>
+          ) : (
+            <>
+              Entrez le code reçu
+              {useSms ? " par SMS" : " par email"} pour finaliser.
+            </>
+          )}
+        </p>
 
         {step === "form" ? (
-          <>
+          <div className="auth-panel__fields">
             <Field label="Nom du commerce">
               <input
                 className={inputClass}
@@ -178,7 +170,7 @@ export function SignupForm({
                 required
               />
             </Field>
-            <Field label="Votre email">
+            <Field label="Email">
               <input
                 className={inputClass}
                 type="email"
@@ -189,17 +181,7 @@ export function SignupForm({
                 required
               />
             </Field>
-            <div
-              aria-hidden
-              style={{
-                position: "absolute",
-                left: "-10000px",
-                top: "auto",
-                width: 1,
-                height: 1,
-                overflow: "hidden",
-              }}
-            >
+            <div className="auth-hp" aria-hidden>
               <label>
                 Site web
                 <input
@@ -212,7 +194,7 @@ export function SignupForm({
                 />
               </label>
             </div>
-            <Field label="Mot de passe (8 caractères min.)">
+            <Field label="Mot de passe (8 car. min.)">
               <input
                 className={inputClass}
                 type="password"
@@ -224,50 +206,67 @@ export function SignupForm({
               />
             </Field>
 
-            {smsAvailable ? (
-              <div className="space-y-2">
-                <p className="text-[12px] opacity-70">Recevoir le code par</p>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    className={`segmented-tab ${channel === "email" ? "active" : ""}`}
-                    onClick={() => setChannel("email")}
-                  >
-                    Email
-                  </button>
-                  <button
-                    type="button"
-                    className={`segmented-tab ${channel === "sms" ? "active" : ""}`}
-                    onClick={() => setChannel("sms")}
-                  >
-                    SMS
-                  </button>
-                </div>
-                {channel === "sms" ? (
-                  <Field label="Téléphone">
-                    <input
-                      className={inputClass}
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+33612345678"
-                      autoComplete="tel"
-                      required
-                    />
-                  </Field>
-                ) : null}
+            <div className="auth-channel">
+              <p className="auth-channel__label">Code de confirmation</p>
+              <div className="auth-channel__row" role="group">
+                <button
+                  type="button"
+                  className={`auth-channel__btn ${channel === "email" ? "is-on" : ""}`}
+                  onClick={() => setChannel("email")}
+                >
+                  Email
+                </button>
+                <button
+                  type="button"
+                  className={`auth-channel__btn ${channel === "sms" ? "is-on" : ""}`}
+                  onClick={() => {
+                    if (!smsAvailable) {
+                      setError(
+                        "SMS pas encore activé sur ce serveur. Utilisez l’email."
+                      );
+                      setChannel("email");
+                      return;
+                    }
+                    setError(null);
+                    setChannel("sms");
+                  }}
+                  aria-disabled={!smsAvailable}
+                >
+                  SMS
+                </button>
               </div>
-            ) : null}
+              {!smsAvailable ? (
+                <p className="auth-channel__hint">
+                  SMS indisponible pour l’instant — email recommandé.
+                </p>
+              ) : channel === "sms" ? (
+                <Field label="Téléphone mobile">
+                  <input
+                    className={inputClass}
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="06 12 34 56 78"
+                    autoComplete="tel"
+                    required
+                  />
+                </Field>
+              ) : (
+                <p className="auth-channel__hint">
+                  Le code arrive dans votre boîte (et parfois indésirables).
+                </p>
+              )}
+            </div>
 
             {!showPlan ? (
-              <p className="text-[13px] opacity-80">
-                Formule choisie : <strong>{planMeta?.name}</strong>
+              <p className="auth-plan-line">
+                Formule : <strong>{planMeta?.name}</strong>
                 {" · "}
                 {billingPeriod === "yearly" ? "annuel (−20 %)" : "mensuel"}
                 {" · "}
                 <button
                   type="button"
-                  className="underline opacity-90"
+                  className="auth-linkish"
                   onClick={() => setShowPlan(true)}
                 >
                   Changer
@@ -303,35 +302,29 @@ export function SignupForm({
               </>
             )}
 
-            <label className="flex cursor-pointer items-start gap-2 text-[13px] opacity-85">
+            <label className="auth-check">
               <input
                 type="checkbox"
-                className="mt-1"
                 checked={newsletterOptIn}
                 onChange={(e) => setNewsletterOptIn(e.target.checked)}
               />
-              <span>
-                Recevoir les conseils stock Margin (1–2 e-mails / mois).
-                Désinscription en 1 clic.
-              </span>
+              <span>Conseils stock Margin (1–2 e-mails / mois).</span>
             </label>
-          </>
+          </div>
         ) : (
-          <>
-            <p className="text-[13px] opacity-80">
-              Code envoyé à{" "}
-              <strong>
-                {channel === "sms" && smsAvailable ? phone : email}
-              </strong>
+          <div className="auth-panel__fields">
+            <p className="auth-plan-line">
+              Envoyé à{" "}
+              <strong>{useSms ? phone || email : email}</strong>
             </p>
             {devCode ? (
-              <p className="flash flash-warn text-[13px]">
+              <p className="auth-devcode">
                 Mode local — code : <strong>{devCode}</strong>
               </p>
             ) : null}
             <Field label="Code à 6 chiffres">
               <input
-                className={inputClass}
+                className={`${inputClass} auth-otp-input`}
                 inputMode="numeric"
                 pattern="[0-9]{6}"
                 maxLength={6}
@@ -340,13 +333,13 @@ export function SignupForm({
                   setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))
                 }
                 autoComplete="one-time-code"
-                placeholder="123456"
+                placeholder="••••••"
                 required
               />
             </Field>
             <button
               type="button"
-              className="btn-ghost w-full"
+              className="auth-secondary"
               disabled={loading}
               onClick={() => void sendOtp()}
             >
@@ -354,7 +347,7 @@ export function SignupForm({
             </button>
             <button
               type="button"
-              className="text-[13px] underline opacity-70"
+              className="auth-linkish"
               onClick={() => {
                 setStep("form");
                 setOtpCode("");
@@ -364,23 +357,23 @@ export function SignupForm({
             >
               ← Modifier mes infos
             </button>
-          </>
+          </div>
         )}
 
-        {info ? <p className="text-[13px] opacity-80">{info}</p> : null}
-        {error ? (
-          <p className="text-[14px] text-[var(--accent-lime)]">{error}</p>
-        ) : null}
-        <button type="submit" className="brand-cta w-full" disabled={loading}>
+        {info ? <p className="auth-info">{info}</p> : null}
+        {error ? <p className="auth-error">{error}</p> : null}
+
+        <button type="submit" className="auth-cta" disabled={loading}>
           {loading
             ? step === "form"
               ? "Envoi…"
               : "Création…"
             : step === "form"
-              ? "Commencer"
+              ? "Recevoir mon code"
               : "Créer mon compte"}
         </button>
-        <p className="text-center text-[13px] opacity-70">
+
+        <p className="auth-foot">
           Déjà un compte ? <Link href="/login">Se connecter</Link>
         </p>
       </form>

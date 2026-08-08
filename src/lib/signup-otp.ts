@@ -226,7 +226,8 @@ async function sendOtpEmail(
     return {
       ok: false,
       error:
-        "Email indisponible tant que le domaine Resend n’est pas vérifié. Utilisez le SMS, ou l’adresse liée au compte Resend.",
+        sent.userMessage ||
+        "Email non envoyé. Vérifiez l’adresse, réessayez, ou passez en SMS.",
     };
   }
   return { ok: true, via: "resend" };
@@ -249,14 +250,46 @@ async function sendOtpSms(
   try {
     const twilio = (await import("twilio")).default;
     const client = twilio(sid, token);
+    const smsFrom = from.startsWith("whatsapp:")
+      ? from.replace(/^whatsapp:/, "")
+      : from;
+    if (!/^\+?\d{8,15}$/.test(smsFrom.replace(/\s/g, ""))) {
+      return {
+        ok: false,
+        error:
+          "Numéro d’envoi SMS Twilio mal configuré (TWILIO_SMS_FROM). Utilisez l’email.",
+      };
+    }
     await client.messages.create({
-      from,
+      from: smsFrom,
       to: phone,
       body: `Margin : votre code est ${code} (valable 10 min).`,
     });
     return { ok: true, via: "twilio" };
   } catch (err) {
-    console.error("[signup-otp] sms failed", err);
-    return { ok: false, error: "Impossible d’envoyer le SMS. Réessayez." };
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[signup-otp] sms failed", msg.slice(0, 300));
+    const lower = msg.toLowerCase();
+    if (
+      lower.includes("unverified") ||
+      lower.includes("trial") ||
+      lower.includes("permission")
+    ) {
+      return {
+        ok: false,
+        error:
+          "SMS Twilio : numéro destinataire non autorisé (compte trial). Vérifiez le numéro dans Twilio, ou utilisez l’email.",
+      };
+    }
+    if (lower.includes("invalid") && lower.includes("from")) {
+      return {
+        ok: false,
+        error: "Expéditeur SMS invalide. Utilisez l’email pour le moment.",
+      };
+    }
+    return {
+      ok: false,
+      error: "Impossible d’envoyer le SMS. Réessayez ou utilisez l’email.",
+    };
   }
 }

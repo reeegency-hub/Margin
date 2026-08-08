@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Field, inputClass } from "@/components/ui";
 import { MarginLogo } from "@/components/brand/MarginLogo";
 import { getPostLoginPath } from "@/app/actions";
+import "@/components/auth/auth-shell.css";
 
 export function LoginForm({ allowDemo }: { allowDemo: boolean }) {
   const router = useRouter();
@@ -73,21 +74,20 @@ export function LoginForm({ allowDemo }: { allowDemo: boolean }) {
   }
 
   return (
-    <div className="marketing flex min-h-screen items-center justify-center px-4">
-      <form
-        onSubmit={onSubmit}
-        className="brand-card brand-card--dark-card w-full max-w-md"
-      >
-        <MarginLogo tone="light" href="/welcome" />
-        <h1 className="brand-card__title mt-3">
+    <div className="auth-shell">
+      <div className="auth-shell__glow" aria-hidden />
+      <form onSubmit={onSubmit} className="auth-panel">
+        <MarginLogo tone="light" href="/welcome" className="auth-panel__logo" />
+        <h1 className="auth-panel__title">
           {justPaid ? "Paiement reçu" : "Connexion"}
         </h1>
-        <p className="brand-card__proof">
+        <p className="auth-panel__lead">
           {justPaid
             ? "Entrez le mot de passe choisi à l’inscription pour ouvrir votre commerce."
-            : "Retour au commerce — email et mot de passe de votre compte."}
+            : "Email et mot de passe de votre compte Margin."}
         </p>
-        <div className="login-fields space-y-3">
+
+        <div className="auth-panel__fields">
           <Field label="Email">
             <input
               className={inputClass}
@@ -108,20 +108,23 @@ export function LoginForm({ allowDemo }: { allowDemo: boolean }) {
               required
             />
           </Field>
-          {error ? (
-            <p className="text-[14px] text-[var(--accent-lime)]">{error}</p>
-          ) : null}
         </div>
-        <button type="submit" className="brand-cta w-full" disabled={loading}>
+
+        {error ? <p className="auth-error">{error}</p> : null}
+
+        <button type="submit" className="auth-cta" disabled={loading}>
           {loading ? "Connexion…" : "Se connecter"}
         </button>
+
         {allowDemo ? (
-          <p className="mt-3 text-center text-[13px] opacity-70">
+          <p className="auth-foot">
             <a href="/api/demo-login">Connexion démo (local)</a>
           </p>
         ) : null}
-        <p className="mt-4 text-center text-[13px] opacity-70">
-          <Link href="/welcome">Retour à l’accueil</Link>
+        <p className="auth-foot">
+          Pas encore de compte ? <Link href="/signup">S’inscrire</Link>
+          {" · "}
+          <Link href="/welcome">Accueil</Link>
         </p>
       </form>
     </div>
