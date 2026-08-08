@@ -147,21 +147,15 @@ export function MarginAssistant({
   }, [messages, expanded, pending]);
 
   useEffect(() => {
-    if (layout !== "page") return;
-    onExpandedChange(true);
-  }, [layout, onExpandedChange]);
-
-  useEffect(() => {
     function onPrefill(e: Event) {
       const detail = (e as CustomEvent<{ text?: string }>).detail;
       const text = String(detail?.text || "").trim();
       if (!text) return;
       setInput(text);
-      onExpandedChange(true);
     }
     window.addEventListener("margin:assistant-prefill", onPrefill);
     return () => window.removeEventListener("margin:assistant-prefill", onPrefill);
-  }, [onExpandedChange]);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;

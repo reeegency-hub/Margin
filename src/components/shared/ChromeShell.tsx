@@ -108,7 +108,40 @@ function iconFor(sectionId: NavSection["id"]) {
   return <IconBox />;
 }
 
+function IconGear() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 3.5v2.2M12 18.3V20.5M4.8 7.2l1.7 1.2M17.5 15.6l1.7 1.2M4.8 16.8l1.7-1.2M17.5 8.4l1.7-1.2" />
+    </svg>
+  );
+}
+
 function buildNavGroups(isAdmin: boolean, device: DeviceType): NavGroupConfig[] {
+  if (isFeatureEnabled("mobileThreeTabApp", device)) {
+    return [
+      {
+        id: "main",
+        items: [
+          {
+            id: "home",
+            href: "/",
+            label: "Accueil",
+            icon: <IconDash />,
+            match: ["/"],
+          },
+          {
+            id: "settings",
+            href: "/settings",
+            label: "Réglages",
+            icon: <IconGear />,
+            match: ["/settings"],
+          },
+        ],
+      },
+    ];
+  }
+
   const allowCatalog = isFeatureEnabled("catalogImport", device);
 
   const main: NavGroupConfig = {
@@ -270,7 +303,7 @@ function ShellInner({
     </div>
   );
 
-  const sidebarFooter = (
+  const sidebarFooter = threeTabApp ? null : (
     <div className="ds-chrome-foot">
       <SidebarWhatsApp
         whatsappTo={whatsappTo}
@@ -279,7 +312,15 @@ function ShellInner({
     </div>
   );
 
-  const userMenu = (
+  const userMenu = threeTabApp ? (
+    <button
+      type="button"
+      role="menuitem"
+      onClick={() => void signOut({ callbackUrl: "/welcome" })}
+    >
+      Déconnexion
+    </button>
+  ) : (
     <>
       <Link href="/settings" role="menuitem">
         Réglages
@@ -296,7 +337,8 @@ function ShellInner({
 
   const topbarTitle =
     pageTitle ||
-    (isHome ? restaurantName : undefined) ||
+    (isHome ? (threeTabApp ? "Copilote" : restaurantName) : undefined) ||
+    (pathname.startsWith("/settings") ? "Réglages" : undefined) ||
     NAV_SECTIONS.find(
       (s) => pathname === s.href || pathname.startsWith(`${s.href}/`)
     )?.label;
@@ -326,14 +368,15 @@ function ShellInner({
           subtitle: planLabel,
         }}
         navGroups={navGroups}
-        helpHref="/settings"
-        helpLabel="Aide commerce"
+        helpHref={threeTabApp ? "/" : "/settings"}
+        helpLabel={threeTabApp ? "Accueil" : "Aide commerce"}
         sidebarFooter={sidebarFooter}
         topbarTitle={topbarTitle}
         logoPlan={plan}
         user={{ name: restaurantName }}
         userMenu={userMenu}
         hideMenuOnDesktop={isFeatureEnabled("sidebarNav", device)}
+        hideMobileDrawer={threeTabApp}
         onAssistantClick={
           showDockedAssistant
             ? () => setAssistantExpanded((v) => !v)
@@ -348,13 +391,15 @@ function ShellInner({
           ) : undefined
         }
       >
-        {forceMobileOverride ? (
+        {forceMobileOverride && !threeTabApp ? (
           <div className="force-mobile-bar">
             <span>Mode téléphone</span>
             <Link href="/?mobile=0">Quitter</Link>
           </div>
         ) : null}
-        {showFullscreenGuide ? (
+        {threeTabApp ? (
+          children
+        ) : showFullscreenGuide ? (
           <FirstHourGuide
             state={firstHour!}
             restaurantId={restaurantId}

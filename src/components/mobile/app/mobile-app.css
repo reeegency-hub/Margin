@@ -387,13 +387,55 @@
   border: 0;
 }
 
-/* Shell: hide classic docked assistant / old bottom nav when 3-tab */
-.ds-chrome--mapp-three .margin-asst-pane,
+/* Shell mobile LLM + réglages */
+.ds-chrome--mapp-three .margin-asst-pane:not(.margin-asst-pane--page),
 .ds-chrome--mapp-three .bottom-nav,
 .ds-chrome--mapp-three .bottom-nav-wrap {
   display: none !important;
 }
 
+.ds-chrome--mapp-three .ds-side__child,
+.ds-chrome--mapp-three .ds-side__help,
+.ds-chrome--mapp-three .ds-chrome-foot,
+.ds-chrome--mapp-three .ds-top__menu,
+.ds-chrome--mapp-three .ds-side-overlay,
+.ds-chrome--mapp-three .ds-side--drawer {
+  display: none !important;
+}
+
 .ds-chrome--mapp-three .app-shell--force-mobile .main {
   padding-bottom: 1rem;
+}
+
+.mapp-tabs__row--two {
+  grid-template-columns: 1fr 1fr;
+  max-width: 16rem;
+}
+
+.mapp-tabs {
+  z-index: 120;
+}
+
+.mapp-copilot {
+  min-height: calc(100dvh - 7rem);
+  margin: -0.25rem -0.15rem 4.5rem;
+}
+
+.mapp-copilot .margin-asst-pane {
+  position: relative !important;
+  inset: auto !important;
+  width: 100% !important;
+  height: min(78dvh, 720px) !important;
+  max-height: none !important;
+  border-radius: 1.15rem;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+}
+
+.mapp-copilot .margin-asst-pane.is-expanded {
+  transform: none !important;
+}
+
+.mapp-copilot .margin-asst-pane__close {
+  display: none !important;
 }

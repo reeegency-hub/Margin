@@ -24,7 +24,7 @@ export function SettingsScreen({
     <div className="mapp mapp-settings">
       <h1 className="mapp-settings__title">Réglages</h1>
       <p className="mapp-settings__lead">
-        Compte et préférences essentielles. Le reste passe par le copilote.
+        Compte et préférences. Le reste se demande à l’accueil.
       </p>
 
       <div className="mapp-settings__card">
@@ -61,11 +61,8 @@ export function SettingsScreen({
             className="mapp-settings__btn mapp-settings__btn--ghost"
           />
         ) : null}
-        <Link
-          href="/assistant"
-          className="mapp-settings__btn mapp-settings__btn--ghost"
-        >
-          Demander au copilote
+        <Link href="/" className="mapp-settings__btn mapp-settings__btn--ghost">
+          Retour à l’accueil
         </Link>
         <button
           type="button"
@@ -75,11 +72,6 @@ export function SettingsScreen({
           Déconnexion
         </button>
       </div>
-
-      <p className="mapp-settings__hint">
-        Caisse, catalogue, équipe, connexions delivery : passez par l’onglet
-        Copilote.
-      </p>
     </div>
   );
 }
