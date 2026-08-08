@@ -22,15 +22,31 @@ export async function POST(req: NextRequest) {
     process.env.WEBHOOK_BASE_URL
       ? `${process.env.WEBHOOK_BASE_URL}/api/webhooks/whatsapp`
       : req.url;
+  const isProd = process.env.NODE_ENV === "production";
 
-  if (authToken && signature) {
+  // Prod : signature Twilio obligatoire (pas de traitement partiel).
+  if (isProd) {
+    if (!authToken || !signature) {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
     const valid = twilio.validateRequest(
       authToken,
       signature,
       url,
       Object.fromEntries(form.entries()) as Record<string, string>
     );
-    if (!valid && process.env.NODE_ENV === "production") {
+    if (!valid) {
+      console.warn("[whatsapp-webhook] invalid signature");
+      return new NextResponse("Forbidden", { status: 403 });
+    }
+  } else if (authToken && signature) {
+    const valid = twilio.validateRequest(
+      authToken,
+      signature,
+      url,
+      Object.fromEntries(form.entries()) as Record<string, string>
+    );
+    if (!valid) {
       return new NextResponse("Forbidden", { status: 403 });
     }
   }
