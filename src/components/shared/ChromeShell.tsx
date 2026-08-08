@@ -108,6 +108,15 @@ function iconFor(sectionId: NavSection["id"]) {
   return <IconBox />;
 }
 
+function IconCopilotNav() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+      <circle cx="12" cy="12" r="3.2" />
+      <path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6" />
+    </svg>
+  );
+}
+
 function IconGear() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
@@ -129,6 +138,13 @@ function buildNavGroups(isAdmin: boolean, device: DeviceType): NavGroupConfig[] 
             label: "Accueil",
             icon: <IconDash />,
             match: ["/"],
+          },
+          {
+            id: "copilot",
+            href: "/assistant",
+            label: "Copilote",
+            icon: <IconCopilotNav />,
+            match: ["/assistant"],
           },
           {
             id: "settings",
@@ -372,8 +388,8 @@ function ShellInner({
           subtitle: planLabel,
         }}
         navGroups={navGroups}
-        helpHref={threeTabApp ? "/" : "/settings"}
-        helpLabel={threeTabApp ? "Accueil" : "Aide commerce"}
+        helpHref={threeTabApp ? "/assistant" : "/settings"}
+        helpLabel={threeTabApp ? "Copilote" : "Aide commerce"}
         sidebarFooter={sidebarFooter}
         topbarTitle={topbarTitle}
         logoPlan={plan}

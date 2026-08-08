@@ -91,19 +91,22 @@ export default async function HomePage() {
   // Un seul accueil chargé — pas de double bundle CSS-hidden
   if (!isFeatureEnabled("desktopDashboard", device)) {
     if (isFeatureEnabled("mobileThreeTabApp", device)) {
-      const { HomeScreen } = await import(
-        "@/components/mobile/app/HomeScreen"
+      const { DashboardScreen } = await import(
+        "@/components/mobile/app/DashboardScreen"
       );
       return (
         <HomeAlertsGate
           alerts={dashboardAlerts}
           restaurantName={session.user.restaurantName}
           whatsappTo={m.restaurant.whatsappTo}
-          suppressModal
+          suppressModal={firstHourActive}
         >
-          <HomeScreen
+          <DashboardScreen
             userName={session.user.name || ""}
             restaurantName={session.user.restaurantName}
+            caToday={m.caToday}
+            alertCount={m.alerts.length + m.critical.length}
+            alertMessage={homeData.alert?.message ?? null}
           />
         </HomeAlertsGate>
       );

@@ -1,166 +1,104 @@
-/* App mobile post-login — identité Margin (encre + lime) */
+/* App mobile post-login — 3 onglets */
 
 .mapp {
   --mapp-ink: #0c0f0a;
   --mapp-lime: #e6f8aa;
-  --mapp-muted: rgba(244, 244, 240, 0.62);
-  --mapp-line: rgba(230, 248, 170, 0.14);
-  --mapp-panel: #121610;
-  --mapp-soft: rgba(230, 248, 170, 0.06);
+  --mapp-muted: rgba(12, 15, 10, 0.58);
+  --mapp-line: rgba(12, 15, 10, 0.08);
+  --mapp-soft: #f3f6ec;
 }
 
-/* —— Accueil = copilote —— */
-.mapp-home {
-  position: relative;
-  isolation: isolate;
+.mapp-dash {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  min-height: calc(100dvh - 6.5rem);
-  margin: -0.35rem -0.35rem 4.75rem;
-  padding: 0.85rem 0.85rem 0.5rem;
-  border-radius: 1.25rem;
-  background:
-    radial-gradient(110% 70% at 8% -10%, rgba(230, 248, 170, 0.16), transparent 55%),
-    radial-gradient(90% 60% at 100% 100%, rgba(70, 100, 50, 0.2), transparent 50%),
-    linear-gradient(165deg, #070907 0%, #10140d 50%, #0a0d09 100%);
-  color: #f4f4f0;
-  overflow: hidden;
-  animation: mapp-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  gap: 1.25rem;
+  padding: 0.25rem 0 5.5rem;
+  max-width: 28rem;
+  margin: 0 auto;
 }
 
-.mapp-home__glow {
-  pointer-events: none;
-  position: absolute;
-  inset: auto -25% -35% -25%;
-  height: 50%;
-  background: radial-gradient(
-    closest-side,
-    rgba(230, 248, 170, 0.1),
-    transparent 70%
-  );
-  filter: blur(10px);
-  z-index: 0;
-}
-
-.mapp-home__header {
-  position: relative;
-  z-index: 1;
+.mapp-dash__header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
 }
 
-.mapp-home__brand {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.7rem;
-  min-width: 0;
-}
-
-.mapp-home__mark {
-  width: 1.85rem;
-  height: 1.85rem;
-  color: var(--mapp-lime);
-  flex-shrink: 0;
-  margin-top: 0.15rem;
-}
-
-.mapp-home__hello {
+.mapp-dash__hello {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--mapp-muted);
 }
 
-.mapp-home__title {
-  margin: 0.2rem 0 0;
-  font-size: clamp(1.35rem, 5vw, 1.65rem);
+.mapp-dash__name {
+  margin: 0.15rem 0 0;
+  font-size: clamp(1.45rem, 5vw, 1.75rem);
   font-weight: 680;
   letter-spacing: -0.03em;
   line-height: 1.15;
-  color: #f7f8f2;
+  color: var(--mapp-ink);
 }
 
-.mapp-home__account {
-  width: 2.45rem;
-  height: 2.45rem;
+.mapp-dash__account {
+  width: 2.5rem;
+  height: 2.5rem;
   border-radius: 999px;
   display: grid;
   place-items: center;
-  background: rgba(230, 248, 170, 0.1);
-  border: 1px solid var(--mapp-line);
+  background: var(--mapp-ink);
   color: var(--mapp-lime);
   text-decoration: none;
   flex-shrink: 0;
 }
 
-.mapp-home__lead {
-  position: relative;
-  z-index: 1;
-  margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.4;
-  color: var(--mapp-muted);
-  max-width: 32ch;
+.mapp-dash__kpis {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
 }
 
-.mapp-home__chat {
-  position: relative;
-  z-index: 1;
-  flex: 1;
-  min-height: 0;
+.mapp-dash__kpi {
+  padding: 0.85rem 0.9rem;
+  border-radius: 1rem;
+  background: var(--mapp-soft);
+  border: 1px solid var(--mapp-line);
+}
+
+.mapp-dash__kpi-label {
+  margin: 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mapp-muted);
+}
+
+.mapp-dash__kpi-value {
+  margin: 0.25rem 0 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--mapp-ink);
+}
+
+.mapp-dash__ask-block {
   display: flex;
   flex-direction: column;
-}
-
-.mapp-home__chat .margin-asst-pane {
-  position: relative !important;
-  inset: auto !important;
-  width: 100% !important;
-  height: 100% !important;
-  min-height: min(62dvh, 560px);
-  max-height: none !important;
-  border-radius: 1.05rem;
-  overflow: hidden;
-  border: 1px solid var(--mapp-line);
-  background: color-mix(in srgb, var(--mapp-panel) 94%, black);
-  box-shadow:
-    0 1px 0 rgba(230, 248, 170, 0.05) inset,
-    0 18px 40px rgba(0, 0, 0, 0.35);
-}
-
-.mapp-home__chat .margin-asst-pane.is-expanded {
-  transform: none !important;
-}
-
-.mapp-home__chat .margin-asst-pane__close,
-.mapp-home__chat .margin-asst-pane__eyebrow,
-.mapp-home__chat .margin-asst-pane__context {
-  display: none !important;
-}
-
-.mapp-home__chat .margin-asst-pane__title {
-  color: var(--mapp-lime) !important;
-}
-
-.mapp-home__chat .margin-asst-pane__chip {
-  border-color: rgba(230, 248, 170, 0.22) !important;
-  background: rgba(230, 248, 170, 0.07) !important;
-}
-
-.mapp-home__chat .margin-asst-pane__send,
-.mapp-home__chat .margin-asst-pane__chip.is-active {
-  background: var(--mapp-lime) !important;
-  color: var(--mapp-ink) !important;
+  gap: 0.75rem;
+  padding: 1.1rem 1rem 1.15rem;
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(120% 100% at 0% 0%, rgba(230, 248, 170, 0.55), transparent 55%),
+    linear-gradient(160deg, #121610 0%, #1a2116 100%);
+  color: #f4f4f0;
+  animation: mapp-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes mapp-rise {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -168,15 +106,147 @@
   }
 }
 
-/* —— Réglages —— */
+.mapp-dash__ask-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.mapp-dash__ask-lead {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: rgba(244, 244, 240, 0.68);
+}
+
+.mapp-dash__ask-form {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.35rem 0.35rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(230, 248, 170, 0.22);
+}
+
+.mapp-dash__ask-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: #f4f4f0;
+  font-size: 0.95rem;
+  outline: none;
+  padding: 0.55rem 0;
+}
+
+.mapp-dash__ask-input::placeholder {
+  color: rgba(244, 244, 240, 0.45);
+}
+
+.mapp-dash__ask-icon,
+.mapp-dash__ask-go {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--mapp-lime);
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.mapp-dash__ask-go {
+  background: var(--mapp-lime);
+  color: var(--mapp-ink);
+}
+
+.mapp-dash__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.mapp-dash__chip {
+  appearance: none;
+  border: 1px solid rgba(230, 248, 170, 0.28);
+  background: rgba(230, 248, 170, 0.08);
+  color: #f4f4f0;
+  border-radius: 999px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 560;
+  cursor: pointer;
+}
+
+.mapp-dash__chip:hover {
+  background: rgba(230, 248, 170, 0.16);
+}
+
+.mapp-dash__alert {
+  padding: 0.85rem 0.95rem;
+  border-radius: 1rem;
+  background: #fff;
+  border: 1px solid var(--mapp-line);
+}
+
+.mapp-dash__alert-label {
+  margin: 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mapp-muted);
+}
+
+.mapp-dash__alert-text {
+  margin: 0.25rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--mapp-ink);
+}
+
+/* Copilot page */
+.mapp-copilot {
+  min-height: calc(100dvh - 7.5rem);
+  margin: -0.25rem -0.15rem 4.5rem;
+}
+
+.mapp-copilot .margin-asst-pane {
+  position: relative !important;
+  inset: auto !important;
+  width: 100% !important;
+  height: min(78dvh, 720px) !important;
+  max-height: none !important;
+  border-radius: 1.15rem;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+}
+
+.mapp-copilot .margin-asst-pane.is-expanded {
+  transform: none !important;
+}
+
+.mapp-copilot .margin-asst-pane__close {
+  display: none !important;
+}
+
+.mapp-copilot .margin-asst-pane__eyebrow {
+  display: none;
+}
+
+/* Settings */
 .mapp-settings {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   max-width: 28rem;
   margin: 0 auto;
-  padding: 0.25rem 0 5.5rem;
-  color: #f4f4f0;
+  padding-bottom: 5.5rem;
 }
 
 .mapp-settings__title {
@@ -184,42 +254,41 @@
   font-size: 1.55rem;
   font-weight: 680;
   letter-spacing: -0.03em;
-  color: #f7f8f2;
 }
 
 .mapp-settings__lead {
   margin: 0;
-  color: rgba(244, 244, 240, 0.62);
+  color: var(--mapp-muted);
   font-size: 0.92rem;
 }
 
 .mapp-settings__card {
   padding: 1rem;
   border-radius: 1rem;
-  background: #121610;
-  border: 1px solid rgba(230, 248, 170, 0.14);
+  background: var(--mapp-soft);
+  border: 1px solid var(--mapp-line);
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.75rem;
 }
 
 .mapp-settings__row {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.25rem;
 }
 
 .mapp-settings__label {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: rgba(244, 244, 240, 0.5);
+  color: var(--mapp-muted);
 }
 
 .mapp-settings__value {
   font-size: 1rem;
   font-weight: 600;
-  color: #f4f4f0;
+  color: var(--mapp-ink);
 }
 
 .mapp-settings__actions {
@@ -240,30 +309,30 @@
 }
 
 .mapp-settings__btn--primary {
-  background: var(--mapp-lime);
-  color: var(--mapp-ink);
+  background: var(--mapp-ink);
+  color: var(--mapp-lime);
 }
 
 .mapp-settings__btn--ghost {
   background: transparent;
-  border: 1px solid rgba(230, 248, 170, 0.2);
-  color: #f4f4f0;
+  border: 1px solid var(--mapp-line);
+  color: var(--mapp-ink);
 }
 
 .mapp-settings__btn--danger {
   background: transparent;
-  border: 1px solid rgba(255, 120, 120, 0.28);
-  color: #ffb4b4;
+  border: 1px solid rgba(180, 40, 40, 0.25);
+  color: #8a1f1f;
 }
 
 .mapp-settings__hint {
   margin: 0;
   font-size: 0.82rem;
-  color: rgba(244, 244, 240, 0.5);
+  color: var(--mapp-muted);
   line-height: 1.4;
 }
 
-/* —— Tabs —— */
+/* Bottom tabs */
 .mapp-tabs {
   position: fixed;
   left: 0;
@@ -271,9 +340,9 @@
   bottom: 0;
   z-index: 60;
   padding: 0.45rem 1.1rem calc(0.55rem + env(safe-area-inset-bottom));
-  background: color-mix(in srgb, #0a0d09 88%, transparent);
-  backdrop-filter: blur(16px);
-  border-top: 1px solid rgba(230, 248, 170, 0.12);
+  background: color-mix(in srgb, #f7f8f2 88%, transparent);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid var(--mapp-line);
 }
 
 .mapp-tabs__row {
@@ -284,11 +353,6 @@
   margin: 0 auto;
 }
 
-.mapp-tabs__row--two {
-  grid-template-columns: 1fr 1fr;
-  max-width: 16rem;
-}
-
 .mapp-tabs__link {
   display: flex;
   flex-direction: column;
@@ -297,16 +361,14 @@
   gap: 0.15rem;
   min-height: 3rem;
   border-radius: 0.85rem;
-  color: rgba(244, 244, 240, 0.42);
+  color: rgba(12, 15, 10, 0.45);
   text-decoration: none;
-  transition:
-    color 0.15s ease,
-    background 0.15s ease;
+  transition: color 0.15s ease, background 0.15s ease;
 }
 
 .mapp-tabs__link.is-active {
   color: var(--mapp-ink);
-  background: var(--mapp-lime);
+  background: rgba(230, 248, 170, 0.55);
 }
 
 .mapp-tabs__link svg {
@@ -325,45 +387,20 @@
   border: 0;
 }
 
-/* —— Shell mobile 2 onglets —— */
-.ds-chrome--mapp-three .margin-asst-pane:not(.margin-asst-pane--page),
+/* Shell: hide classic docked assistant / old bottom nav when 3-tab */
+.ds-chrome--mapp-three .margin-asst-pane,
 .ds-chrome--mapp-three .bottom-nav,
 .ds-chrome--mapp-three .bottom-nav-wrap {
   display: none !important;
 }
 
+/* Menu tiroir : pas de sous-sections / liens secondaires */
 .ds-chrome--mapp-three .ds-side__child,
 .ds-chrome--mapp-three .ds-side__help,
 .ds-chrome--mapp-three .ds-chrome-foot {
   display: none !important;
 }
 
-.ds-chrome--mapp-three .app-shell--force-mobile,
-.ds-chrome--mapp-three .ds-shell,
-.ds-chrome--mapp-three .ds-shell__main,
-.ds-chrome--mapp-three .main,
-.ds-chrome--mapp-three .content {
-  background: #070907 !important;
-}
-
-.ds-chrome--mapp-three .ds-top,
-.ds-chrome--mapp-three .topbar {
-  background: #0a0d09 !important;
-  border-bottom-color: rgba(230, 248, 170, 0.1) !important;
-  color: #f4f4f0 !important;
-}
-
-.ds-chrome--mapp-three .ds-top__title,
-.ds-chrome--mapp-three .module-page-title--chrome {
-  color: #f4f4f0 !important;
-}
-
 .ds-chrome--mapp-three .app-shell--force-mobile .main {
-  padding-bottom: 0.5rem;
-}
-
-.ds-chrome--mapp-three .force-mobile-bar {
-  background: rgba(230, 248, 170, 0.08);
-  border-color: rgba(230, 248, 170, 0.18);
-  color: #f4f4f0;
+  padding-bottom: 1rem;
 }
