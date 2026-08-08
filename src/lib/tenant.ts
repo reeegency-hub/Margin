@@ -2,7 +2,7 @@
  * Multi-tenant Margin — shared database + shared schema.
  *
  * Convention :
- * - Tenant = `Restaurant` (une entreprise / magasin)
+ * - Tenant = `Restaurant` (une entreprise / commerce)
  * - Clé tenant = `restaurantId` (= tenant_id métier)
  * - Isolation app : toutes les requêtes métier filtrent par `restaurantId`
  * - Isolation DB (Postgres/Supabase) : RLS via `app.tenant_id` (voir prisma/rls.sql)
@@ -43,7 +43,7 @@ export function assertSameTenant(
   label = "Ressource"
 ): asserts resourceTenantId is string {
   if (!resourceTenantId || resourceTenantId !== tenantId) {
-    throw new Error(`${label} introuvable ou hors périmètre magasin.`);
+    throw new Error(`${label} introuvable ou hors périmètre commerce.`);
   }
 }
 
@@ -83,7 +83,11 @@ export const TENANT_SCOPED_MODELS = new Set([
   "Alert",
   "WhatsAppOutboundMessage",
   "CatalogIssue",
-  /** Journaux billing Ops (restaurantId optionnel ; écritures via lib/stripe) */
+  "LlmProviderCredential",
+  "AssistantDraft",
+  "AssistantCommit",
+  "NewsletterSubscriber",
+  // Journaux billing Ops (restaurantId optionnel ; écritures via lib/stripe)
   "StripeWebhookEvent",
   "StripeReconciliationRun",
 ]);
@@ -100,4 +104,10 @@ export const TENANT_CHILD_MODELS = new Set([
   "Attendance",
   "PerformanceSnapshot",
   "DeliveryAssignment",
+  "LlmProviderCredentialEvent",
+  "SignupOtpChallenge",
+  "MarketingProspect",
+  "MarketingInfluencer",
+  "AdminAuditLog",
+  "PlatformLlmUsage",
 ]);

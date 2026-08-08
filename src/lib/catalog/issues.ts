@@ -280,14 +280,23 @@ export async function mergeIngredients(
       data: { ingredientId: keepId },
     });
     await tx.supplierCatalogItem.deleteMany({
-      where: { ingredientId: removeId },
+      where: {
+        ingredientId: removeId,
+        supplier: { restaurantId },
+      },
     });
     await tx.purchaseOrderLine.updateMany({
-      where: { ingredientId: removeId },
+      where: {
+        ingredientId: removeId,
+        order: { restaurantId },
+      },
       data: { ingredientId: keepId },
     });
     await tx.inventoryCountLine.updateMany({
-      where: { ingredientId: removeId },
+      where: {
+        ingredientId: removeId,
+        inventoryCount: { restaurantId },
+      },
       data: { ingredientId: keepId },
     });
 

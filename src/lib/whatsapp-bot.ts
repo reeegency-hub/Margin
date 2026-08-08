@@ -422,7 +422,7 @@ async function handleInventoryStep(
   }
 
   const inv = await prisma.inventoryCount.findFirst({
-    where: { id: payload.inventoryId },
+    where: { id: payload.inventoryId, restaurantId },
     include: {
       lines: {
         where: { id: payload.lineIds[nextStep] },

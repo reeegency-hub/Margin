@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { isAdminEmail } from "@/lib/admin";
 import {
   getStripe,
   isStripeConfigured,
@@ -14,7 +15,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          "Paiement non configuré. Contactez Margin ou utilisez /admin pour créer le magasin.",
+          "Paiement non configuré. Contactez Margin ou utilisez /admin pour créer le commerce.",
       },
       { status: 503 }
     );
@@ -49,19 +50,31 @@ export async function POST(request: Request) {
   }
 
   const session = await getServerSession(authOptions);
-  const restaurantId = body.restaurantId || session?.user?.restaurantId;
+  const isAdmin = isAdminEmail(session?.user?.email);
+  // Tenant depuis la session uniquement — body.restaurantId réservé aux admins Ops.
+  const restaurantId =
+    isAdmin && body.restaurantId
+      ? body.restaurantId
+      : session?.user?.restaurantId || undefined;
   let customerEmail = session?.user?.email || undefined;
   let customerId: string | undefined;
   let hasReferrer = false;
   let referredByRestaurantId = "";
 
   if (restaurantId) {
+    if (
+      !isAdmin &&
+      session?.user?.restaurantId &&
+      restaurantId !== session.user.restaurantId
+    ) {
+      return NextResponse.json({ error: "Commerce introuvable" }, { status: 404 });
+    }
     const restaurant = await prisma.restaurant.findUnique({
       where: { id: restaurantId },
       include: { users: { take: 1 } },
     });
     if (!restaurant) {
-      return NextResponse.json({ error: "Magasin introuvable" }, { status: 404 });
+      return NextResponse.json({ error: "Commerce introuvable" }, { status: 404 });
     }
     customerEmail = restaurant.users[0]?.email || customerEmail;
     customerId = restaurant.stripeCustomerId || undefined;

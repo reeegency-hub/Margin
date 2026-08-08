@@ -20,10 +20,11 @@ function truncateList(lines: string[], maxChars = 800): string {
 }
 
 export async function queueStockAlertForWhatsApp(
+  restaurantId: string,
   alertId: string
 ): Promise<void> {
-  const alert = await prisma.alert.findUnique({
-    where: { id: alertId },
+  const alert = await prisma.alert.findFirst({
+    where: { id: alertId, restaurantId },
     select: {
       id: true,
       status: true,
@@ -34,8 +35,8 @@ export async function queueStockAlertForWhatsApp(
   if (!alert || alert.status !== "ACTIVE") return;
   if (alert.whatsappSentAt) return; // déjà alerté ce cycle
   if (alert.whatsappPendingAt) return;
-  await prisma.alert.update({
-    where: { id: alertId },
+  await prisma.alert.updateMany({
+    where: { id: alertId, restaurantId },
     data: { whatsappPendingAt: new Date() },
   });
 }

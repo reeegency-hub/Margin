@@ -400,15 +400,16 @@ export async function treatAlertSentAction(alertId: string) {
 export async function resendAlertWhatsApp(formData: FormData) {
   const session = await requireSession();
   const id = String(formData.get("id"));
+  const restaurantId = session.user.restaurantId;
   const alert = await prisma.alert.findFirst({
-    where: { id, restaurantId: session.user.restaurantId },
+    where: { id, restaurantId },
   });
   if (alert) {
-    await prisma.alert.update({
-      where: { id },
+    await prisma.alert.updateMany({
+      where: { id, restaurantId },
       data: { whatsappSentAt: null },
     });
-    await sendAlertWhatsApp(id);
+    await sendAlertWhatsApp(restaurantId, id);
   }
   revalidatePath("/");
   redirect("/");
@@ -1456,13 +1457,13 @@ export async function adminCreateStoreAction(formData: FormData) {
   await prisma.user.create({
     data: {
       email,
-      name: name, // nom du magasin — pas de stub « Gérant »
+      name: name, // nom du commerce — pas de stub « Gérant »
       passwordHash: await bcrypt.hash(password, 10),
       restaurantId: restaurant.id,
     },
   });
 
-  // Magasin vierge : pas de plateformes / équipe / catalogue pré-créés
+  // Commerce vierge : pas de plateformes / équipe / catalogue pré-créés
 
   revalidatePath("/admin");
   const configure = String(formData.get("configureNow") || "") === "1";
@@ -1658,7 +1659,7 @@ export async function signupAndCheckoutAction(input: {
   await prisma.user.create({
     data: {
       email,
-      name, // nom du magasin — magasin vierge, pas de stub « Gérant »
+      name, // nom du commerce — commerce vierge, pas de stub « Gérant »
       passwordHash: await bcrypt.hash(password, 10),
       restaurantId: restaurant.id,
     },
@@ -1675,7 +1676,7 @@ export async function signupAndCheckoutAction(input: {
     });
   }
 
-  // Magasin vierge : pas Uber/Deliveroo / équipe / produits pré-créés
+  // Commerce vierge : pas Uber/Deliveroo / équipe / produits pré-créés
 
   const { isStripeConfigured, getStripe, stripePriceId } = await import(
     "@/lib/stripe"
@@ -2035,7 +2036,7 @@ export async function completeOnboarding(): Promise<
     where: { id: session.user.restaurantId },
   });
 
-  // Magasin vierge : pas d’employé / stubs créés à l’ouverture.
+  // Commerce vierge : pas d’employé / stubs créés à l’ouverture.
   // Équipe et listes se remplissent seulement par actions du commerçant.
   const data: {
     onboardingCompletedAt: Date;

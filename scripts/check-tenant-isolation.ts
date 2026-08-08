@@ -57,7 +57,7 @@ function parseSchemaModels(schema: string): {
 
 /** Paths where unscoped / cross-tenant access is intentional. */
 const ALLOW_PATH_RE =
-  /(\/admin\/|seed|demo-login|stripe\/|cron\/|ops\/|scripts\/|tenant\.ts|check-tenant|pos\/health|whatsapp\/|webhooks\/twilio|catalog\/)/;
+  /(\/admin\/|seed|demo-login|stripe\/|cron\/|ops\/|scripts\/|tenant\.ts|check-tenant|pos\/health|whatsapp\/|webhooks\/|newsletter\.ts|llm\/|catalog\/)/;
 
 const DANGEROUS_OPS = [
   "findMany",

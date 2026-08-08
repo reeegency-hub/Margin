@@ -28,10 +28,24 @@ export async function createIngredient(...) {
 export async function createIngredient(fd) {
   return catalogActions.createIngredient(fd);
 }
-```
+````
 
 ## Fait
 
 - `requireTenantDb` + `withTenantRls` (transaction) : modèle pour écritures tenant
 - **catalog** + **pos** extraits ; delete POS scoped `restaurantId` (plus de `delete` nu)
 - Billing gate + cron auth hors monolithe (`lib/stripe/access`, `lib/cron-auth`)
+
+## Sécurité tenant (obligatoire nouvelles routes)
+
+```ts
+import { tenantScopedClient } from "@/lib/db/tenant-scoped";
+
+const tdb = tenantScopedClient(session.user.restaurantId);
+const row = await tdb.ingredient.findFirst({ where: { id } });
+if (!row) return notFound(); // 404, jamais 403 cross-tenant
+```
+
+- `restaurantId` **uniquement** depuis la session serveur (sauf admin Ops explicite).
+- Préférer `findFirst` / `updateMany` avec tenant dans le `where`.
+- Voir `audit-tenant-scoping.md` + `npm run test:tenant`.

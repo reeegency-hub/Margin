@@ -145,7 +145,7 @@ export async function syncIngredientAlert(
 
   // Toujours en file batch si pas encore notifié sur ce cycle (dédup = whatsappSentAt)
   if (!alreadyAlertedThisCycle) {
-    await queueStockAlertForWhatsApp(alertId);
+    await queueStockAlertForWhatsApp(restaurantId, alertId);
     // Rupture totale → flush immédiat ; sinon fenêtre WHATSAPP_BATCH_MINUTES
     if (options?.flushImmediate || payload.severity <= 1) {
       await flushStockAlertBatch(restaurantId, { force: true });
@@ -153,12 +153,15 @@ export async function syncIngredientAlert(
   }
 }
 
-export async function sendAlertWhatsApp(alertId: string): Promise<{
+export async function sendAlertWhatsApp(
+  restaurantId: string,
+  alertId: string
+): Promise<{
   sent: boolean;
   reason?: string;
 }> {
-  const alert = await prisma.alert.findUnique({
-    where: { id: alertId },
+  const alert = await prisma.alert.findFirst({
+    where: { id: alertId, restaurantId },
     include: { restaurant: true, ingredient: true },
   });
   if (!alert || alert.status !== "ACTIVE") {
@@ -181,7 +184,7 @@ export async function sendAlertWhatsApp(alertId: string): Promise<{
 
   const result = await sendWhatsAppOutbound({
     to,
-    restaurantId: alert.restaurantId,
+    restaurantId,
     purpose: "stock_alert",
     templateKey: "stock_alert",
     templateVars: vars,
@@ -193,7 +196,7 @@ export async function sendAlertWhatsApp(alertId: string): Promise<{
   }
 
   await prisma.alert.updateMany({
-    where: { id: alertId, restaurantId: alert.restaurantId },
+    where: { id: alertId, restaurantId },
     data: { whatsappSentAt: new Date(), whatsappPendingAt: null },
   });
 
