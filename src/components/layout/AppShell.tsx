@@ -32,6 +32,7 @@ export function AppShell({
   helpPanel,
   hideMenuOnDesktop = false,
   hideMobileDrawer = false,
+  hideTopbar = false,
   assistantPanel,
   children,
 }: {
@@ -57,6 +58,7 @@ export function AppShell({
   helpPanel?: ReactNode;
   hideMenuOnDesktop?: boolean;
   hideMobileDrawer?: boolean;
+  hideTopbar?: boolean;
   assistantPanel?: ReactNode;
   children: ReactNode;
 }) {
@@ -129,20 +131,24 @@ export function AppShell({
           />
         ) : null}
 
-        <div className="ds-shell__main">
-          <Topbar
-            title={topbarTitle}
-            breadcrumbs={breadcrumbs}
-            logoPlan={logoPlan}
-            onMenuClick={
-              hideMobileDrawer ? undefined : () => setDrawerOpen(true)
-            }
-            notificationCount={notificationCount}
-            onNotificationsClick={onNotificationsClick}
-            user={user}
-            userMenu={userMenu}
-            actions={topbarActions}
-          />
+        <div
+          className={`ds-shell__main${hideTopbar ? " ds-shell__main--flush" : ""}`}
+        >
+          {!hideTopbar ? (
+            <Topbar
+              title={topbarTitle}
+              breadcrumbs={breadcrumbs}
+              logoPlan={logoPlan}
+              onMenuClick={
+                hideMobileDrawer ? undefined : () => setDrawerOpen(true)
+              }
+              notificationCount={notificationCount}
+              onNotificationsClick={onNotificationsClick}
+              user={user}
+              userMenu={userMenu}
+              actions={topbarActions}
+            />
+          ) : null}
           <div className="ds-shell__content">{children}</div>
         </div>
 

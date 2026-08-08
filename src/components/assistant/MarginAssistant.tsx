@@ -115,7 +115,7 @@ export function MarginAssistant({
   const pathname = usePathname() || "/";
   const router = useRouter();
   const titleId = useId();
-  const panelRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const photoRef = useRef<HTMLInputElement>(null);
@@ -390,15 +390,16 @@ export function MarginAssistant({
 
   const isPage = layout === "page";
   const effectiveExpanded = isPage ? true : expanded;
+  const Root = isPage ? "main" : "aside";
 
   return (
-    <aside
+    <Root
       ref={panelRef}
       className={`margin-asst-pane${effectiveExpanded ? " is-expanded" : " is-collapsed"}${
         isPage ? " margin-asst-pane--page" : ""
       }`}
       aria-label="Copilote Margin"
-      aria-expanded={effectiveExpanded}
+      {...(!isPage ? { "aria-expanded": effectiveExpanded } : {})}
       onDragOver={(e) => {
         if (!effectiveExpanded) return;
         e.preventDefault();
@@ -420,15 +421,22 @@ export function MarginAssistant({
           <span className="margin-asst-pane__tab-label">Copilote</span>
         </button>
       ) : (
-        <div className="margin-asst-pane__body ms-spot__card">
+        <div
+          className={`margin-asst-pane__body${isPage ? "" : " ms-spot__card"}`}
+        >
           <header className="margin-asst-pane__head">
             <div className="margin-asst-pane__titles">
-              <p className="ms-spot__eyebrow margin-asst-pane__eyebrow">
-                {isPage ? "Toujours avec vous" : "Toujours à droite"}
-              </p>
-              <h2 id={titleId} className="ms-spot__title margin-asst-pane__title">
-                Copilote
-              </h2>
+              {!isPage ? (
+                <p className="ms-spot__eyebrow margin-asst-pane__eyebrow">
+                  Toujours à droite
+                </p>
+              ) : null}
+              <h1
+                id={titleId}
+                className="ms-spot__title margin-asst-pane__title"
+              >
+                {isPage ? "Comment je peux aider ?" : "Copilote"}
+              </h1>
             </div>
             <div className="margin-asst-pane__tools">
               {llmLabel ? (
@@ -453,10 +461,12 @@ export function MarginAssistant({
             </div>
           </header>
 
-          <div className="margin-asst-pane__context">
-            <span className="margin-asst-pane__ctx-label">Page</span>
-            <code className="margin-asst-pane__ctx-path">{pathname}</code>
-          </div>
+          {!isPage ? (
+            <div className="margin-asst-pane__context">
+              <span className="margin-asst-pane__ctx-label">Page</span>
+              <code className="margin-asst-pane__ctx-path">{pathname}</code>
+            </div>
+          ) : null}
 
           {llmConfigured === false ? (
             <p className="margin-asst-pane__alert" role="status">
@@ -660,12 +670,14 @@ export function MarginAssistant({
               </button>
             </form>
             <p className="ms-spot__hint margin-asst-pane__safe">
-              Aperçu avant écriture · ⌘J pour fermer
+              {isPage
+                ? "Aperçu avant écriture"
+                : "Aperçu avant écriture · ⌘J pour fermer"}
             </p>
           </div>
         </div>
       )}
-    </aside>
+    </Root>
   );
 }
 

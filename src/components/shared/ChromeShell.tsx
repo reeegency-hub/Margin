@@ -357,7 +357,9 @@ function ShellInner({
         !threeTabApp && isFeatureEnabled("copilotFullscreen", device)
           ? " ds-chrome--copilot-focus"
           : ""
-      }${threeTabApp ? " ds-chrome--mapp-three" : ""}`}
+      }${threeTabApp ? " ds-chrome--mapp-three" : ""}${
+        threeTabApp && isHome ? " ds-chrome--mapp-home" : ""
+      }`}
       data-device={device}
     >
       <AppShell
@@ -377,6 +379,7 @@ function ShellInner({
         userMenu={userMenu}
         hideMenuOnDesktop={isFeatureEnabled("sidebarNav", device)}
         hideMobileDrawer={threeTabApp}
+        hideTopbar={threeTabApp && isHome}
         onAssistantClick={
           showDockedAssistant
             ? () => setAssistantExpanded((v) => !v)

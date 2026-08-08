@@ -4,16 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import "@/components/mobile/app/mobile-app.css";
 
-function IconHome({ active }: { active?: boolean }) {
+function IconAsk({ active }: { active?: boolean }) {
   return (
     <svg
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={active ? 2 : 1.7}
+      strokeWidth={active ? 2.2 : 1.8}
       aria-hidden
     >
-      <path d="M4 10.5L12 4l8 6.5V20a1 1 0 01-1 1h-5v-6H10v6H5a1 1 0 01-1-1v-9.5z" />
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="M16.5 16.5L21 21" />
     </svg>
   );
 }
@@ -24,7 +25,7 @@ function IconSettings({ active }: { active?: boolean }) {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={active ? 2 : 1.7}
+      strokeWidth={active ? 2.2 : 1.8}
       aria-hidden
     >
       <circle cx="12" cy="12" r="3" />
@@ -36,8 +37,8 @@ function IconSettings({ active }: { active?: boolean }) {
 const TABS = [
   {
     href: "/",
-    label: "Accueil",
-    Icon: IconHome,
+    label: "Copilote",
+    Icon: IconAsk,
     match: (p: string) => p === "/" || p.startsWith("/assistant"),
   },
   {
@@ -62,9 +63,11 @@ export function MobileNavTabs() {
               href={href}
               className={`mapp-tabs__link${active ? " is-active" : ""}`}
               aria-current={active ? "page" : undefined}
+              aria-label={label}
+              title={label}
             >
               <Icon active={active} />
-              <span className="mapp-tabs__sr">{label}</span>
+              <span className="mapp-tabs__label">{label}</span>
             </Link>
           );
         })}

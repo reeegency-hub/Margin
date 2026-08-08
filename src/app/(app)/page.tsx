@@ -101,7 +101,10 @@ export default async function HomePage() {
           whatsappTo={m.restaurant.whatsappTo}
           suppressModal
         >
-          <CopilotScreen />
+          <CopilotScreen
+            restaurantName={session.user.restaurantName}
+            userName={session.user.name}
+          />
         </HomeAlertsGate>
       );
     }

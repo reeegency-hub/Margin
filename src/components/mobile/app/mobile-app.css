@@ -210,33 +210,347 @@
   color: var(--mapp-ink);
 }
 
-/* Copilot page */
-.mapp-copilot {
-  min-height: calc(100dvh - 7.5rem);
-  margin: -0.25rem -0.15rem 4.5rem;
-}
-
-.mapp-copilot .margin-asst-pane {
-  position: relative !important;
-  inset: auto !important;
-  width: 100% !important;
-  height: min(78dvh, 720px) !important;
-  max-height: none !important;
-  border-radius: 1.15rem;
+/* Accueil « Besoin de quelque chose ? » — style image 2 adapté Margin */
+.mapp-ask {
+  --mapp-tabs-h: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  --ask-ink: #0c0f0a;
+  --ask-muted: #8a8f84;
+  --ask-line: rgba(12, 15, 10, 0.08);
+  --ask-lime: #e6f8aa;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  padding: 0 0 var(--mapp-tabs-h);
   overflow: hidden;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+  background: #fff;
+  color: var(--ask-ink);
 }
 
-.mapp-copilot .margin-asst-pane.is-expanded {
-  transform: none !important;
+.mapp-ask__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: max(0.85rem, env(safe-area-inset-top, 0px)) 1.2rem 0.5rem;
 }
 
-.mapp-copilot .margin-asst-pane__close {
-  display: none !important;
+.mapp-ask__header--chat {
+  border-bottom: 1px solid var(--ask-line);
+  padding-bottom: 0.75rem;
 }
 
-.mapp-copilot .margin-asst-pane__eyebrow {
+.mapp-ask__identity {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.mapp-ask__avatar {
+  width: 2.55rem;
+  height: 2.55rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--ask-ink);
+  color: var(--ask-lime);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.mapp-ask__hello {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--ask-muted);
+  line-height: 1.2;
+}
+
+.mapp-ask__name {
+  margin: 0.1rem 0 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 12rem;
+}
+
+.mapp-ask__bag,
+.mapp-ask__back {
+  appearance: none;
+  width: 2.55rem;
+  height: 2.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--ask-line);
+  background: #fff;
+  color: var(--ask-ink);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  text-decoration: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.15rem;
+}
+
+.mapp-ask__banner {
+  margin: 0 1.2rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.85rem;
+  font-size: 0.84rem;
+  line-height: 1.35;
+  background: rgba(230, 248, 170, 0.45);
+}
+
+.mapp-ask__banner a {
+  color: inherit;
+  font-weight: 700;
+}
+
+.mapp-ask__hero {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1rem 1.35rem 1.5rem;
+  min-height: 0;
+}
+
+.mapp-ask__title {
+  margin: 0;
+  font-size: clamp(1.85rem, 7vw, 2.35rem);
+  font-weight: 760;
+  letter-spacing: -0.045em;
+  line-height: 1.1;
+}
+
+.mapp-ask__lead {
+  margin: 0.85rem 0 0;
+  max-width: 20rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--ask-muted);
+}
+
+.mapp-ask__bar {
+  width: 100%;
+  max-width: 24rem;
+  margin-top: 1.6rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.4rem 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid rgba(12, 15, 10, 0.06);
+  box-shadow: 0 10px 28px rgba(12, 15, 10, 0.08);
+}
+
+.mapp-ask__cam {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #6b7164;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.mapp-ask__input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.98rem;
+  color: var(--ask-ink);
+  outline: none;
+  min-height: 2.5rem;
+  padding: 0.2rem 0.25rem;
+}
+
+.mapp-ask__input::placeholder {
+  color: #a3a89c;
+}
+
+.mapp-ask__send {
+  appearance: none;
+  border: 0;
+  width: 2.65rem;
+  height: 2.65rem;
+  border-radius: 999px;
+  background: var(--ask-ink);
+  color: var(--ask-lime);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.mapp-ask__send:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.mapp-ask__chips {
+  width: 100%;
+  max-width: 24rem;
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 0.15rem;
+}
+
+.mapp-ask__chips::-webkit-scrollbar {
   display: none;
+}
+
+.mapp-ask__chips--dock {
+  max-width: none;
+  margin: 0 0 0.55rem;
+  padding: 0 0.15rem;
+}
+
+.mapp-ask__chip {
+  appearance: none;
+  flex: 0 0 auto;
+  border: 1px solid rgba(12, 15, 10, 0.1);
+  background: #f4f5f1;
+  color: var(--ask-ink);
+  border-radius: 999px;
+  min-height: 2.15rem;
+  padding: 0.4rem 0.9rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.mapp-ask__chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mapp-ask__file {
+  width: 100%;
+  max-width: 24rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.85rem;
+  background: #f4f5f1;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.mapp-ask__file button {
+  appearance: none;
+  border: 0;
+  background: none;
+  color: #8a1f1f;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mapp-ask--chat {
+  background: #fafaf8;
+}
+
+.mapp-ask__thread {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 1rem 1.1rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.mapp-ask__bubble {
+  max-width: 92%;
+  padding: 0.85rem 0.95rem;
+  border-radius: 1.05rem;
+  font-size: 0.96rem;
+  line-height: 1.45;
+}
+
+.mapp-ask__bubble--assistant {
+  align-self: flex-start;
+  background: #fff;
+  border: 1px solid var(--ask-line);
+  border-bottom-left-radius: 0.35rem;
+}
+
+.mapp-ask__bubble--user {
+  align-self: flex-end;
+  background: var(--ask-lime);
+  border: 1px solid rgba(160, 185, 70, 0.35);
+  border-bottom-right-radius: 0.35rem;
+}
+
+.mapp-ask__line {
+  margin: 0 0 0.35em;
+}
+
+.mapp-ask__line:last-child {
+  margin-bottom: 0;
+}
+
+.mapp-ask__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.55rem;
+}
+
+.mapp-ask__links a {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: inherit;
+}
+
+.mapp-ask__typing {
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  color: var(--ask-muted);
+}
+
+.mapp-ask__dock {
+  flex: 0 0 auto;
+  padding: 0.55rem 0.95rem 0.75rem;
+  border-top: 1px solid var(--ask-line);
+  background: #fff;
+}
+
+.mapp-ask__dock .mapp-ask__bar {
+  margin-top: 0;
+  max-width: none;
+}
+
+.mapp-ask__dock .mapp-ask__file {
+  margin: 0 0 0.5rem;
+  max-width: none;
 }
 
 /* Settings */
@@ -246,7 +560,7 @@
   gap: 1rem;
   max-width: 28rem;
   margin: 0 auto;
-  padding-bottom: 5.5rem;
+  padding-bottom: 6.5rem;
 }
 
 .mapp-settings__title {
@@ -332,51 +646,57 @@
   line-height: 1.4;
 }
 
-/* Bottom tabs */
+/* Bottom tabs — dock flottant noir (image 2) */
 .mapp-tabs {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 60;
-  padding: 0.45rem 1.1rem calc(0.55rem + env(safe-area-inset-bottom));
-  background: color-mix(in srgb, #f7f8f2 88%, transparent);
-  backdrop-filter: blur(14px);
-  border-top: 1px solid var(--mapp-line);
+  z-index: 120;
+  padding: 0 1.25rem calc(0.85rem + env(safe-area-inset-bottom));
+  background: transparent;
+  border: 0;
+  pointer-events: none;
 }
 
 .mapp-tabs__row {
+  pointer-events: auto;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.35rem;
   max-width: 22rem;
   margin: 0 auto;
+  padding: 0.45rem;
+  border-radius: 999px;
+  background: #0c0f0a;
+}
+
+.mapp-tabs__row--two {
+  grid-template-columns: 1fr 1fr;
+  max-width: 11.5rem;
 }
 
 .mapp-tabs__link {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.15rem;
-  min-height: 3rem;
-  border-radius: 0.85rem;
-  color: rgba(12, 15, 10, 0.45);
+  display: grid;
+  place-items: center;
+  min-height: 2.75rem;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.45);
   text-decoration: none;
   transition: color 0.15s ease, background 0.15s ease;
 }
 
 .mapp-tabs__link.is-active {
-  color: var(--mapp-ink);
-  background: rgba(230, 248, 170, 0.55);
+  color: #0c0f0a;
+  background: #fff;
 }
 
 .mapp-tabs__link svg {
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
-.mapp-tabs__sr {
+.mapp-tabs__label {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -407,35 +727,12 @@
   padding-bottom: 1rem;
 }
 
-.mapp-tabs__row--two {
-  grid-template-columns: 1fr 1fr;
-  max-width: 16rem;
-}
-
-.mapp-tabs {
-  z-index: 120;
-}
-
-.mapp-copilot {
-  min-height: calc(100dvh - 7rem);
-  margin: -0.25rem -0.15rem 4.5rem;
-}
-
-.mapp-copilot .margin-asst-pane {
-  position: relative !important;
-  inset: auto !important;
-  width: 100% !important;
-  height: min(78dvh, 720px) !important;
-  max-height: none !important;
-  border-radius: 1.15rem;
+.ds-chrome--mapp-home .ds-shell__content {
+  padding: 0 !important;
   overflow: hidden;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
 }
 
-.mapp-copilot .margin-asst-pane.is-expanded {
-  transform: none !important;
+.ds-chrome--mapp-home .ds-shell__main--flush {
+  max-height: 100dvh;
 }
 
-.mapp-copilot .margin-asst-pane__close {
-  display: none !important;
-}
