@@ -21,7 +21,7 @@ export const metadata: Metadata = {
  * Switch device — un seul bundle landing chargé.
  * DesktopLanding : figée (aucune modif chantier mobile).
  * MobileLanding : expérience minimale validée brief.
- * `?mobile=1` force la landing mobile (middleware pose aussi le cookie).
+ * `?mobile=1` force la landing mobile.
  */
 export default async function WelcomePage({
   searchParams,
