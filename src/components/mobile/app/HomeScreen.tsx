@@ -1,12 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { MarginLogoMark } from "@/components/brand/MarginLogo";
-import {
-  MarginAssistant,
-  readExpandedDefault,
-} from "@/components/assistant/MarginAssistant";
+import { MarginAssistant } from "@/components/assistant/MarginAssistant";
 import "@/components/mobile/app/mobile-app.css";
 
 function greetingLabel(now = new Date()) {
@@ -27,26 +24,8 @@ export function HomeScreen({
   userName: string;
   restaurantName: string;
 }) {
-  const [expanded, setExpanded] = useState(true);
   const displayName = (userName.trim() || restaurantName).split(" ")[0];
   const hello = useMemo(() => greetingLabel(), []);
-
-  useEffect(() => {
-    setExpanded(true);
-    try {
-      const pending = sessionStorage.getItem("margin:mobile-ask");
-      if (pending) {
-        sessionStorage.removeItem("margin:mobile-ask");
-        window.dispatchEvent(
-          new CustomEvent("margin:assistant-prefill", {
-            detail: { text: pending },
-          })
-        );
-      }
-    } catch {
-      /* ignore */
-    }
-  }, []);
 
   return (
     <div className="mapp mapp-home">
@@ -88,8 +67,8 @@ export function HomeScreen({
 
       <div className="mapp-home__chat">
         <MarginAssistant
-          expanded={expanded || readExpandedDefault()}
-          onExpandedChange={setExpanded}
+          expanded
+          onExpandedChange={() => {}}
           layout="page"
         />
       </div>

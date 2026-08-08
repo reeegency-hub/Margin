@@ -31,6 +31,7 @@ export function AppShell({
   onAssistantClick,
   helpPanel,
   hideMenuOnDesktop = false,
+  hideMobileDrawer = false,
   assistantPanel,
   children,
 }: {
@@ -57,6 +58,8 @@ export function AppShell({
   helpPanel?: ReactNode;
   /** Sidebar rail desktop — masque le hamburger ≥768 */
   hideMenuOnDesktop?: boolean;
+  /** Mobile app 2 onglets : pas de tiroir (évite overlay bloquant) */
+  hideMobileDrawer?: boolean;
   /** Panneau assistant docké (style Cursor) */
   assistantPanel?: ReactNode;
   children: ReactNode;
@@ -64,13 +67,19 @@ export function AppShell({
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
-    if (!drawerOpen) return;
+    if (!drawerOpen || hideMobileDrawer) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prev;
     };
-  }, [drawerOpen]);
+  }, [drawerOpen, hideMobileDrawer]);
+
+  useEffect(() => {
+    if (!hideMobileDrawer) return;
+    setDrawerOpen(false);
+    document.body.style.overflow = "";
+  }, [hideMobileDrawer]);
 
   const openAssistant = useCallback(() => {
     onAssistantClick?.();
@@ -104,7 +113,7 @@ export function AppShell({
     <div
       className={`ds-shell${hideMenuOnDesktop ? " ds-shell--rail" : ""}${
         assistantPanel ? " ds-shell--with-asst" : ""
-      }`}
+      }${hideMobileDrawer ? " ds-shell--no-drawer" : ""}`}
     >
       {banner ? <div className="ds-shell__banner">{banner}</div> : null}
 
@@ -115,19 +124,23 @@ export function AppShell({
           </div>
         ) : null}
 
-        <Sidebar
-          {...sidebarProps}
-          mobile
-          open={drawerOpen}
-          onClose={() => setDrawerOpen(false)}
-        />
+        {!hideMobileDrawer ? (
+          <Sidebar
+            {...sidebarProps}
+            mobile
+            open={drawerOpen}
+            onClose={() => setDrawerOpen(false)}
+          />
+        ) : null}
 
         <div className="ds-shell__main">
           <Topbar
             title={topbarTitle}
             breadcrumbs={breadcrumbs}
             logoPlan={logoPlan}
-            onMenuClick={() => setDrawerOpen(true)}
+            onMenuClick={
+              hideMobileDrawer ? undefined : () => setDrawerOpen(true)
+            }
             notificationCount={notificationCount}
             onNotificationsClick={onNotificationsClick}
             user={user}

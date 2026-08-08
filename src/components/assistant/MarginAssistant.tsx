@@ -155,10 +155,8 @@ export function MarginAssistant({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, expanded, pending]);
 
-  useEffect(() => {
-    if (layout !== "page") return;
-    onExpandedChange(true);
-  }, [layout, onExpandedChange]);
+  // layout=page : toujours ouvert — pas d’effet qui rappelle onExpandedChange
+  // (évite boucles si le parent passe une callback non mémoïsée).
 
   useEffect(() => {
     function onPrefill(e: Event) {
@@ -166,11 +164,10 @@ export function MarginAssistant({
       const text = String(detail?.text || "").trim();
       if (!text) return;
       setInput(text);
-      onExpandedChange(true);
     }
     window.addEventListener("margin:assistant-prefill", onPrefill);
     return () => window.removeEventListener("margin:assistant-prefill", onPrefill);
-  }, [onExpandedChange]);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;

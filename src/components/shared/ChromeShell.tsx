@@ -380,6 +380,7 @@ function ShellInner({
         user={{ name: restaurantName }}
         userMenu={userMenu}
         hideMenuOnDesktop={isFeatureEnabled("sidebarNav", device)}
+        hideMobileDrawer={threeTabApp}
         onAssistantClick={
           showDockedAssistant
             ? () => setAssistantExpanded((v) => !v)
@@ -400,7 +401,9 @@ function ShellInner({
             <Link href="/?mobile=0">Quitter</Link>
           </div>
         ) : null}
-        {showFullscreenGuide ? (
+        {threeTabApp ? (
+          children
+        ) : showFullscreenGuide ? (
           <FirstHourGuide
             state={firstHour!}
             restaurantId={restaurantId}
