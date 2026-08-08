@@ -96,8 +96,17 @@ async function clearSession(restaurantId: string, phone: string) {
 }
 
 async function findRestaurantByPhone(from: string) {
+  const normalized = normalizePhone(from);
+  // Lookup exact (numéros normalisés en settings) — contrainte @unique
+  const exact = await prisma.restaurant.findUnique({
+    where: { whatsappTo: normalized },
+  });
+  if (exact) return exact;
+
+  // Fallback legacy : formats hétérogènes encore en base
   const restaurants = await prisma.restaurant.findMany({
     where: { whatsappTo: { not: null } },
+    take: 200,
   });
   return restaurants.find(
     (r) => r.whatsappTo && phonesMatch(from, r.whatsappTo)

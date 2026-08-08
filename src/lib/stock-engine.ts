@@ -122,13 +122,17 @@ export async function syncIngredientAlert(
   let alreadyAlertedThisCycle = false;
 
   if (existing) {
-    const updated = await db.alert.update({
-      where: { id: existing.id },
+    await db.alert.updateMany({
+      where: { id: existing.id, restaurantId },
       data: payload,
     });
-    alertId = updated.id;
+    alertId = existing.id;
+    const refreshed = await db.alert.findFirst({
+      where: { id: existing.id, restaurantId },
+      select: { whatsappSentAt: true },
+    });
     // Dédup : déjà notifié tant que l’alerte ACTIVE n’a pas été résolue
-    alreadyAlertedThisCycle = Boolean(updated.whatsappSentAt);
+    alreadyAlertedThisCycle = Boolean(refreshed?.whatsappSentAt);
   } else {
     const created = await db.alert.create({
       data: {
@@ -267,8 +271,8 @@ export async function recordSale(
     });
 
     for (const [ingredientId, qty] of consumption) {
-      await tx.ingredient.update({
-        where: { id: ingredientId },
+      await tx.ingredient.updateMany({
+        where: { id: ingredientId, restaurantId },
         data: { stockTheoretical: { decrement: qty } },
       });
       await tx.stockMovement.create({
@@ -341,8 +345,8 @@ export async function voidSaleByExternalOrderId(
 
   await runTenantTx(db, async (tx) => {
     for (const [ingredientId, qty] of restore) {
-      await tx.ingredient.update({
-        where: { id: ingredientId },
+      await tx.ingredient.updateMany({
+        where: { id: ingredientId, restaurantId },
         data: { stockTheoretical: { increment: qty } },
       });
       await tx.stockMovement.create({
@@ -356,8 +360,8 @@ export async function voidSaleByExternalOrderId(
         },
       });
     }
-    await tx.sale.update({
-      where: { id: sale.id },
+    await tx.sale.updateMany({
+      where: { id: sale.id, restaurantId },
       data: { channel: "pos_cancelled" },
     });
   });
@@ -419,8 +423,8 @@ export async function recordReceipt(
     });
 
     for (const line of lines) {
-      await tx.ingredient.update({
-        where: { id: line.ingredientId },
+      await tx.ingredient.updateMany({
+        where: { id: line.ingredientId, restaurantId },
         data: { stockTheoretical: { increment: line.quantity } },
       });
       await tx.stockMovement.create({

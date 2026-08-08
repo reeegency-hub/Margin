@@ -237,13 +237,16 @@ export async function validatePurchaseOrder(
   });
   if (!order) throw new Error("Liste introuvable");
 
-  return db.purchaseOrder.update({
-    where: { id: orderId },
+  await db.purchaseOrder.updateMany({
+    where: { id: orderId, restaurantId },
     data: {
       status: "SENT",
       validatedAt: new Date(),
       sentAt: new Date(),
     },
+  });
+  return db.purchaseOrder.findFirst({
+    where: { id: orderId, restaurantId },
   });
 }
 

@@ -155,8 +155,12 @@ export async function deleteShiftForRestaurant(
     where: { id: shiftId, employee: { restaurantId } },
   });
   if (!shift) throw new Error("Créneau introuvable");
-  await db.attendance.deleteMany({ where: { shiftId } });
-  await db.shift.delete({ where: { id: shiftId } });
+  await db.attendance.deleteMany({
+    where: { shiftId, employee: { restaurantId } },
+  });
+  await db.shift.deleteMany({
+    where: { id: shiftId, employee: { restaurantId } },
+  });
 }
 
 export async function renameEmployee(
@@ -171,10 +175,11 @@ export async function renameEmployee(
     where: { id: employeeId, restaurantId },
   });
   if (!employee) throw new Error("Employé introuvable");
-  return db.employee.update({
-    where: { id: employeeId },
+  await db.employee.updateMany({
+    where: { id: employeeId, restaurantId },
     data: { name: trimmed },
   });
+  return db.employee.findFirst({ where: { id: employeeId, restaurantId } });
 }
 
 export async function updateEmployeeHourlyRate(
@@ -192,9 +197,12 @@ export async function updateEmployeeHourlyRate(
   if (!employee) throw new Error("Employé introuvable");
   const rounded = Math.round(hourlyRate * 100) / 100;
   if (employee.hourlyRate === rounded) return employee;
-  return db.employee.update({
-    where: { id: employeeId },
+  await db.employee.updateMany({
+    where: { id: employeeId, restaurantId, active: true },
     data: { hourlyRate: rounded },
+  });
+  return db.employee.findFirst({
+    where: { id: employeeId, restaurantId },
   });
 }
 
@@ -353,13 +361,20 @@ export async function clockInEmployee(
   });
 
   if (existing) {
-    return db.attendance.update({
-      where: { id: existing.id },
+    await db.attendance.updateMany({
+      where: {
+        id: existing.id,
+        employeeId,
+        employee: { restaurantId },
+      },
       data: {
         clockIn: at,
         lateMinutes,
         status: lateMinutes > 5 ? "LATE" : "PRESENT",
       },
+    });
+    return db.attendance.findFirst({
+      where: { id: existing.id, employee: { restaurantId } },
     });
   }
 
@@ -395,6 +410,7 @@ export async function clockInByName(
   const shift = await prisma.shift.findFirst({
     where: {
       employeeId: employee.id,
+      employee: { restaurantId },
       date: { gte: today, lt: tomorrow },
     },
     orderBy: { startTime: "asc" },
@@ -444,6 +460,7 @@ export async function clockOutByName(
   const attendance = await prisma.attendance.findFirst({
     where: {
       employeeId: employee.id,
+      employee: { restaurantId },
       status: { in: ["PRESENT", "LATE"] },
       OR: [
         { clockIn: { gte: today, lt: tomorrow } },
@@ -473,8 +490,12 @@ export async function clockOutByName(
     };
   }
 
-  await prisma.attendance.update({
-    where: { id: attendance.id },
+  await prisma.attendance.updateMany({
+    where: {
+      id: attendance.id,
+      employeeId: employee.id,
+      employee: { restaurantId },
+    },
     data: { clockOut },
   });
 

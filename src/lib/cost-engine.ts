@@ -121,8 +121,8 @@ export async function refreshDishFoodCosts(
   const now = new Date();
   for (const d of dishes) {
     const foodCost = await computeDishFoodCost(restaurantId, d.id);
-    await prisma.dish.update({
-      where: { id: d.id },
+    await prisma.dish.updateMany({
+      where: { id: d.id, restaurantId },
       data: { foodCost, foodCostUpdatedAt: now },
     });
   }
@@ -166,8 +166,8 @@ export async function applyPurchasePrice(opts: {
         source: opts.source || "RECEIPT",
       },
     }),
-    prisma.ingredient.update({
-      where: { id: ingredientId },
+    prisma.ingredient.updateMany({
+      where: { id: ingredientId, restaurantId },
       data: {
         lastPurchasePrice: unitPrice,
         lastPurchaseAt: new Date(),
@@ -266,8 +266,8 @@ export async function getTopDishCosts(
     if (foodCost == null) {
       foodCost = await computeDishFoodCost(restaurantId, d.id);
       if (foodCost != null) {
-        await prisma.dish.update({
-          where: { id: d.id },
+        await prisma.dish.updateMany({
+          where: { id: d.id, restaurantId },
           data: { foodCost, foodCostUpdatedAt: new Date() },
         });
       }

@@ -214,11 +214,36 @@ export async function confirmInvoiceImportAction(payload: {
 
 export async function updateSettings(formData: FormData) {
   const session = await requireSession();
-  const whatsappTo = String(formData.get("whatsappTo") || "").trim();
-  await prisma.restaurant.update({
-    where: { id: session.user.restaurantId },
-    data: { whatsappTo: whatsappTo || null },
-  });
+  const raw = String(formData.get("whatsappTo") || "").trim();
+  const whatsappTo = raw
+    ? raw.replace(/^whatsapp:/i, "").replace(/\s/g, "")
+    : null;
+
+  if (whatsappTo) {
+    const taken = await prisma.restaurant.findFirst({
+      where: {
+        whatsappTo,
+        NOT: { id: session.user.restaurantId },
+      },
+      select: { id: true },
+    });
+    if (taken) {
+      redirect("/settings?error=whatsapp_taken");
+    }
+  }
+
+  try {
+    await prisma.restaurant.update({
+      where: { id: session.user.restaurantId },
+      data: { whatsappTo },
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (/Unique constraint|P2002/i.test(msg)) {
+      redirect("/settings?error=whatsapp_taken");
+    }
+    throw e;
+  }
   revalidatePath("/settings");
   redirect("/settings?saved=1");
 }
@@ -1980,11 +2005,40 @@ export async function saveOnboardingWhatsApp(
   whatsappTo: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const session = await requireSession();
-  const phone = String(whatsappTo || "").trim();
-  await prisma.restaurant.update({
-    where: { id: session.user.restaurantId },
-    data: { whatsappTo: phone || null },
-  });
+  const phone = String(whatsappTo || "")
+    .trim()
+    .replace(/^whatsapp:/i, "")
+    .replace(/\s/g, "");
+  if (phone) {
+    const taken = await prisma.restaurant.findFirst({
+      where: {
+        whatsappTo: phone,
+        NOT: { id: session.user.restaurantId },
+      },
+      select: { id: true },
+    });
+    if (taken) {
+      return {
+        ok: false,
+        error: "Ce numéro est déjà utilisé par un autre compte.",
+      };
+    }
+  }
+  try {
+    await prisma.restaurant.update({
+      where: { id: session.user.restaurantId },
+      data: { whatsappTo: phone || null },
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (/Unique constraint|P2002/i.test(msg)) {
+      return {
+        ok: false,
+        error: "Ce numéro est déjà utilisé par un autre compte.",
+      };
+    }
+    throw e;
+  }
   revalidatePath("/settings");
   revalidatePath("/onboarding");
   return { ok: true };

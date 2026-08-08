@@ -63,7 +63,7 @@ model Restaurant {
   id                    String    @id @default(cuid())
   name                  String
   timezone              String    @default("Europe/Paris")
-  whatsappTo            String?
+  whatsappTo            String?   @unique
   openaiApiKeyEncrypted String?
   openaiModel           String?
   onboardingCompletedAt DateTime?
