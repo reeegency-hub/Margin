@@ -40,6 +40,7 @@ if (!password || password.length < 8) {
   console.error("Set ADMIN_SEED_PASSWORD (8+ chars).");
   process.exit(1);
 }
+const newPassword: string = password;
 
 async function main() {
   const { default: bcrypt } = await import("bcryptjs");
@@ -56,7 +57,7 @@ async function main() {
     console.log(`DB host: ${host}`);
 
     // Raw SQL : évite les colonnes schema absentes en prod (ex. User.role).
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(newPassword, 10);
     const updated = await prisma.$executeRaw`
       UPDATE "User"
       SET "passwordHash" = ${passwordHash}
