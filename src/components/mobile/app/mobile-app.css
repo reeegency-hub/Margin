@@ -269,7 +269,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 120;
+  z-index: 60;
   padding: 0.45rem 1.1rem calc(0.55rem + env(safe-area-inset-bottom));
   background: color-mix(in srgb, #0a0d09 88%, transparent);
   backdrop-filter: blur(16px);
@@ -366,18 +366,4 @@
   background: rgba(230, 248, 170, 0.08);
   border-color: rgba(230, 248, 170, 0.18);
   color: #f4f4f0;
-}
-
-.ds-chrome--mapp-three .ds-top__menu,
-.ds-chrome--mapp-three .ds-side-overlay,
-.ds-chrome--mapp-three .ds-side--drawer {
-  display: none !important;
-}
-
-.ds-chrome--mapp-three .ms-spot,
-.ds-chrome--mapp-three .ms-spot-ring,
-.ds-chrome--mapp-three .page-tour,
-.ds-chrome--mapp-three .guide-focus {
-  display: none !important;
-  pointer-events: none !important;
 }
