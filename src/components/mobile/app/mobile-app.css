@@ -639,11 +639,20 @@
   color: #8a1f1f;
 }
 
-.mapp-settings__hint {
+.mapp-settings__section-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 680;
+  letter-spacing: -0.02em;
+}
+
+.mapp-settings__card--llm {
+  gap: 0.65rem;
+}
+
+.mapp-settings__card--llm .feature-section,
+.mapp-settings__card--llm .ms-spot__card {
   margin: 0;
-  font-size: 0.82rem;
-  color: var(--mapp-muted);
-  line-height: 1.4;
 }
 
 /* Bottom tabs — dock flottant noir (image 2) */

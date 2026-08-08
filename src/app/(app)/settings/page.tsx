@@ -89,6 +89,7 @@ export default async function SettingsPage({
         planLabel={planLabel}
         whatsappTo={restaurant.whatsappTo}
         showBilling={Boolean(restaurant.stripeCustomerId)}
+        llm={llm}
       />
     );
   }

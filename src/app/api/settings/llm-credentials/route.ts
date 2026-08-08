@@ -28,18 +28,36 @@ export async function GET() {
   if (!a) {
     return NextResponse.json({ error: "Non authentifié." }, { status: 401 });
   }
-  const status = await getTenantLlmStatus(a.restaurantId);
-  const rows = await prisma.llmProviderCredential.findMany({
-    where: { restaurantId: a.restaurantId },
-    select: {
-      provider: true,
-      status: true,
-      keyFingerprint: true,
-      lastValidatedAt: true,
-      lastError: true,
-      updatedAt: true,
-    },
-  });
+  const status = await getTenantLlmStatus(a.restaurantId).catch(() => ({
+    configured: false,
+    provider: null,
+    status: "none" as const,
+    fingerprintDisplay: null,
+    source: null,
+  }));
+  let rows: Array<{
+    provider: string;
+    status: string;
+    keyFingerprint: string;
+    lastValidatedAt: Date | null;
+    lastError: string | null;
+    updatedAt: Date;
+  }> = [];
+  try {
+    rows = await prisma.llmProviderCredential.findMany({
+      where: { restaurantId: a.restaurantId },
+      select: {
+        provider: true,
+        status: true,
+        keyFingerprint: true,
+        lastValidatedAt: true,
+        lastError: true,
+        updatedAt: true,
+      },
+    });
+  } catch {
+    /* table absente / migration en cours */
+  }
   return NextResponse.json({ status, credentials: rows });
 }
 
