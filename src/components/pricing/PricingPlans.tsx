@@ -149,7 +149,7 @@ export function PricingPlans({
         <p className="pricing__note">
           <strong>Branchement caisse</strong> — non inclus sur Commerce (à faire
           de votre côté). Sur Franchise, Margin s’en occupe pour chaque
-          magasin&nbsp;: environ {SETUP_FEE_EUR}&nbsp;€ économisés par site.
+          commerce&nbsp;: environ {SETUP_FEE_EUR}&nbsp;€ économisés par site.
         </p>
       ) : null}
     </div>

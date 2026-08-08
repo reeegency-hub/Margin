@@ -424,7 +424,7 @@ export function buildEquipeFocuses(input: {
   });
 }
 
-/** Focus hub Magasin (réglages) */
+/** Focus hub Commerce (réglages) */
 export function buildMagasinFocuses(input: {
   hasWhatsApp: boolean;
   hasCaisse: boolean;
@@ -448,7 +448,7 @@ export function buildMagasinFocuses(input: {
       id: "shop-wa",
       cadence: "day",
       urgency: "high",
-      title: "WhatsApp du magasin",
+      title: "WhatsApp du commerce",
       message: "Ajoutez le numéro pour alertes rupture et listes.",
       ctaLabel: "Ajouter mon numéro",
       ctaHref: "/settings",
@@ -478,7 +478,7 @@ export function buildMagasinFocuses(input: {
   return orClear(items, {
     id: "shop-ok",
     cadence: "day",
-    title: "Magasin branché",
+    title: "Commerce branché",
     message: "WhatsApp et caisse OK. Ajustez les options quand vous voulez.",
     ctaLabel: "Voir les réglages",
     ctaHref: "/settings",

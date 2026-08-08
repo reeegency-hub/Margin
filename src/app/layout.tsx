@@ -10,13 +10,13 @@ const plusJakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: "Margin — Stock magasin relié à votre caisse",
+    default: "Margin — Stock commerce relié à votre caisse",
     template: "%s · Margin",
   },
   description:
     "Logiciel de stock pour commerces de proximité : caisse branchée, stock à jour, alertes WhatsApp en cas de rupture. Formules Commerce et Franchise.",
   openGraph: {
-    title: "Margin — Stock magasin relié à votre caisse",
+    title: "Margin — Stock commerce relié à votre caisse",
     description:
       "Moins de ruptures, plus de marge. Synchronisez caisse et stock pour votre boutique de proximité.",
     locale: "fr_FR",

@@ -72,7 +72,7 @@ export function DeliveryIntegrationsPanel({
                 name="storeId"
                 className={inputClass}
                 defaultValue={c.storeId ?? ""}
-                placeholder="ID restaurant sur la plateforme"
+                placeholder="ID commerce sur la plateforme"
               />
             </Field>
             <button

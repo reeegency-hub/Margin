@@ -137,16 +137,15 @@ export function SignupForm({
         onSubmit={onSubmit}
         className="brand-card brand-card--dark-card relative w-full max-w-md space-y-3"
       >
-        <h1 className="brand-card__title">Créer mon magasin</h1>
+        <h1 className="brand-card__title">Démarrez avec Margin</h1>
         {planMeta ? (
           <p className="brand-card__proof">
             <strong className="signup-plan-name">{planMeta.name}</strong>
             {" — "}
-            {planMeta.bestFor}.{" "}
-            {billingPeriod === "yearly" ? "Facturation annuelle" : `${planMeta.priceMonthly} €/mois`}{" "}
-            HT.
+            {planMeta.bestFor}. Sans changer de caisse · −
+            {AFFILIATE.discountPercentReferee}&nbsp;% le premier mois.
             {referralCode
-              ? ` Parrainage : −${AFFILIATE.discountPercentReferee} % le 1er mois.`
+              ? ` Parrainage appliqué.`
               : null}
             {step === "form" ? (
               <span className="signup-plan-note">
@@ -162,15 +161,14 @@ export function SignupForm({
           </p>
         ) : (
           <p className="brand-card__proof">
-            {step === "form"
-              ? "Un code à usage unique avant création."
-              : "Entrez le code reçu, puis on finalise."}
+            Sans changer de caisse · −{AFFILIATE.discountPercentReferee}&nbsp;% le
+            premier mois.
           </p>
         )}
 
         {step === "form" ? (
           <>
-            <Field label="Nom du magasin">
+            <Field label="Nom du commerce">
               <input
                 className={inputClass}
                 value={name}

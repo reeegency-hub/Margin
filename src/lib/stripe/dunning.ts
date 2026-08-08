@@ -97,7 +97,7 @@ export async function notifyBillingDunning(opts: {
   };
   invoice: Stripe.Invoice;
   accessGraceUntil: Date;
-  /** Email gérant — sinon 1er user du magasin */
+  /** Email gérant — sinon 1er user du commerce */
   email?: string | null;
 }): Promise<boolean> {
   if (

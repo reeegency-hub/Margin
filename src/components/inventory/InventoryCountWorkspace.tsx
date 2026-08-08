@@ -25,7 +25,7 @@ export type CountLine = {
 };
 
 /**
- * Vérification rayon : indiquer ce qu’il y a vraiment en magasin.
+ * Vérification rayon : indiquer ce qu’il y a vraiment dans le commerce.
  * Valider = corriger le stock appli (et donc les prochaines courses).
  */
 export function InventoryCountWorkspace({
@@ -209,7 +209,7 @@ export function InventoryCountWorkspace({
               </div>
               <div className="inv-row__count">
                 <label>
-                  En magasin ({unitLbl})
+                  Dans le commerce ({unitLbl})
                   <input
                     type="number"
                     step="any"
@@ -271,7 +271,7 @@ export function InventoryCountWorkspace({
         </button>
       </div>
       <p className="inv-workspace__foot-hint">
-        Après validation, le stock appli = le magasin. Les prochaines listes
+        Après validation, le stock appli = le commerce. Les prochaines listes
         Courses et alertes se basent dessus.
       </p>
     </div>

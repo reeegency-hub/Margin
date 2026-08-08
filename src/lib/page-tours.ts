@@ -151,14 +151,14 @@ export const PAGE_TOURS: PageTour[] = [
   },
   {
     pageKey: "magasin",
-    label: "Magasin",
+    label: "Commerce",
     match: (p) =>
       startsWithAny(p, ["/settings", "/delivery"]) &&
       !startsWithAny(p, ["/kiosks"]),
     steps: [
       {
         id: "magasin-1",
-        title: "Réglages du magasin",
+        title: "Réglages du commerce",
         body: "Simple · Connexions · Avancé — commencez par Simple.",
         anchor: '[data-tour="settings-tabs"], .segmented-tabs',
         placement: "bottom",
@@ -196,7 +196,7 @@ export const PAGE_TOURS: PageTour[] = [
       {
         id: "accueil-2",
         title: "Guide en bas",
-        body: "La barre reste en bas tant que le magasin n’est pas prêt.",
+        body: "La barre reste en bas tant que le commerce n’est pas prêt.",
         anchor: '[data-tour="home-dock"], .sg-dock',
         placement: "top",
       },

@@ -39,7 +39,7 @@ export default function CguPage() {
 
       <h2>Données client</h2>
       <p>
-        Le client reste propriétaire des données de son magasin. Margin les
+        Le client reste propriétaire des données de son commerce. Margin les
         traite pour fournir le service, conformément à la politique de
         confidentialité.
       </p>

@@ -71,7 +71,7 @@ export default async function AdminStorePage({
         </Link>
       </header>
 
-      {q.saved ? <p className="flash">Magasin enregistré.</p> : null}
+      {q.saved ? <p className="flash">Commerce enregistré.</p> : null}
       {q.password ? <p className="flash">Mot de passe mis à jour.</p> : null}
       {q.pos ? <p className="flash">Lien caisse mis à jour.</p> : null}
       {q.team ? <p className="flash">Équipe stub créée.</p> : null}
@@ -80,7 +80,7 @@ export default async function AdminStorePage({
       ) : null}
       {q.error === "delete" ? (
         <p className="flash flash-warn">
-          Pour supprimer, retapez exactement le nom du magasin.
+          Pour supprimer, retapez exactement le nom du commerce.
         </p>
       ) : null}
 
@@ -90,7 +90,7 @@ export default async function AdminStorePage({
       >
         <input type="hidden" name="restaurantId" value={store.id} />
         <h2 className="md:col-span-2 text-lg font-semibold">Identité & offre</h2>
-        <Field label="Nom du magasin">
+        <Field label="Nom du commerce">
           <input
             name="name"
             className={inputClass}
@@ -105,7 +105,7 @@ export default async function AdminStorePage({
             defaultValue={store.timezone}
           />
         </Field>
-        <Field label="WhatsApp magasin">
+        <Field label="WhatsApp commerce">
           <input
             name="whatsappTo"
             className={inputClass}
@@ -155,7 +155,7 @@ export default async function AdminStorePage({
             value="1"
             defaultChecked={store.active}
           />
-          Magasin actif
+          Commerce actif
         </label>
         <label className="flex items-center gap-2 text-[13px]">
           <input type="checkbox" name="completeOnboarding" value="1" />
@@ -274,7 +274,7 @@ export default async function AdminStorePage({
           <input name="confirm" className={inputClass} autoComplete="off" />
         </Field>
         <button type="submit" className="btn-ghost">
-          Supprimer le magasin
+          Supprimer le commerce
         </button>
       </form>
     </div>

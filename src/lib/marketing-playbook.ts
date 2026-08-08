@@ -8,7 +8,7 @@ export const COLD_SEGMENTS = [
   { id: "mode", label: "Prêt-à-porter" },
   { id: "beaute", label: "Beauté / parfumerie" },
   { id: "boulangerie", label: "Boulangerie / snacking" },
-  { id: "franchise", label: "Franchise / multi-magasin" },
+  { id: "franchise", label: "Franchise / multi-commerce" },
   { id: "autre", label: "Autre commerce" },
 ] as const;
 
@@ -31,7 +31,7 @@ export const INFLUENCER_PLATFORMS = [
 ] as const;
 
 export const INFLUENCER_NICHES = [
-  { id: "retail", label: "Retail / magasin" },
+  { id: "retail", label: "Retail / commerce" },
   { id: "food", label: "Food / épicerie" },
   { id: "entrepreneur", label: "Entrepreneur TPE" },
   { id: "franchise", label: "Franchise" },
@@ -68,7 +68,7 @@ export const COLD_SEQUENCE = [
         : "Stock qui ne suit pas la caisse ?",
     body: (v: ColdEmailVars) => {
       const hi = v.contactName ? `Bonjour ${v.contactName},` : "Bonjour,";
-      const shop = v.businessName || "votre magasin";
+      const shop = v.businessName || "votre commerce";
       const city = v.city ? ` à ${v.city}` : "";
       const pos = v.posVendor
         ? `Avec ${v.posVendor}, `
@@ -79,7 +79,7 @@ Je m’adresse aux gérants de commerces de proximité${city} qui perdent du tem
 
 ${pos}chaque ticket devrait baisser le stock tout seul — et WhatsApp vous prévenir avant la rupture rayon.
 
-Margin Shop fait exactement ça pour des magasins comme ${shop} : 89 € HT/mois (Commerce), sans remplacer votre caisse.
+Margin Shop fait exactement ça pour des commerces comme ${shop} : 89 € HT/mois (Commerce), sans remplacer votre caisse.
 
 Est-ce que 15 minutes cette semaine pour voir si ça matche votre rayon auraient du sens ?
 
@@ -107,7 +107,7 @@ Ce que les gérants testent en premier avec Margin :
 2) seuil bas → alerte WhatsApp
 3) liste de courses envoyée sur le téléphone, « marquer fait » → stock remonte
 
-Si vous gérez encore le réassort au feeling / Excel, on peut brancher un pilote sur 1 magasin.
+Si vous gérez encore le réassort au feeling / Excel, on peut brancher un pilote sur 1 commerce.
 
 OK pour un créneau court ?
 
@@ -127,7 +127,7 @@ OK pour un créneau court ?
 Je ne veux pas polluer votre boîte. Dernier message de mon côté concernant Margin pour ${shop}.
 
 Si le stock ↔ caisse n’est pas un sujet aujourd’hui, ignorez cet email.
-Si ça revient (ruptures, inventaire, franchise 2ᵉ magasin), répondez « OK » et je vous renvoie le lien d’essai + la démo 15 min.
+Si ça revient (ruptures, inventaire, franchise 2ᵉ commerce), répondez « OK » et je vous renvoie le lien d’essai + la démo 15 min.
 
 Bonne continuation,
 — Nabil`;
@@ -148,7 +148,7 @@ export const INFLUENCER_OUTREACH = {
     const niche = opts.niche || "retail";
     return `Bonjour ${name},
 
-J’ai vu votre contenu ${niche} (${opts.followers ? `~${opts.followers.toLocaleString("fr-FR")} abonnés` : "communauté engagée"}) — très aligné avec les gérants de magasins de proximité.
+J’ai vu votre contenu ${niche} (${opts.followers ? `~${opts.followers.toLocaleString("fr-FR")} abonnés` : "communauté engagée"}) — très aligné avec les gérants de commerces de proximité.
 
 Margin Shop est un SaaS stock ↔ caisse (89 €/mois) : on cherche 3–5 micro-créateurs pour un format honnête (story / short / avis terrain), pas un script pub.
 
@@ -209,7 +209,7 @@ export const MARKETING_PLAYBOOK = {
   icp: [
     "Gérant TPE commerce de proximité (épicerie, mode, beauté…)",
     "Déjà une caisse numérique (Zelty, Cashpad, Square, SumUp…)",
-    "1 à 3 magasins — trop petit pour un ERP, trop chaotique pour Excel",
+    "1 à 3 commerces — trop petit pour un ERP, trop chaotique pour Excel",
     "Douleur : ruptures, inventaires longs, stock ≠ ventes",
   ],
   weeklyCadence: [
@@ -220,14 +220,14 @@ export const MARKETING_PLAYBOOK = {
   ],
   sources: [
     "Google Maps « épicerie + ville » → site → contact",
-    "LinkedIn : gérant magasin / franchise food retail",
+    "LinkedIn : gérant commerce / franchise food retail",
     "Groupes Facebook commerçants / franchise",
     "Partenaires caisse (intégrateurs Zelty / Cashpad)",
     "Parrainage clients (Réglages → Affiliation)",
   ],
   influencerCriteria: [
     "5k–80k abonnés, engagement > 2–3 %",
-    "Contenu magasin, food retail, vie de gérant — pas lifestyle luxe",
+    "Contenu commerce, food retail, vie de gérant — pas lifestyle luxe",
     "FR / francophone, audience commerçants ou créateurs de boutique",
     "Préférer barter + affiliation avant cash (cash flow early)",
   ],

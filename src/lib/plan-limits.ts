@@ -45,7 +45,7 @@ export async function assertCanAddStore(
     where: { email: ownerEmail },
     select: { restaurant: { select: { plan: true, id: true } } },
   });
-  // Admin crée des magasins indépendants — limite par plan du magasin parent n’existe pas encore.
+  // Admin crée des commerces indépendants — limite par plan du commerce parent n’existe pas encore.
   // On compte les restaurants actifs du même email gérant si multi-compte ; sinon no-op soft.
   if (!user?.restaurant) return { ok: true };
   const plan = resolvePlan(user.restaurant.plan);

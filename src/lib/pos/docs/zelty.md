@@ -28,16 +28,16 @@
     ]
   }
 }
-```
+````
 
 ### Annulation / void
 
-```json
+````json
 {
   "event": "order.cancelled",
   "order": { "id": "12345", "status": "cancelled" }
 }
-```
+````
 
 Alias cancel : `cancelled` | `canceled` | `void` | `refund` | `annul` (event/type/action/status).
 

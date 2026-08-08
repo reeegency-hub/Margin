@@ -11,26 +11,26 @@
 | 2 | **Pull API** | Margin interroge périodiquement l’API commandes (clé partenaire) |
 | 3 | **Export** | CSV/SFTP en secours (moins live) |
 
-## 2. Endpoint Margin (par magasin)
+## 2. Endpoint Margin (par commerce)
 
 ```
 POST https://margin-shop.vercel.app/api/webhooks/pos/{connectionId}
-```
+````
 
 Headers recommandés :
-```
+````
 Content-Type: application/json
 x-webhook-secret: <secret fourni à la création de connexion>
-```
+````
 
 Alias signé (optionnel) :
-```
+````
 x-pos-signature: sha256=<hmac>
-```
+````
 
 ## 3. Payload minimal accepté
 
-```json
+````json
 {
   "secret": "<même secret ou header>",
   "order_id": "TICKET-12345",
@@ -44,7 +44,7 @@ x-pos-signature: sha256=<hmac>
     }
   ]
 }
-```
+````
 
 | Champ | Obligatoire | Notes |
 |-------|-------------|--------|
@@ -76,7 +76,7 @@ x-pos-signature: sha256=<hmac>
 
 Nous pouvons fournir sous 24 h :
 - 1 `connectionId` + URL + secret de test
-- 1 magasin démo
+- 1 commerce démo
 - Logs de réception + impact stock
 
-**Sécurité** : HTTPS only · secret par magasin · pas de carte bancaire dans le flux (uniquement ticket / lignes).
+**Sécurité** : HTTPS only · secret par commerce · pas de carte bancaire dans le flux (uniquement ticket / lignes).

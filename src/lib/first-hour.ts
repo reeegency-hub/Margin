@@ -272,7 +272,7 @@ function buildEquipe(p: Progress): SectionGuide {
       done: p.employeeCount > 0,
       href: "/employees",
       cta: "Ajouter un prénom",
-      hint: "Les personnes qui travaillent au magasin.",
+      hint: "Les personnes qui travaillent au commerce.",
     },
     {
       id: "team-planning",
@@ -301,7 +301,7 @@ function buildEquipe(p: Progress): SectionGuide {
   };
 }
 
-/** Magasin → Caisse · Livraison · Réglages */
+/** Commerce → Caisse · Livraison · Réglages */
 function buildMagasin(p: Progress): SectionGuide {
   const items: FirstHourItem[] = [
     {
@@ -329,30 +329,30 @@ function buildMagasin(p: Progress): SectionGuide {
       done: p.hasWhatsApp,
       href: "/settings",
       cta: "Ajouter mon WhatsApp",
-      hint: "Numéro du magasin pour les alertes et listes.",
+      hint: "Numéro du commerce pour les alertes et listes.",
     },
   ];
-  // Livraison optionnelle : ne bloque pas la fin du parcours Magasin
+  // Livraison optionnelle : ne bloque pas la fin du parcours Commerce
   const requiredDone = p.hasCaisse && p.hasWhatsApp;
   return {
     section: "magasin",
-    badge: "Menu Magasin",
-    title: "Parcours Magasin",
-    lead: "Caisse, livraison, réglages — les 3 sous-menus Magasin.",
+    badge: "Menu Commerce",
+    title: "Parcours Commerce",
+    lead: "Caisse, livraison, réglages — les 3 sous-menus Commerce.",
     items,
     active: !requiredDone,
   };
 }
 
 /**
- * Accueil = checklist complète pour un magasin vraiment opérationnel.
+ * Accueil = checklist complète pour un commerce vraiment opérationnel.
  * Chaque étape a son CTA direct (pas un résumé de menus).
  */
 function buildHome(p: Progress): SectionGuide {
   const items: FirstHourItem[] = [
     {
       id: "home-wa",
-      label: "WhatsApp du magasin",
+      label: "WhatsApp du commerce",
       done: p.hasWhatsApp,
       href: "/settings",
       cta: "Ajouter mon numéro",
@@ -407,7 +407,7 @@ function buildHome(p: Progress): SectionGuide {
       done: p.employeeCount > 0,
       href: "/employees",
       cta: "Ajouter un prénom",
-      hint: "Les personnes qui ouvrent et ferment le magasin.",
+      hint: "Les personnes qui ouvrent et ferment le commerce.",
     },
     {
       id: "home-planning",
@@ -486,7 +486,7 @@ function buildHome(p: Progress): SectionGuide {
   return {
     section: "home",
     badge: "Accueil",
-    title: "Mettre le magasin au point",
+    title: "Mettre le commerce au point",
     lead: "Le Copilote à droite + tous les gestes pour être opérationnel — cliquez chaque CTA.",
     items,
     active: requiredOpen,

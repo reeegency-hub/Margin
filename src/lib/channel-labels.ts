@@ -1,7 +1,7 @@
 /** Libellés canaux / plateformes — safe client (pas de Prisma / Twilio). */
 
 export const CHANNEL_LABELS: Record<string, string> = {
-  dine_in: "En magasin",
+  dine_in: "Sur place",
   takeaway: "À emporter",
   kiosk: "Caisse",
   deliveroo: "Deliveroo",

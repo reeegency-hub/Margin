@@ -1,7 +1,32 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
+import {
+  DEVICE_COOKIE,
+  FORCE_MOBILE_COOKIE,
+  isMobileUserAgent,
+  resolveDeviceType,
+} from "@/lib/device";
 
-const MOBILE_COOKIE = "margin_mobile";
+function attachDeviceCookie(
+  res: NextResponse,
+  req: {
+    headers: Headers;
+    cookies: { get: (n: string) => { value: string } | undefined };
+  }
+) {
+  const nextDevice = resolveDeviceType({
+    forceMobile: req.cookies.get(FORCE_MOBILE_COOKIE)?.value === "1",
+    userAgent: req.headers.get("user-agent"),
+  });
+  if (req.cookies.get(DEVICE_COOKIE)?.value !== nextDevice) {
+    res.cookies.set(DEVICE_COOKIE, nextDevice, {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+      sameSite: "lax",
+    });
+  }
+  return res;
+}
 
 export default withAuth(
   function middleware(req) {
@@ -9,7 +34,10 @@ export default withAuth(
 
     // Racine publique : amis / téléphone → landing, pas l’écran login
     if (!token && req.nextUrl.pathname === "/") {
-      return NextResponse.redirect(new URL("/welcome", req.nextUrl.origin));
+      return attachDeviceCookie(
+        NextResponse.redirect(new URL("/welcome", req.nextUrl.origin)),
+        req
+      );
     }
 
     // JWT vide après un seed / reset → forcer login (évite boucle / ↔ onboarding)
@@ -19,7 +47,7 @@ export default withAuth(
       const res = NextResponse.redirect(login);
       res.cookies.delete("next-auth.session-token");
       res.cookies.delete("__Secure-next-auth.session-token");
-      return res;
+      return attachDeviceCookie(res, req);
     }
 
     // ?mobile=1 → toute l’app en chrome mobile (cookie). ?mobile=0 → quit.
@@ -27,7 +55,6 @@ export default withAuth(
     if (mobile === "1" || mobile === "0") {
       const url = req.nextUrl.clone();
       url.searchParams.delete("mobile");
-      // Import catalogue & fiches produit = PC uniquement (pas de "carte" en boutique)
       if (
         mobile === "1" &&
         (url.pathname.startsWith("/ingredients/menu") ||
@@ -37,36 +64,59 @@ export default withAuth(
       }
       const res = NextResponse.redirect(url);
       if (mobile === "1") {
-        res.cookies.set(MOBILE_COOKIE, "1", {
+        res.cookies.set(FORCE_MOBILE_COOKIE, "1", {
+          path: "/",
+          maxAge: 60 * 60 * 24 * 30,
+          sameSite: "lax",
+        });
+        res.cookies.set(DEVICE_COOKIE, "mobile", {
           path: "/",
           maxAge: 60 * 60 * 24 * 30,
           sameSite: "lax",
         });
       } else {
-        res.cookies.set(MOBILE_COOKIE, "", {
+        res.cookies.set(FORCE_MOBILE_COOKIE, "", {
           path: "/",
           maxAge: 0,
         });
+        res.cookies.set(
+          DEVICE_COOKIE,
+          isMobileUserAgent(req.headers.get("user-agent"))
+            ? "mobile"
+            : "desktop",
+          {
+            path: "/",
+            maxAge: 60 * 60 * 24 * 30,
+            sameSite: "lax",
+          }
+        );
       }
       return res;
     }
 
-    // Mode téléphone : pas d’accès à l’import catalogue ni aux fiches produit
+    const device = resolveDeviceType({
+      forceMobile: req.cookies.get(FORCE_MOBILE_COOKIE)?.value === "1",
+      cookieDevice: req.cookies.get(DEVICE_COOKIE)?.value,
+      userAgent: req.headers.get("user-agent"),
+    });
+
     if (
-      req.cookies.get(MOBILE_COOKIE)?.value === "1" &&
+      device === "mobile" &&
       (req.nextUrl.pathname.startsWith("/ingredients/menu") ||
         req.nextUrl.pathname.startsWith("/dishes"))
     ) {
-      return NextResponse.redirect(new URL("/", req.nextUrl.origin));
+      return attachDeviceCookie(
+        NextResponse.redirect(new URL("/", req.nextUrl.origin)),
+        req
+      );
     }
 
-    return NextResponse.next();
+    return attachDeviceCookie(NextResponse.next(), req);
   },
   {
     pages: { signIn: "/login" },
     callbacks: {
       authorized: ({ token, req }) => {
-        // Autoriser le passage sur / sans session → redirect /welcome ci-dessus
         if (req.nextUrl.pathname === "/") return true;
         return Boolean(token);
       },
@@ -92,5 +142,6 @@ export const config = {
     "/kiosks/:path*",
     "/admin",
     "/admin/:path*",
+    "/costs/:path*",
   ],
 };

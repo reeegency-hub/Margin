@@ -10,7 +10,7 @@ export type PosTuto = {
 
 const SHARED_SETUP = [
   "Indiquez votre logiciel de caisse ici.",
-  "Créez la connexion webhook (URL + secret générés pour votre magasin).",
+  "Créez la connexion webhook (URL + secret générés pour votre commerce).",
   "L’équipe Margin programme le branchement sur votre caisse (~400 € une fois).",
   "Margin actif : 99 € / mois — ventes → catalogue → stock automatique.",
   "Quand les ventes arrivent : validez les nouveaux produits, puis vérifiez le stock.",
@@ -48,7 +48,7 @@ export const POS_TUTOS: Record<string, PosTuto> = {
   lightspeed: tutoFor(
     "lightspeed",
     "Lightspeed",
-    "Vous avez Lightspeed : créez la connexion. On programme le branchement pour votre magasin."
+    "Vous avez Lightspeed : créez la connexion. On programme le branchement pour votre commerce."
   ),
   square: tutoFor(
     "square",
@@ -58,7 +58,7 @@ export const POS_TUTOS: Record<string, PosTuto> = {
   custom: tutoFor(
     "custom",
     "Autre caisse",
-    "Autre logiciel : dites-nous lequel, créez la connexion. On étudie le branchement pour votre magasin."
+    "Autre logiciel : dites-nous lequel, créez la connexion. On étudie le branchement pour votre commerce."
   ),
 };
 
@@ -78,7 +78,7 @@ export function getPosTuto(vendor: string | null | undefined): PosTuto {
   return {
     vendor: "custom",
     title: "Caisse",
-    body: "Choisissez le logiciel de votre magasin. On programme la connexion webhook pour vous — mise en service ~400 €, puis 99 € / mois.",
+    body: "Choisissez le logiciel de votre commerce. On programme la connexion webhook pour vous — mise en service ~400 €, puis 99 € / mois.",
     tips: [
       "Cliquez sur votre caisse (Zelty, Cashpad, Square…).",
       "Créez la connexion webhook.",

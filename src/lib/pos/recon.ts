@@ -20,7 +20,7 @@ export type ReconInternalResult = {
 };
 
 /**
- * Stats 24 h par magasin CONNECTED : events, stock négatif, pending stale.
+ * Stats 24 h par commerce CONNECTED : events, stock négatif, pending stale.
  */
 export async function runInternalPosReconciliation(opts?: {
   /** Jour couvert (défaut = hier) */

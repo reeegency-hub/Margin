@@ -45,7 +45,7 @@ export default async function InventoryDetailPage({
       question={editable ? "Vérifiez le rayon" : "Vérification terminée"}
       guide={
         editable
-          ? "Indiquez ce qu’il y a vraiment en magasin. Valider corrige le stock."
+          ? "Indiquez ce qu’il y a vraiment dans le commerce. Valider corrige le stock."
           : "Cette vérification a recalibré le stock. Les alertes et Courses partent de là."
       }
     >

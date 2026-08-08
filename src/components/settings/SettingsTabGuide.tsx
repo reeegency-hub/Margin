@@ -22,7 +22,7 @@ const GUIDE: Record<
 > = {
   simple: {
     eyebrow: "Réglages · Simple",
-    title: "WhatsApp = le fil du magasin",
+    title: "WhatsApp = le fil du commerce",
     lead: "C’est l’onglet du quotidien : numéro pour alertes stock, listes de courses et pointage. La facturation Stripe est ici si votre abonnement est lié.",
     list: [
       "Enregistrez un numéro au format +336…",
@@ -35,7 +35,7 @@ const GUIDE: Record<
   affiliation: {
     eyebrow: "Réglages · Affiliation",
     title: "Parrainez, gagnez des mois",
-    lead: "Partagez votre lien : chaque magasin qui s’inscrit via ce lien vous rapporte du crédit d’abonnement.",
+    lead: "Partagez votre lien : chaque commerce qui s’inscrit via ce lien vous rapporte du crédit d’abonnement.",
     list: [
       "Copiez le lien ou le code",
       "Envoyez-le à un confrère commerçant",
@@ -51,7 +51,7 @@ const GUIDE: Record<
     list: [
       "Collez la clé fournie par la plateforme",
       "Elle est chiffrée côté serveur",
-      "La caisse (Zelty…) se branche dans Magasin → Caisse",
+      "La caisse (Zelty…) se branche dans Commerce → Caisse",
     ],
     hint: "Pour la caisse, ouvrez plutôt la page Caisse — pas cet onglet.",
     selector: '[data-settings-tab="connexions"]',

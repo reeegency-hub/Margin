@@ -146,7 +146,7 @@ export function StockSheetPanel({
       <div className="dash-card dash-card--dark stock-live__panel">
         <header className="stock-live__head">
           <div>
-            <span className="stock-live__title">Stock magasin</span>
+            <span className="stock-live__title">Stock commerce</span>
             <em className="stock-live__badge">
               {alertes.length
                 ? `${alertes.length} à racheter`

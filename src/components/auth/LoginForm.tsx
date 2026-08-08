@@ -22,7 +22,7 @@ export function LoginForm({ allowDemo }: { allowDemo: boolean }) {
     sessionExpired
       ? "Session expirée. Reconnectez-vous."
       : billingBlocked
-        ? "Abonnement requis ou paiement en attente. Terminez le checkout Stripe, puis reconnectez-vous."
+        ? "Votre abonnement est en pause. Contactez-nous pour le réactiver."
         : adminDenied
           ? "Accès admin refusé."
           : null
@@ -56,7 +56,7 @@ export function LoginForm({ allowDemo }: { allowDemo: boolean }) {
       } catch {
         /* ignore — tombe sur message identifiants */
       }
-      setError("Identifiants incorrects");
+      setError("Email ou mot de passe incorrect.");
       return;
     }
     try {
@@ -84,8 +84,8 @@ export function LoginForm({ allowDemo }: { allowDemo: boolean }) {
         </h1>
         <p className="brand-card__proof">
           {justPaid
-            ? "Entrez le mot de passe choisi à l’inscription pour ouvrir votre magasin."
-            : "Retour au magasin — email et mot de passe de votre compte."}
+            ? "Entrez le mot de passe choisi à l’inscription pour ouvrir votre commerce."
+            : "Retour au commerce — email et mot de passe de votre compte."}
         </p>
         <div className="login-fields space-y-3">
           <Field label="Email">

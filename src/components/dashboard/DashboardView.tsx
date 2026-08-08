@@ -121,7 +121,7 @@ export function DashboardView(props: DashboardViewProps) {
   return (
     <BrandPage
       question={props.restaurantName}
-      guide="Une priorité à traiter, puis le pouls du magasin."
+      guide="Une priorité à traiter, puis le pouls du commerce."
     >
       <div className="home-now dash-card dash-card--dark hub-now" data-tour="home-focus">
         {primary && !primary.done ? (
@@ -154,7 +154,7 @@ export function DashboardView(props: DashboardViewProps) {
             <p className="hub-now__eyebrow">À faire maintenant</p>
             <p className="hub-now__title">Rien d’urgent</p>
             <p className="hub-now__detail">
-              Magasin à jour — activité et coûts juste en dessous.
+              Commerce à jour — activité et coûts juste en dessous.
             </p>
             <div className="hub-now__actions">
               <Link href="/orders" className="btn-ghost">

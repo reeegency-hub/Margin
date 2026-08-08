@@ -34,11 +34,11 @@ export const WHATSAPP_TEMPLATES: Record<string, TemplateDef> = {
     key: "stock_recap",
     purpose: "stock_recap",
     contentSid: envSid("TWILIO_WA_TEMPLATE_STOCK_RECAP"),
-    variables: ["1", "2", "3"], // magasin, nb produits, liste
+    variables: ["1", "2", "3"], // commerce, nb produits, liste
     fallbackBody: (v) =>
       [
         `Margin — Récap rupture de stock`,
-        `${v["1"] || "Magasin"} · ${v["2"] || "0"} produit(s)`,
+        `${v["1"] || "Commerce"} · ${v["2"] || "0"} produit(s)`,
         v["3"] || "",
         `→ Une seule liste à traiter.`,
       ]

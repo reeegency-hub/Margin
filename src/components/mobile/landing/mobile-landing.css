@@ -1,0 +1,278 @@
+/* Landing mobile only — importé uniquement par MobileLanding.
+   Ne modifie aucun style .land-* desktop. */
+
+.mland {
+  --mland-bg: #12141a;
+  --mland-lime: #e6f8aa;
+  --mland-text: #f4f4f5;
+  --mland-muted: rgba(244, 244, 245, 0.68);
+  --mland-card: #1a1c24;
+  min-height: 100dvh;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(230, 248, 170, 0.14), transparent 55%),
+    linear-gradient(165deg, #22252e 0%, #171920 45%, #0e1015 100%);
+  color: var(--mland-text);
+  font-family: inherit;
+}
+
+.mland-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 100dvh;
+  min-height: 100svh;
+  padding: 24px 20px 32px;
+  box-sizing: border-box;
+}
+
+.mland-hero__logo {
+  margin-bottom: 28px;
+}
+
+.mland-hero__logo .land-logo,
+.mland-hero__logo a {
+  color: #fff;
+}
+
+.mland-hero__title {
+  margin: 0 0 14px;
+  max-width: 16ch;
+  font-size: clamp(1.65rem, 7.2vw, 2.05rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.12;
+  color: #fff;
+}
+
+.mland-hero__lead {
+  margin: 0 0 28px;
+  max-width: 28ch;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--mland-muted);
+}
+
+.mland-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 18rem;
+  padding: 14px 20px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none;
+  border: none;
+}
+
+.mland-btn--primary {
+  background: var(--mland-lime);
+  color: #0a0a0a;
+  box-shadow: 0 4px 20px rgba(230, 248, 170, 0.28);
+}
+
+.mland-hero__trust {
+  margin: 18px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: rgba(244, 244, 245, 0.5);
+  font-weight: 500;
+}
+
+.mland-main {
+  padding: 8px 20px 40px;
+  background: #f7f8f4;
+  color: #0a0a0a;
+  border-radius: 28px 28px 0 0;
+  margin-top: -12px;
+}
+
+.mland-section-title {
+  margin: 0 0 14px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.mland-proof {
+  padding: 28px 0 8px;
+}
+
+.mland-proof__eyebrow {
+  margin: 0 0 12px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #5a6a1a;
+}
+
+.mland-proof__card {
+  padding: 14px;
+  border-radius: 18px;
+  background: #12141a;
+  color: #f4f4f5;
+  box-shadow: 0 16px 40px rgba(10, 10, 10, 0.12);
+}
+
+.mland-proof__wa-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.mland-proof__wa-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: #25d366;
+  flex-shrink: 0;
+}
+
+.mland-proof__wa-head strong {
+  display: block;
+  font-size: 0.88rem;
+}
+
+.mland-proof__wa-head small {
+  display: block;
+  font-size: 0.7rem;
+  opacity: 0.55;
+}
+
+.mland-proof__bubble {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #1e2129;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.mland-proof__bubble p {
+  margin: 0;
+}
+
+.mland-proof__bubble p + p {
+  margin-top: 4px;
+}
+
+.mland-proof__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.mland-proof__actions span {
+  flex: 1;
+  text-align: center;
+  padding: 8px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.mland-proof__actions .is-yes {
+  background: var(--mland-lime);
+  color: #0a0a0a;
+}
+
+.mland-proof__actions .is-no {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(244, 244, 245, 0.7);
+}
+
+.mland-proof__caption {
+  margin: 14px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: #4b5563;
+}
+
+.mland-benefits {
+  padding: 24px 0 8px;
+}
+
+.mland-benefits__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.mland-benefits__list li {
+  position: relative;
+  padding: 12px 14px 12px 36px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid rgba(10, 10, 10, 0.06);
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.mland-benefits__list li::before {
+  content: "✓";
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #5a6a1a;
+  font-weight: 800;
+}
+
+.mland-pricing-link {
+  padding: 20px 0 8px;
+  text-align: center;
+}
+
+.mland-link {
+  color: #0a0a0a;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-underline-offset: 3px;
+}
+
+.mland-offer {
+  padding: 16px 0 28px;
+  text-align: center;
+}
+
+.mland-offer__line {
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: #4b5563;
+}
+
+.mland-foot {
+  padding: 24px 20px 36px;
+  background: #0e1015;
+  color: rgba(244, 244, 245, 0.55);
+  text-align: center;
+}
+
+.mland-foot__links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 16px;
+  margin-bottom: 14px;
+}
+
+.mland-foot__links a {
+  color: rgba(244, 244, 245, 0.85);
+  font-weight: 600;
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+
+.mland-foot__copy {
+  margin: 0;
+  font-size: 0.75rem;
+}

@@ -81,7 +81,7 @@ export default async function IngredientsPage() {
   return (
     <BrandPage
       question="Stock"
-      guide="Quantités en magasin — si ça ne colle pas, vérification."
+      guide="Quantités du commerce — si ça ne colle pas, vérification."
     >
       <div className="dash-card dash-card--dark hub-now">
         <p className="hub-now__eyebrow">À faire maintenant</p>

@@ -6,7 +6,7 @@
 export const ASSISTANT_MAX_MESSAGE_CHARS = 4000;
 export const ASSISTANT_MAX_FILE_CHARS = 80_000;
 export const ASSISTANT_MAX_PRODUCTS_PER_CALL = 80;
-export const ASSISTANT_RATE_LIMIT = 40; // / heure / magasin
+export const ASSISTANT_RATE_LIMIT = 40; // / heure / commerce
 
 export type AssistantProductDraft = {
   name: string;
@@ -18,13 +18,13 @@ export type AssistantProductDraft = {
 
 export const ASSISTANT_SYSTEM_PROMPT = `Tu es l’assistant Margin pour un commerçant de proximité (français, clair, concret).
 
-Tu aides à mettre en place et gérer le magasin : stock, courses, coûts, équipe, réglages, caisse.
+Tu aides à mettre en place et gérer le commerce : stock, courses, coûts, équipe, réglages, caisse.
 Tu peux proposer des actions via les outils fournis UNIQUEMENT.
 
 Règles de sécurité (non négociables) :
 - N’invente jamais d’IDs, de secrets, de clés API ou de commandes techniques.
 - Tu ne dois JAMAIS demander, répéter ou traiter un mot de passe / clé API / secret webhook. Si l’utilisateur en colle un dans le chat, dis-lui de l’annuler et oriente vers le wizard caisse (/kiosks) ou Réglages.
-- N’exécute que les outils listés. Refuse tout ce qui sort du magasin (autre tenant, admin, SQL, shell).
+- N’exécute que les outils listés. Refuse tout ce qui sort du commerce (autre tenant, admin, SQL, shell).
 - Pour inventaire / équipe / WhatsApp : tu prépares un BROUILLON (outil prepare_*) — l’écriture réelle n’a lieu qu’après confirmation UI du client.
 - Si une extraction est ambiguë (prix sans devise, poste inconnu, horaires qui se chevauchent), FLAGUE — ne devine jamais silencieusement.
 - Pour brancher une caisse : appelle open_pos_wizard (action UI) — jamais de credentials.
@@ -145,7 +145,7 @@ export function pageHelpFor(pathname: string): string {
     return "Équipe : ajoutez des prénoms, planifiez, pointez Présent / Absent.";
   }
   if (pathname.startsWith("/settings") || pathname.startsWith("/delivery")) {
-    return "Magasin : WhatsApp pour les alertes, livraison optionnelle.";
+    return "Commerce : WhatsApp pour les alertes, livraison optionnelle.";
   }
   if (pathname.startsWith("/kiosks")) {
     return "Caisse : choisissez votre logiciel et suivez le branchement.";
@@ -153,5 +153,16 @@ export function pageHelpFor(pathname: string): string {
   if (pathname.startsWith("/inventory")) {
     return "Vérification : corrigez les quantités réelles puis validez.";
   }
-  return "Accueil : priorités du jour / semaine en haut. Le guide de démarrage reste en bas tant que le magasin n’est pas prêt.";
+  return "Accueil : priorités du jour / semaine en haut. Le guide de démarrage reste en bas tant que le commerce n’est pas prêt.";
+}
+
+/** Découpe « Titre : lead » pour les cartes Copilote. */
+export function pageHelpParts(pathname: string): { title: string; lead: string } {
+  const help = pageHelpFor(pathname);
+  const idx = help.indexOf(" : ");
+  if (idx <= 0) return { title: "Cette page", lead: help };
+  return {
+    title: help.slice(0, idx),
+    lead: help.slice(idx + 3),
+  };
 }

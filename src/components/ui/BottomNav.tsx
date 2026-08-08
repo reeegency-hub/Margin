@@ -211,7 +211,7 @@ export function BottomNav({ isAdmin = false }: { isAdmin?: boolean }) {
               </button>
             </header>
             <p className="app-menu-sheet__hint">
-              Accueil · Stock · Courses · Équipe · Magasin
+              Accueil · Stock · Courses · Équipe · Commerce
             </p>
             <div className="app-menu-sheet__body">
               {NAV_SECTIONS.map((section) => (

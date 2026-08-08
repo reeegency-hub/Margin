@@ -18,27 +18,27 @@ const FOOT_FORM = "Zone mise en avant — complétez puis validez.";
 
 /** Copies canoniques par id de tâche (parcours + accueil). */
 const BY_ID: Record<string, GuideSpotCopy> = {
-  /* —— Magasin —— */
+  /* —— Commerce —— */
   "shop-settings": {
     title: "Ajouter mon WhatsApp",
     steps: [
-      "Saisissez le numéro WhatsApp du magasin.",
+      "Saisissez le numéro WhatsApp du commerce.",
       "Cliquez Enregistrer pour recevoir alertes et listes.",
     ],
     footHint: FOOT_SAVE,
   },
   "home-wa": {
-    title: "WhatsApp du magasin",
+    title: "WhatsApp du commerce",
     steps: [
-      "Saisissez le numéro WhatsApp du magasin.",
+      "Saisissez le numéro WhatsApp du commerce.",
       "Cliquez Enregistrer pour recevoir alertes et listes.",
     ],
     footHint: FOOT_SAVE,
   },
   "shop-wa": {
-    title: "WhatsApp du magasin",
+    title: "WhatsApp du commerce",
     steps: [
-      "Saisissez le numéro WhatsApp du magasin.",
+      "Saisissez le numéro WhatsApp du commerce.",
       "Cliquez Enregistrer pour recevoir alertes et listes.",
     ],
     footHint: FOOT_SAVE,
@@ -155,7 +155,7 @@ const BY_ID: Record<string, GuideSpotCopy> = {
     title: "Ajouter un membre",
     steps: [
       "Ajoutez le prénom d’une personne de l’équipe.",
-      "Répétez pour chaque personne du magasin.",
+      "Répétez pour chaque personne du commerce.",
     ],
     footHint: FOOT_CLICK,
   },

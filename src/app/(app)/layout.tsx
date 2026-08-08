@@ -3,15 +3,16 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { AppChrome } from "@/components/AppChrome";
 import { StockAlertService } from "@/lib/stock-alert-service";
 import type { StockAlertSummary } from "@/lib/stock-alert-service";
 import { isAdminEmail } from "@/lib/admin";
 import { PLANS } from "@/lib/plans";
 import { hasAppAccess } from "@/lib/stripe/access";
 import { getFirstHourState } from "@/lib/first-hour";
-import { getCostPilotSnapshot } from "@/lib/cost-engine";
-import type { CostPilotSnapshot } from "@/lib/cost-engine";
+import {
+  FORCE_MOBILE_COOKIE,
+  getDeviceType,
+} from "@/lib/device";
 
 /** Next.js redirect() throws — must not be swallowed by try/catch. */
 function rethrowRedirect(err: unknown): void {
@@ -102,33 +103,36 @@ export default async function AppLayout({
   }
 
   const jar = await cookies();
-  const forceMobile = jar.get("margin_mobile")?.value === "1";
+  const forceMobileOverride = jar.get(FORCE_MOBILE_COOKIE)?.value === "1";
+  const device = await getDeviceType();
 
   let firstHour: Awaited<ReturnType<typeof getFirstHourState>> = null;
-  let costPilot: CostPilotSnapshot | null = null;
   try {
-    const [fh, costs] = await Promise.all([
-      getFirstHourState(session.user.restaurantId),
-      getCostPilotSnapshot(session.user.restaurantId),
-    ]);
-    firstHour = fh;
-    costPilot = costs;
+    firstHour = await getFirstHourState(session.user.restaurantId);
   } catch (err) {
     rethrowRedirect(err);
-    console.error("[app/layout] first-hour / costs failed", err);
+    console.error("[app/layout] first-hour failed", err);
   }
 
-  return (
-    <AppChrome
-      restaurantName={session.user.restaurantName}
-      planLabel={planLabel}
-      whatsappTo={restaurant.whatsappTo}
-      pendingStockRecap={pendingStockRecap}
-      forceMobile={forceMobile}
-      isAdmin={isAdminEmail(session.user.email)}
-      firstHour={firstHour}
-    >
-      {children}
-    </AppChrome>
-  );
+  const shellProps = {
+    restaurantName: session.user.restaurantName,
+    restaurantId: session.user.restaurantId,
+    planLabel,
+    plan: restaurant.plan,
+    whatsappTo: restaurant.whatsappTo,
+    pendingStockRecap,
+    forceMobileOverride,
+    isAdmin: isAdminEmail(session.user.email),
+    firstHour,
+    children,
+  };
+
+  // Import dynamique conditionnel — le bundle de l’autre shell n’est pas chargé
+  if (device === "mobile") {
+    const { MobileShell } = await import("@/components/mobile/MobileShell");
+    return <MobileShell {...shellProps} />;
+  }
+
+  const { DesktopShell } = await import("@/components/desktop/DesktopShell");
+  return <DesktopShell {...shellProps} />;
 }

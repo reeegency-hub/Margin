@@ -120,15 +120,15 @@ const DEMO_FOCUSES: Record<string, ReturnType<typeof demoFocus>> = {
     "home-wa",
     "/settings",
     "/settings",
-    "Magasin",
+    "Commerce",
     "Alertes rupture et listes sur le téléphone."
   ),
   "shop-settings": demoFocus(
     "shop-settings",
     "/settings",
     "/settings",
-    "Magasin",
-    "Numéro du magasin pour les alertes et listes."
+    "Commerce",
+    "Numéro du commerce pour les alertes et listes."
   ),
   "cost-invoice": demoFocus(
     "cost-invoice",
@@ -357,7 +357,7 @@ export function GuideFocusBanner({
               </form>
               <p className="ms-spot__hint">
                 En enregistrant, vous acceptez de recevoir des messages Margin
-                liés au magasin.{" "}
+                liés au commerce.{" "}
                 <a href="/legal/confidentialite">Confidentialité</a>
               </p>
             </div>

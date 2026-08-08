@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { MarginLogoMark } from "@/components/brand/MarginLogo";
+import { planLogoTag } from "@/lib/plans";
 import type { BreadcrumbItem } from "./types";
 
 export function Topbar({
@@ -13,6 +14,7 @@ export function Topbar({
   user,
   userMenu,
   actions,
+  logoPlan = null,
 }: {
   title?: string;
   breadcrumbs?: BreadcrumbItem[];
@@ -22,8 +24,10 @@ export function Topbar({
   user?: { name: string; email?: string; initials?: string } | null;
   userMenu?: ReactNode;
   actions?: ReactNode;
+  logoPlan?: string | null;
 }) {
   const [scrolled, setScrolled] = useState(false);
+  const logoTag = planLogoTag(logoPlan);
   const initials =
     user?.initials ||
     user?.name
@@ -88,13 +92,27 @@ export function Topbar({
       </div>
 
       <div className="ds-top__brand">
-        <Link href="/" className="ds-top__logo" aria-label="Margin — Accueil">
+        <Link
+          href="/"
+          className="ds-top__logo"
+          aria-label={`Margin ${logoTag} — Accueil`}
+        >
           <span className="ds-top__logo-mark" aria-hidden>
             <MarginLogoMark />
           </span>
           <span className="ds-top__logo-text">
             <span className="ds-top__logo-name">Margin</span>
-            <span className="ds-top__logo-tag">magasin</span>
+            <span className="ds-top__logo-tag" aria-label={logoTag}>
+              {logoTag.split("").map((ch, i) => (
+                <span
+                  key={`${logoTag}-${i}`}
+                  className="ds-top__logo-tag-ch"
+                  aria-hidden
+                >
+                  {ch}
+                </span>
+              ))}
+            </span>
           </span>
         </Link>
       </div>

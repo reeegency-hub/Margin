@@ -58,7 +58,7 @@ export default async function FounderAdminPage({
     },
   });
 
-  /** Magasin interne Ops — hors suivi clients */
+  /** Commerce interne Ops — hors suivi clients */
   const clients = stores.filter((s) => s.name !== "Margin Ops");
   const activeClients = clients.filter((s) => s.active);
   const byPlan = {
@@ -302,14 +302,14 @@ export default async function FounderAdminPage({
       <div className="dash-card dash-card--dark space-y-4 mb-6" id="nouveau">
         <h2 className="text-lg font-semibold">Nouveau client</h2>
         <p className="text-[13px] opacity-70">
-          Crée le magasin + le login gérant. Tu configures ensuite plan, caisse,
+          Crée le commerce + le login gérant. Tu configures ensuite plan, caisse,
           WhatsApp.
         </p>
         <form
           action={adminCreateStoreAction}
           className="grid gap-3 md:grid-cols-2"
         >
-          <Field label="Nom du magasin">
+          <Field label="Nom du commerce">
             <input
               name="name"
               className={inputClass}
@@ -322,7 +322,7 @@ export default async function FounderAdminPage({
               name="email"
               type="email"
               className={inputClass}
-              placeholder="gerant@magasin.fr"
+              placeholder="gerant@commerce.fr"
               required
             />
           </Field>
@@ -395,7 +395,7 @@ export default async function FounderAdminPage({
         </div>
         {clients.length === 0 ? (
           <p className="text-[14px] opacity-70">
-            Aucun client pour l’instant. Crée le premier magasin ci-dessus.
+            Aucun client pour l’instant. Crée le premier commerce ci-dessus.
           </p>
         ) : (
           <table className="admin-table">
@@ -573,7 +573,7 @@ export default async function FounderAdminPage({
           <section>
             <h3 className="mb-2 text-[15px] font-semibold">Catalogue</h3>
             <p className="text-[13px] opacity-70">
-              {catalogAtRisk} magasin(s) à risque sur {stores.length}
+              {catalogAtRisk} commerce(s) à risque sur {stores.length}
             </p>
           </section>
 
@@ -584,7 +584,7 @@ export default async function FounderAdminPage({
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>Magasin</th>
+                  <th>Commerce</th>
                   <th>Dernier OK</th>
                   <th>APPLIED</th>
                   <th>FAILED</th>
@@ -623,7 +623,7 @@ export default async function FounderAdminPage({
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>Magasin</th>
+                  <th>Commerce</th>
                   <th>Jour</th>
                   <th>Type</th>
                   <th>Statut</th>

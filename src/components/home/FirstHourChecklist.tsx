@@ -14,7 +14,7 @@ export type { FirstHourItem };
 export { isFirstHourWindow } from "@/lib/first-hour";
 
 /**
- * Parcours singulier par page menu (Stock / Courses / Équipe / Magasin / Accueil).
+ * Parcours singulier par page menu (Stock / Courses / Équipe / Commerce / Accueil).
  * Accueil = checklist complète avec tous les CTAs cliquables.
  */
 export function FirstHourChecklist({
@@ -36,7 +36,7 @@ export function FirstHourChecklist({
       ? {
           section: "home" as const,
           badge: "Votre démarrage",
-          title: "Chemin magasin",
+          title: "Chemin commerce",
           lead: lead || "",
           items,
           active: items.some((i) => !i.done),

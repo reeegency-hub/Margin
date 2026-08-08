@@ -40,20 +40,18 @@ export const PLANS: PlanDef[] = [
     name: "Commerce",
     bestFor: "1 boutique · jusqu’à 200 produits",
     description:
-      "Palier Starter : un magasin, catalogue jusqu’à 200 produits. Votre caisse alimente le stock, les alertes WhatsApp et la vérification. La mise en place technique sur la caisse n’est pas prise en charge par Margin : vous (ou votre prestataire) branchez le lien.",
+      "Palier Starter : un commerce, catalogue jusqu’à 200 produits. Votre caisse alimente le stock, les alertes WhatsApp et la vérification. La mise en place technique sur la caisse n’est pas prise en charge par Margin : vous (ou votre prestataire) branchez le lien.",
     priceMonthly: 89,
     maxStores: 1,
     maxProducts: 200,
     featured: true,
     features: [
-      { label: "Stock à jour sans ressaisie le soir", highlight: true },
-      { label: "1 boutique · jusqu’à 200 produits" },
-      { label: "1 gérant + caissiers du magasin" },
-      { label: "Lien caisse → stock (une fois branché)" },
+      { label: "Stock relié à votre caisse", highlight: true },
       { label: "Alertes WhatsApp avant rupture" },
-      { label: "Vérification rayon · liste de courses" },
+      { label: "Vérification rayon" },
+      { label: "Liste de courses automatique" },
       {
-        label: "Mise en place technique Margin : non incluse",
+        label: `Setup caisse non inclus — vous (ou votre prestataire) branchez le lien, ~${SETUP_FEE_EUR} € si accompagnement`,
         struck: true,
       },
     ],
@@ -64,20 +62,18 @@ export const PLANS: PlanDef[] = [
     name: "Franchise",
     bestFor: "1 à 3 boutiques · produits illimités",
     description:
-      "Palier Pro : jusqu’à 3 magasins, catalogue illimité. Tout Commerce, plus la vue réseau. Margin réalise la mise en place technique sur chaque caisse — un coût énorme économisé à chaque ouverture.",
+      "Palier Pro : jusqu’à 3 commerces, catalogue illimité. Tout Commerce, plus la vue réseau. Margin réalise la mise en place technique sur chaque caisse — un coût énorme économisé à chaque ouverture.",
     priceMonthly: 249,
     maxStores: 3,
     maxProducts: null,
     features: [
-      { label: "Tout Commerce, sur plusieurs sites", highlight: true },
-      { label: "1 à 3 boutiques · produits illimités" },
-      { label: "Vue d’ensemble de tous les magasins" },
-      { label: "Utilisateurs multi-magasins" },
-      { label: "Aide prioritaire de l’équipe Margin" },
+      { label: "Tout Commerce", highlight: true },
       {
-        label: `Branchements caisse inclus (~${SETUP_FEE_EUR} € économisés / magasin)`,
+        label: `Setup caisse inclus — jusqu’à ${SETUP_FEE_EUR} € économisés par boutique`,
         highlight: true,
       },
+      { label: "Équipe : planning et pointage" },
+      { label: "Accompagnement prioritaire" },
     ],
     cta: "Démarrer Franchise",
   },
@@ -108,4 +104,11 @@ export function planLimitsLabel(plan: PlanDef): string {
       ? "produits illimités"
       : `jusqu’à ${plan.maxProducts} produits`;
   return `${stores} · ${products}`;
+}
+
+/** Tag logo topbar : commerce (Starter) ↔ franchise (réseau). */
+export function planLogoTag(
+  plan: string | null | undefined
+): "commerce" | "franchise" {
+  return plan === "reseau" ? "franchise" : "commerce";
 }

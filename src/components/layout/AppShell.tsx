@@ -21,6 +21,7 @@ export function AppShell({
   topbarTitle,
   topbarGuide,
   breadcrumbs,
+  logoPlan,
   notificationCount,
   onNotificationsClick,
   user,
@@ -44,6 +45,8 @@ export function AppShell({
   topbarTitle?: string;
   topbarGuide?: ReactNode;
   breadcrumbs?: BreadcrumbItem[];
+  /** Plan tenant → tag logo commerce | franchise */
+  logoPlan?: string | null;
   notificationCount?: number;
   onNotificationsClick?: () => void;
   user?: { name: string; email?: string; initials?: string } | null;
@@ -123,6 +126,7 @@ export function AppShell({
           <Topbar
             title={topbarTitle}
             breadcrumbs={breadcrumbs}
+            logoPlan={logoPlan}
             onMenuClick={() => setDrawerOpen(true)}
             notificationCount={notificationCount}
             onNotificationsClick={onNotificationsClick}

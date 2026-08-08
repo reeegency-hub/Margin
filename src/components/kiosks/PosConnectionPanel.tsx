@@ -312,7 +312,7 @@ function PosSetupBody({
           <p className="hub-section-lead">
             {selectedVendor
               ? `${POS_VENDOR_LABELS[selectedVendor]} sélectionné — suite juste en dessous.`
-              : "Choisissez celui installé en magasin. Un clic suffit."}
+              : "Choisissez celui installé dans le commerce. Un clic suffit."}
           </p>
         </header>
         <ul className="pos-pick__list" data-guide-action="pos">

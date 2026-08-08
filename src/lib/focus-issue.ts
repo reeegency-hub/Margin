@@ -97,7 +97,7 @@ export function buildFocusIssue(input: {
           lines: [
             `Plateforme : ${platform}`,
             `Perte estimée : ${euro(outage.estimatedLostRevenue)}`,
-            "Les clients voient le restaurant fermé sans que vous le sachiez.",
+            "Les clients voient le commerce fermé sans que vous le sachiez.",
           ],
         },
         ...detailsBase,

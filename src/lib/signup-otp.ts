@@ -98,7 +98,7 @@ export async function createAndSendSignupOtp(opts: {
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
-    return { ok: false, error: "Cet email existe déjà. Connectez-vous." };
+    return { ok: false, error: "Cet email est déjà utilisé. Connectez-vous plutôt." };
   }
 
   const code = generateCode();
@@ -190,7 +190,7 @@ export async function consumeSignupOtp(opts: {
       where: { id: challenge.id },
       data: { attempts: { increment: 1 } },
     });
-    return { ok: false, error: "Code incorrect." };
+    return { ok: false, error: "Le code n'est pas valide. Vérifiez et réessayez." };
   }
 
   await prisma.signupOtpChallenge.update({

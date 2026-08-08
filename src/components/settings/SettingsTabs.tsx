@@ -111,7 +111,7 @@ export function SettingsTabs({
         <div className="settings-guided__panel">
           <div className="ms-spot__card settings-guided__card">
             <p className="ms-spot__eyebrow">Essentiel</p>
-            <h3 className="ms-spot__title">WhatsApp du magasin</h3>
+            <h3 className="ms-spot__title">WhatsApp du commerce</h3>
             <p className="ms-spot__lead">
               Alertes stock, listes de courses et pointage arrivent sur ce
               numéro. Format international : +336…
@@ -155,7 +155,7 @@ export function SettingsTabs({
             </div>
             <p className="ms-spot__hint">
               En enregistrant, vous acceptez de recevoir des messages Margin
-              liés au magasin.{" "}
+              liés au commerce.{" "}
               <a href="/legal/confidentialite">Confidentialité</a>
             </p>
           </div>

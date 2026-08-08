@@ -1,6 +1,6 @@
 /**
- * Navigation commerçant — Accueil · Stock · Courses · Équipe · Magasin.
- * Bottom bar = 4 onglets. Magasin (caisse, livraison) = menu / sidebar.
+ * Navigation commerçant — Accueil · Stock · Courses · Équipe · Commerce.
+ * Bottom bar = 4 onglets. Commerce (caisse, livraison) = menu / sidebar.
  * Réglages & déconnexion = menu compte (topbar uniquement).
  */
 
@@ -35,7 +35,7 @@ export const NAV_SECTIONS: NavSection[] = [
     href: "/ingredients",
     label: "Stock",
     match: ["/ingredients", "/inventory", "/dishes", "/ingredients/menu"],
-    hint: "Quantités en magasin",
+    hint: "Quantités du commerce",
     children: [
       {
         href: "/ingredients",
@@ -82,7 +82,7 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     id: "magasin",
     href: "/kiosks",
-    label: "Magasin",
+    label: "Commerce",
     match: ["/delivery", "/kiosks", "/settings", "/admin"],
     hint: "Caisse & livraison",
     menuOnly: true,
@@ -93,7 +93,7 @@ export const NAV_SECTIONS: NavSection[] = [
   },
 ];
 
-/** Onglets barre du bas (sans Menu ni Magasin) */
+/** Onglets barre du bas (sans Menu ni Commerce) */
 export const BOTTOM_TABS = NAV_SECTIONS.filter((s) => !s.menuOnly).map((s) => ({
   href: s.href,
   label: s.label,

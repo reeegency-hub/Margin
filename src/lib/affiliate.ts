@@ -1,6 +1,6 @@
 /**
  * Programme d’affiliation Margin — règles produit (V1).
- * Parrain = magasin actif ; filleul = nouveau signup via ?ref=CODE.
+ * Parrain = commerce actif ; filleul = nouveau signup via ?ref=CODE.
  */
 
 export const AFFILIATE = {

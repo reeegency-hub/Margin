@@ -175,7 +175,7 @@ export function MarketingHub({
                 <Field label="Contact">
                   <input name="contactName" className={inputClass} placeholder="Prénom" />
                 </Field>
-                <Field label="Magasin">
+                <Field label="Commerce">
                   <input
                     name="businessName"
                     className={inputClass}
@@ -406,7 +406,7 @@ export function MarketingHub({
               }}
             >
               <Field label="Pseudo *">
-                <input name="handle" className={inputClass} placeholder="magasin_du_coin" required />
+                <input name="handle" className={inputClass} placeholder="commerce_du_coin" required />
               </Field>
               <Field label="Nom affiché">
                 <input name="displayName" className={inputClass} />

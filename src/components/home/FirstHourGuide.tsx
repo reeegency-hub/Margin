@@ -155,7 +155,7 @@ function incentivesFor(
     ],
     "team-members": [
       "Ajoutez le prénom d’une personne de l’équipe.",
-      "Répétez pour chaque personne du magasin.",
+      "Répétez pour chaque personne du commerce.",
     ],
     "team-planning": [
       "Créez un créneau sur le planning.",
@@ -174,7 +174,7 @@ function incentivesFor(
       "Sinon ignorez — ce n’est pas bloquant.",
     ],
     "shop-settings": [
-      "Ajoutez le numéro WhatsApp du magasin.",
+      "Ajoutez le numéro WhatsApp du commerce.",
       "Enregistrez pour recevoir alertes et listes.",
     ],
   };
@@ -260,7 +260,7 @@ function ProgressRing({ value }: { value: number }) {
 
 /**
  * Guide de démarrage plein écran (Accueil) + dock ailleurs.
- * Objectif : le commerçant suit le parcours jusqu’à un magasin opérationnel.
+ * Objectif : le commerçant suit le parcours jusqu’à un commerce opérationnel.
  */
 export function FirstHourGuide({
   state,
@@ -452,7 +452,7 @@ export function FirstHourGuide({
                   >
                     <span className="sg-dock__eyebrow">Guide</span>
                     <span className="sg-dock__title">
-                      {next ? next.label : "Magasin prêt"}
+                      {next ? next.label : "Commerce prêt"}
                     </span>
                   </button>
                   {next && !(onCaisse && nextIsCaisse) ? (
@@ -498,10 +498,10 @@ export function FirstHourGuide({
       <section className="sg-full" aria-label="Guide de démarrage">
         <header className="sg-full__hero">
           <div className="sg-full__hero-copy">
-            <p className="sg-full__eyebrow">Mise en route magasin</p>
+            <p className="sg-full__eyebrow">Mise en route commerce</p>
             <h1 className="sg-full__title">
               Configurez Margin une fois.
-              <span> Ensuite, le magasin tourne tout seul.</span>
+              <span> Ensuite, le commerce tourne tout seul.</span>
             </h1>
             <p className="sg-full__lead">
               Stock, équipe, courses, coûts, caisse — et le{" "}
@@ -524,7 +524,7 @@ export function FirstHourGuide({
             <p className="ms-spot__eyebrow">Produit à part entière</p>
             <h2 className="ms-spot__title">Copilote Margin</h2>
             <p className="ms-spot__lead">
-              Toujours ouvert à droite : il configure le magasin (inventaire,
+              Toujours ouvert à droite : il configure le commerce (inventaire,
               équipe, WhatsApp), lit vos CSV/PDF, et répond sur stock, courses et
               coûts — avec aperçu avant toute écriture. Pas un gadget : c’est le
               fil conducteur du produit.
@@ -563,7 +563,7 @@ export function FirstHourGuide({
           </div>
         ) : (
           <div className="sg-full__celebrate">
-            <h2>Votre magasin est prêt.</h2>
+            <h2>Votre commerce est prêt.</h2>
             <p>
               Margin peut maintenant alerter, lister, pointer et suivre les
               coûts. Revenez ici seulement pour affiner.

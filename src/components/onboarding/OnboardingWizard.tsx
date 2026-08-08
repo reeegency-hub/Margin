@@ -26,31 +26,31 @@ const STEPS: {
 }[] = [
   {
     id: "whatsapp",
-    label: "WhatsApp",
-    short: "Votre numéro",
+    label: "WhatsApp du commerce",
+    short: "WhatsApp",
     blurb: "Pour les alertes rupture — comme un SMS.",
     minutes: "30 s",
   },
   {
     id: "produits",
-    label: "Produits",
-    short: "Votre rayon",
+    label: "Votre stock",
+    short: "Stock",
     blurb: "Photo, PDF, ou passez — la caisse peut suffire.",
     minutes: "1 min",
   },
   {
     id: "pret",
-    label: "C’est prêt",
-    short: "Ouvrir",
-    blurb: "Ensuite on vous guide pour la caisse.",
+    label: "Votre caisse",
+    short: "Suite",
+    blurb: "Ensuite on vous guide pour brancher la caisse.",
     minutes: "10 s",
   },
 ];
 
 /** Chemin après l’onboarding — visible pour rassurer */
 const AFTER_PATH = [
-  { label: "Caisse", hint: "Indiquer votre logiciel" },
-  { label: "Réassort", hint: "Un test liste de courses" },
+  { label: "Votre équipe", hint: "Planning et pointage" },
+  { label: "Votre caisse", hint: "Indiquer votre logiciel" },
 ];
 
 export type OnboardingInitial = {
@@ -208,7 +208,7 @@ export function OnboardingWizard({ initial }: { initial: OnboardingInitial }) {
     <div className="ob-page">
       <header className="ob-header">
         <div className="ob-logo">Margin</div>
-        <p className="ob-restaurant">{initial.restaurantName}</p>
+        <p className="ob-commerce">{initial.restaurantName}</p>
       </header>
 
       {/* Chemin de progression — compte déjà fait + étapes + suite */}
@@ -285,7 +285,7 @@ export function OnboardingWizard({ initial }: { initial: OnboardingInitial }) {
             <p className="ob-step-kicker">Étape 1 sur 3 · {current.minutes}</p>
             <h1>Votre numéro WhatsApp</h1>
             <p className="ob-lead">
-              C’est le numéro du magasin ou du gérant. Margin y envoie les
+              C’est le numéro du commerce ou du gérant. Margin y envoie les
               alertes rupture et la liste de courses — comme un SMS.
             </p>
             <Field label="Mobile (06… ou +33…)">
@@ -515,7 +515,7 @@ export function OnboardingWizard({ initial }: { initial: OnboardingInitial }) {
                 disabled={pending}
                 onClick={finish}
               >
-                {pending ? "Ouverture…" : "Entrer dans mon magasin"}
+                {pending ? "Ouverture…" : "Entrer dans mon commerce"}
               </button>
             </div>
           </section>

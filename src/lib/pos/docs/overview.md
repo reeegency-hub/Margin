@@ -5,7 +5,7 @@ Toutes les caisses suivent le même pipeline :
 ```
 Webhook live ──► PosWebhookEvent ──► adapter.normalize ──► SALE / CANCEL
 API pull nuit ──► compare Sale ──► backfill manquants
-```
+````
 
 | Vendor | Webhook | Cancel | Pull API | Identifiants |
 |---|---|---|---|---|

@@ -4,7 +4,7 @@
 
 ```
 POST /api/v1/webhooks/pos/{provider}?connectionId={id}
-```
+````
 
 Providers : `zelty` | `cashpad` | `tiller` | `sumup` | `laddition` | `lightspeed` | `square` | `custom`
 
@@ -30,7 +30,7 @@ Table `PosWebhookEvent` (`webhook_events`) :
 ## Mapping SKU strict (live)
 
 1. Normalisation : trim, suppression espaces, **MAJUSCULES** (`normalizeSku`)
-2. Match **uniquement** sur `Dish.externalSku` (unique par magasin)
+2. Match **uniquement** sur `Dish.externalSku` (unique par commerce)
 3. Pas de fallback nom
 4. SKU inconnu → `PosPendingProduct` + statut event `SKU_NOT_FOUND` (alerte Ops)
 5. `order.cancelled` / refund → void stock (ré-incrément)
@@ -41,4 +41,4 @@ Table `PosWebhookEvent` (`webhook_events`) :
 
 ## Catalogue
 
-`Dish.externalSku` : `@@unique([restaurantId, externalSku])` — un SKU = une déclinaison produit par magasin.
+`Dish.externalSku` : `@@unique([restaurantId, externalSku])` — un SKU = une déclinaison produit par commerce.

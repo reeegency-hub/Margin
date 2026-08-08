@@ -19,6 +19,7 @@ import {
   checkAssistantRateLimit,
   normalizeUnit,
   pageHelpFor,
+  pageHelpParts,
   parseProductListText,
   sanitizeAssistantText,
   type AssistantProductDraft,
@@ -82,7 +83,7 @@ const TOOLS = [
     function: {
       name: "prepare_set_whatsapp",
       description:
-        "Prépare un brouillon pour enregistrer le numéro WhatsApp du magasin.",
+        "Prépare un brouillon pour enregistrer le numéro WhatsApp du commerce.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -141,7 +142,7 @@ const TOOLS = [
     type: "function" as const,
     function: {
       name: "stock_summary",
-      description: "Résumé du stock du magasin (nb produits, alertes).",
+      description: "Résumé du stock du commerce (nb produits, alertes).",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -663,8 +664,7 @@ export async function POST(req: Request) {
     else if (/lightspeed/i.test(message)) provider = "lightspeed";
     else if (/addition/i.test(message)) provider = "laddition";
     return NextResponse.json({
-      reply:
-        "Pour brancher la caisse, utilisez le wizard (les secrets ne passent pas par le chat).",
+      reply: "Voici le parcours sécurisé pour brancher la caisse :",
       actions: [
         {
           type: "open_pos_wizard",
@@ -672,7 +672,6 @@ export async function POST(req: Request) {
           href: provider !== "other" ? `/kiosks?pos=${provider}` : "/kiosks",
         },
       ],
-      links: [{ label: "Ouvrir la caisse", href: "/kiosks" }],
     });
   }
 
@@ -751,7 +750,16 @@ export async function POST(req: Request) {
       }
     }
   } catch (err) {
-    if (err instanceof LLMNotConfiguredError) {
+    const errName = err instanceof Error ? err.name : "";
+    const errMsg = err instanceof Error ? err.message : String(err);
+    const notConfigured =
+      err instanceof LLMNotConfiguredError ||
+      errName === "LLMNotConfiguredError" ||
+      /Aucune clé LLM|LlmProviderCredential|P2021|does not exist/i.test(
+        errMsg
+      );
+
+    if (notConfigured) {
       if (fileText) {
         const draft = await prepareInventoryDraft({
           restaurantId,
@@ -761,36 +769,120 @@ export async function POST(req: Request) {
         });
         if (draft.type === "setup_draft") {
           return NextResponse.json({
-            reply: `Aperçu inventaire (sans IA) : **${draft.rowCount}** ligne(s). Confirmez pour appliquer. Pour le chat libre : Réglages → Assistant IA.`,
-            actions: [draft],
-            links: [
-              { label: "Connecter mon IA", href: "/settings?tab=avance" },
-              { label: "Voir le stock", href: "/ingredients" },
+            reply: "Aperçu inventaire prêt (sans IA).",
+            actions: [
+              draft,
+              {
+                type: "ui_card",
+                badge: "Sans clé IA",
+                title: "Chat libre indisponible",
+                lead: "Sans clé IA : les imports CSV/PDF restent disponibles. Pour discuter librement avec le Copilote, connectez une clé Anthropic ou OpenAI dans les réglages.",
+                steps: [
+                  "Confirmez l’aperçu inventaire ci-dessus",
+                  "Ou branchez votre clé dans Réglages → Avancé",
+                ],
+                cta: {
+                  label: "Connecter mon IA",
+                  href: "/settings?tab=avance",
+                },
+                secondary: {
+                  label: "Voir le stock",
+                  href: "/ingredients",
+                },
+              },
             ],
           });
         }
       }
       if (/stock|produit|critique|rupture/i.test(message)) {
         const summary = await stockSummary(restaurantId);
+        const alertBit =
+          summary.criticalCount > 0
+            ? `${summary.criticalCount} en alerte`
+            : "aucune alerte";
+        const names =
+          summary.criticalNames.length > 0
+            ? ` (${summary.criticalNames.join(", ")})`
+            : "";
         return NextResponse.json({
-          reply: `Stock : **${summary.productCount}** produit(s), **${summary.criticalCount}** en alerte${summary.criticalNames.length ? ` (${summary.criticalNames.join(", ")})` : ""}.\n\nPour l’assistant conversationnel, connectez votre clé IA (BYOK) dans Réglages.`,
-          links: [
-            { label: "Connecter mon IA", href: "/settings?tab=avance" },
-            { label: "Ouvrir le stock", href: "/ingredients" },
+          reply: "Aperçu stock (sans IA) :",
+          actions: [
+            {
+              type: "ui_card",
+              badge: "Stock",
+              title: `${summary.productCount} produit(s) · ${alertBit}${names}`,
+              lead: "Pour un Copilote conversationnel, connectez une clé Anthropic ou OpenAI (facturée sur votre compte).",
+              steps: [
+                "Imports CSV/PDF : possibles sans clé",
+                "Chat libre : clé IA requise",
+              ],
+              cta: {
+                label: "Connecter mon IA",
+                href: "/settings?tab=avance",
+              },
+              secondary: {
+                label: "Ouvrir le stock",
+                href: "/ingredients",
+              },
+            },
           ],
         });
       }
+      const help = pageHelpParts(pathname);
       return NextResponse.json({
-        reply: `${pageHelpFor(pathname)}\n\nConnectez votre clé Anthropic ou OpenAI dans **Réglages → Assistant IA** (facturée sur votre compte). Les imports CSV restent possibles sans clé.`,
-        links: [
-          { label: "Connecter mon IA", href: "/settings?tab=avance" },
-          { label: "Aide de cette page", href: pathname || "/" },
+        reply: "Voici l’essentiel pour cette page :",
+        actions: [
+          {
+            type: "ui_card",
+            badge: "Cette page",
+            title: help.title,
+            lead: help.lead,
+            steps: [
+              "Chat libre : clé Anthropic (Claude) ou OpenAI",
+              "Imports CSV/PDF : possibles sans clé",
+            ],
+            cta: {
+              label: "Connecter mon IA",
+              href: "/settings?tab=avance",
+            },
+            secondary: {
+              label: "Rester sur la page",
+              href: pathname || "/",
+            },
+          },
         ],
       });
     }
-    console.error("[assistant] llm", err instanceof Error ? err.message : err);
+
+    if (/OpenAI 401|Anthropic 401|invalid.?api.?key/i.test(errMsg)) {
+      return NextResponse.json({
+        reply: "La clé IA est refusée par le provider.",
+        actions: [
+          {
+            type: "ui_card",
+            badge: "Clé invalide",
+            title: "Corriger la connexion IA",
+            lead: "Le provider a renvoyé une erreur 401. Vérifiez ou régénérez la clé chez OpenAI / Anthropic.",
+            steps: [
+              "Ouvrir Réglages → Avancé",
+              "Coller une clé valide",
+              "Retester le Copilote",
+            ],
+            cta: {
+              label: "Corriger la clé IA",
+              href: "/settings?tab=avance",
+            },
+          },
+        ],
+      });
+    }
+
+    console.error("[assistant] llm", errMsg);
     return NextResponse.json(
-      { error: "L’assistant est temporairement indisponible." },
+      {
+        error:
+          "L’assistant n’a pas pu répondre (erreur provider ou réseau). Réessayez dans un instant.",
+      },
       { status: 502 }
     );
   }

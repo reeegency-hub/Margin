@@ -58,7 +58,7 @@ export async function extractTextFromMenuFile(
           content: [
             {
               type: "text" as const,
-              text: "Extrais tout le texte de ce menu restaurant (plats, prix, sections). Retourne uniquement le texte brut, une ligne par plat si possible.",
+              text: "Extrais tout le texte de ce catalogue produits (noms, prix, sections). Retourne uniquement le texte brut, une ligne par produit si possible.",
             },
             {
               type: "image_url" as const,

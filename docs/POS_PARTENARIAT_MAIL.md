@@ -26,7 +26,7 @@ Nous voyons beaucoup de gérants équipés de **{{CAISSE}}**. Aujourd’hui ils 
 Je joins une **checklist technique d’1 page** (payload minimal + URL).  
 Disponible 15–20 min pour un call : https://calendly.com/reegency/30min
 
-Merci d’avance — je peux aussi envoyer un magasin pilote et une URL webhook de test dès que vous le souhaitez.
+Merci d’avance — je peux aussi envoyer un commerce pilote et une URL webhook de test dès que vous le souhaitez.
 
 Cordialement,  
 {{TON_NOM}}  
@@ -37,7 +37,7 @@ https://margin-shop.vercel.app
 
 ## Variantes 2 phrases (selon éditeur)
 
-**Zelty** — *Beaucoup de restos / dark / retail FR déjà sur Zelty ; on veut un webhook commande validée → stock.*  
+**Zelty** — *Beaucoup de commerces / dark / retail FR déjà sur Zelty ; on veut un webhook commande validée → stock.*  
 **Cashpad** — *Présence forte indépendants ; on a besoin d’un canal partenaire pour pousser les tickets.*  
 **Square** — *Self-serve souvent possible ; on confirme le format webhook / Events API adapté retail FR.*  
 **L’Addition** — *Cible CHR / snacking ; intérêt pour un flux vente → stock back-office.*  

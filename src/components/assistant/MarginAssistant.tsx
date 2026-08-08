@@ -11,6 +11,10 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { SetupDraftConfirm } from "@/components/assistant/SetupDraftConfirm";
+import {
+  AssistantActionCard,
+  type AssistantCardModel,
+} from "@/components/assistant/AssistantActionCard";
 import { PosWizardSkeleton } from "@/components/kiosks/PosWizardSkeleton";
 
 type ChatMsg = {
@@ -20,31 +24,38 @@ type ChatMsg = {
   links?: { label: string; href: string }[];
   draftId?: string;
   posProvider?: string;
+  cards?: AssistantCardModel[];
 };
 
 const QUICK = [
   {
     label: "Inventaire",
+    hint: "Import CSV / PDF",
     message: "Importe mon inventaire depuis le fichier joint.",
   },
   {
     label: "Équipe",
+    hint: "Aperçu planning",
     message: "Voici mon équipe — prépare un aperçu planning.",
   },
   {
     label: "Stock",
+    hint: "Résumé + alertes",
     message: "Donne-moi un résumé du stock et des alertes.",
   },
   {
     label: "Cette page",
+    hint: "Que faire ici",
     message: "Explique-moi cette page et quoi faire maintenant.",
   },
   {
     label: "WhatsApp",
-    message: "Enregistre mon WhatsApp magasin.",
+    hint: "Numéro commerce",
+    message: "Enregistre mon WhatsApp commerce.",
   },
   {
     label: "Caisse",
+    hint: "Wizard sécurisé",
     message: "Je veux brancher ma caisse.",
   },
 ];
@@ -55,7 +66,7 @@ const MAX_FILE_BYTES = 1_500_000;
 const STORAGE_KEY = "margin:assistant-pane:open:v2";
 
 const WELCOME =
-  "Copilote **toujours ouvert** à droite de votre magasin.\n\n" +
+  "Copilote **toujours ouvert** à droite de votre commerce.\n\n" +
   "Configurez (inventaire, équipe, WhatsApp), pilotez (stock, courses, coûts) ou demandez de l’aide sur cette page. " +
   "Les écritures passent par un **aperçu** avant validation.\n\n" +
   "Fermez-le avec × ou ⌘J — la page reste utilisable à gauche.";
@@ -112,6 +123,8 @@ export function MarginAssistant({
   const [fileBase64, setFileBase64] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [llmLabel, setLlmLabel] = useState<string | null>(null);
+  /** null = chargement ; false = pas de clé BYOK */
+  const [llmConfigured, setLlmConfigured] = useState<boolean | null>(null);
   const [messages, setMessages] = useState<ChatMsg[]>([
     { id: "welcome", role: "assistant", text: WELCOME },
   ]);
@@ -143,7 +156,9 @@ export function MarginAssistant({
           fingerprintDisplay?: string | null;
         } | null;
         if (!st) return;
-        if (!st.configured) setLlmLabel("IA à connecter");
+        const ok = Boolean(st.configured);
+        setLlmConfigured(ok);
+        if (!ok) setLlmLabel("IA à connecter");
         else if (st.status === "untested") setLlmLabel("IA · à tester");
         else if (st.status === "invalid") setLlmLabel("IA · invalide");
         else
@@ -294,6 +309,31 @@ export function MarginAssistant({
         const pos = actions.find(
           (a: { type?: string }) => a.type === "open_pos_wizard"
         ) as { provider?: string } | undefined;
+        const cards = actions
+          .filter((a: { type?: string }) => a.type === "ui_card")
+          .map(
+            (a: AssistantCardModel & { type?: string }): AssistantCardModel => ({
+              badge: String(a.badge || "Info"),
+              title: String(a.title || ""),
+              lead: a.lead ? String(a.lead) : undefined,
+              steps: Array.isArray(a.steps)
+                ? a.steps.map((s) => String(s))
+                : undefined,
+              cta: a.cta
+                ? {
+                    label: String(a.cta.label),
+                    href: String(a.cta.href),
+                  }
+                : undefined,
+              secondary: a.secondary
+                ? {
+                    label: String(a.secondary.label),
+                    href: String(a.secondary.href),
+                  }
+                : undefined,
+            })
+          )
+          .filter((c: AssistantCardModel) => c.title);
 
         setMessages((prev) => [
           ...prev,
@@ -303,7 +343,13 @@ export function MarginAssistant({
             text: String(data.reply || "C’est noté."),
             draftId: draft?.draftId,
             posProvider: pos?.provider,
-            links: Array.isArray(data.links) ? data.links : undefined,
+            cards: cards.length ? cards : undefined,
+            links:
+              cards.length || pos
+                ? undefined
+                : Array.isArray(data.links)
+                  ? data.links
+                  : undefined,
           },
         ]);
 
@@ -391,7 +437,20 @@ export function MarginAssistant({
             <code className="margin-asst-pane__ctx-path">{pathname}</code>
           </div>
 
-          <div className="margin-asst-pane__quick">
+          {llmConfigured === false ? (
+            <p className="margin-asst-pane__alert" role="status">
+              Sans clé IA : les imports CSV/PDF restent disponibles. Pour
+              discuter librement avec le Copilote, connectez une clé Anthropic
+              ou OpenAI dans{" "}
+              <Link href="/settings?tab=avance">les réglages</Link>.
+            </p>
+          ) : null}
+
+          <div
+            className="margin-asst-pane__quick"
+            role="group"
+            aria-label="Actions rapides"
+          >
             {QUICK.map((q) => (
               <button
                 key={q.label}
@@ -400,7 +459,8 @@ export function MarginAssistant({
                 disabled={pending}
                 onClick={() => send(q.message)}
               >
-                {q.label}
+                <span className="margin-asst-pane__chip-label">{q.label}</span>
+                <span className="margin-asst-pane__chip-hint">{q.hint}</span>
               </button>
             ))}
           </div>
@@ -429,12 +489,17 @@ export function MarginAssistant({
                   />
                 ) : null}
                 {m.posProvider != null ? (
-                  <PosWizardSkeleton
-                    provider={m.posProvider}
-                    onClose={() => onExpandedChange(false)}
-                  />
+                  <PosWizardSkeleton provider={m.posProvider} />
                 ) : null}
-                {m.links?.length ? (
+                {m.cards?.map((card, i) => (
+                  <AssistantActionCard
+                    key={`${m.id}-card-${i}`}
+                    {...card}
+                  />
+                ))}
+                {m.links?.length &&
+                m.posProvider == null &&
+                !m.cards?.length ? (
                   <div className="margin-asst-pane__links">
                     {m.links.map((l) => (
                       <Link key={l.href} href={l.href}>
@@ -553,7 +618,7 @@ export function MarginAssistant({
                 className="margin-asst__input margin-asst-pane__input"
                 rows={2}
                 value={input}
-                placeholder="Demandez n’importe quoi sur le magasin…"
+                placeholder="Demandez n’importe quoi sur le commerce…"
                 disabled={pending}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {

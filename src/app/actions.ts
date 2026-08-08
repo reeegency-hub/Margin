@@ -1649,7 +1649,7 @@ export async function signupAndCheckoutAction(input: {
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    return { ok: false, error: "Cet email existe déjà. Connectez-vous." };
+    return { ok: false, error: "Cet email est déjà utilisé. Connectez-vous plutôt." };
   }
 
   let referredByRestaurantId: string | undefined;

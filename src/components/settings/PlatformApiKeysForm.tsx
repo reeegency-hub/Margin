@@ -62,7 +62,7 @@ export function PlatformApiKeysForm({
                 }
               />
             </Field>
-            <Field label="Store ID / ID restaurant">
+            <Field label="Store ID / ID commerce">
               <input
                 name="storeId"
                 className={inputClass}

@@ -143,7 +143,7 @@ export async function sendWelcomeNewsletterEmail(
     <div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;color:#111">
       <p>Bonjour ${escapeHtml(firstName)},</p>
       <p>Merci de rejoindre Margin. Vous recevrez de temps en temps des conseils concrets pour tenir le stock sans tableur — alertes, pointages, livraisons.</p>
-      <p><a href="${appBaseUrl()}/login" style="display:inline-block;padding:10px 16px;background:#111;color:#fff;text-decoration:none;border-radius:8px">Ouvrir mon magasin</a></p>
+      <p><a href="${appBaseUrl()}/login" style="display:inline-block;padding:10px 16px;background:#111;color:#fff;text-decoration:none;border-radius:8px">Ouvrir mon commerce</a></p>
       <p style="font-size:13px;color:#666">Vous pouvez vous désinscrire à tout moment : <a href="${unsub}">lien de désinscription</a>.</p>
     </div>
   `;

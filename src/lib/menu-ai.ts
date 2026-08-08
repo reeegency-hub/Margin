@@ -472,7 +472,7 @@ async function analyzeWithOpenAI(
     (options.model || process.env.OPENAI_MODEL || "gpt-4o-mini").trim() ||
     "gpt-4o-mini";
 
-  const prompt = `Tu es un expert en fiches techniques de restaurant (France).
+  const prompt = `Tu es un expert en fiches techniques de commerce (France).
 À partir du menu ci-dessous, propose pour chaque plat une composition d'ingrédients avec quantités réalistes pour 1 portion.
 Ingrédients déjà en stock (réutilise ces noms si possible): ${existingIngredients.join(", ") || "aucun"}.
 

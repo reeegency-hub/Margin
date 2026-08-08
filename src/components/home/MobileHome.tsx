@@ -102,7 +102,7 @@ export function MobileHome({
   return (
     <BrandPage
       question={data.restaurantName}
-      guide="Une priorité à traiter, puis le pouls du magasin."
+      guide="Une priorité à traiter, puis le pouls du commerce."
     >
       <div className="home-now dash-card dash-card--dark hub-now" data-tour="home-focus">
         {showInlineAlert && data.alert ? (
@@ -157,7 +157,7 @@ export function MobileHome({
             <p className="hub-now__eyebrow">À faire maintenant</p>
             <p className="hub-now__title">Rien d’urgent</p>
             <p className="hub-now__detail">
-              Le magasin est à jour — CA et signaux coûts juste en dessous.
+              Le commerce est à jour — CA et signaux coûts juste en dessous.
             </p>
             <div className="hub-now__actions">
               <Link href="/orders" className="btn-ghost">

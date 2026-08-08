@@ -13,7 +13,7 @@
 
 1. Choisir / valider les 3 priorités ✓ (proposition ci-dessus)
 2. Envoyer 5–10 mails (J2–3)
-3. Brancher 1 magasin pilote réel webhook (J3–5) = preuve pour les éditeurs
+3. Brancher 1 commerce pilote réel webhook (J3–5) = preuve pour les éditeurs
 
 ## Message commercial
 
