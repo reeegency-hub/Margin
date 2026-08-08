@@ -71,6 +71,11 @@ const WELCOME =
   "Les écritures passent par un **aperçu** avant validation.\n\n" +
   "Fermez-le avec × ou ⌘J — la page reste utilisable à gauche.";
 
+const WELCOME_MOBILE =
+  "Bonjour — je suis votre **copilote Margin**.\n\n" +
+  "Demandez un résumé stock, une liste de courses, d’enregistrer WhatsApp ou de brancher la caisse. " +
+  "Je prépare un **aperçu** avant toute écriture.";
+
 function renderText(text: string) {
   return text.split("\n").map((line, i) => {
     const parts = line.split(/(\*\*[^*]+\*\*)/g);
@@ -129,7 +134,11 @@ export function MarginAssistant({
   /** null = chargement ; false = pas de clé BYOK */
   const [llmConfigured, setLlmConfigured] = useState<boolean | null>(null);
   const [messages, setMessages] = useState<ChatMsg[]>([
-    { id: "welcome", role: "assistant", text: WELCOME },
+    {
+      id: "welcome",
+      role: "assistant",
+      text: layout === "page" ? WELCOME_MOBILE : WELCOME,
+    },
   ]);
   const [dragOver, setDragOver] = useState(false);
 
