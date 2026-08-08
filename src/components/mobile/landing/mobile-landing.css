@@ -1,34 +1,57 @@
-/* Landing mobile only — importé uniquement par MobileLanding.
-   Ne modifie aucun style .land-* desktop. */
+/* Landing mobile only — agencement type welcome/card stack.
+   Identité Margin inchangée (lime / ink). Pas de styles .land-* desktop. */
 
 .mland {
-  --mland-bg: #12141a;
+  --mland-ink: #0a0a0a;
+  --mland-bg: #f4f5f2;
+  --mland-sheet: #ffffff;
   --mland-lime: #e6f8aa;
-  --mland-text: #f4f4f5;
-  --mland-muted: rgba(244, 244, 245, 0.68);
-  --mland-card: #1a1c24;
+  --mland-dark: #12141a;
+  --mland-muted: #6b7280;
+  --mland-radius: 28px;
+  --mland-radius-sm: 18px;
+  --mland-shadow: 0 18px 40px rgba(10, 10, 10, 0.08);
   min-height: 100dvh;
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(230, 248, 170, 0.14), transparent 55%),
-    linear-gradient(165deg, #22252e 0%, #171920 45%, #0e1015 100%);
-  color: var(--mland-text);
+  background: var(--mland-bg);
+  color: var(--mland-ink);
   font-family: inherit;
 }
 
+/* ——— Hero : une seule zone visuelle (logo + mosaïque + copy) ——— */
 .mland-hero {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
   min-height: 100dvh;
   min-height: 100svh;
-  padding: 24px 20px 32px;
+  background: var(--mland-dark);
+  overflow: hidden;
+}
+
+.mland-hero__visual {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100dvh;
+  min-height: 100svh;
+  padding: 0 20px 32px;
   box-sizing: border-box;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 18%, rgba(230, 248, 170, 0.16), transparent 58%),
+    linear-gradient(180deg, #1c1f28 0%, #12141a 55%, #0e1015 100%);
+}
+
+.mland-hero__top {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 18px 0 8px;
+  z-index: 4;
 }
 
 .mland-hero__logo {
-  margin-bottom: 28px;
+  margin: 0;
 }
 
 .mland-hero__logo .land-logo,
@@ -36,10 +59,102 @@
   color: #fff;
 }
 
+.mland-mosaic {
+  position: relative;
+  flex: 1 1 auto;
+  width: min(100%, 320px);
+  min-height: 180px;
+  max-height: 220px;
+  margin: 8px auto 20px;
+}
+
+.mland-mosaic__tile {
+  position: absolute;
+  width: 132px;
+  padding: 14px 14px 12px;
+  border-radius: 22px;
+  background: #fff;
+  color: var(--mland-ink);
+  box-shadow: 0 20px 36px rgba(0, 0, 0, 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mland-mosaic__tile strong {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.mland-mosaic__tile small {
+  font-size: 0.72rem;
+  color: var(--mland-muted);
+  font-weight: 500;
+}
+
+.mland-mosaic__label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5a6a1a;
+  margin-bottom: 4px;
+}
+
+.mland-mosaic__wa {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #25d366;
+  margin-bottom: 6px;
+}
+
+.mland-mosaic__tile--a {
+  left: 0;
+  top: 28px;
+  transform: rotate(-8deg);
+  z-index: 1;
+}
+
+.mland-mosaic__tile--b {
+  right: 8px;
+  top: 0;
+  transform: rotate(7deg);
+  z-index: 3;
+  background: var(--mland-lime);
+}
+
+.mland-mosaic__tile--b .mland-mosaic__label,
+.mland-mosaic__tile--b small {
+  color: rgba(10, 10, 10, 0.55);
+}
+
+.mland-mosaic__tile--c {
+  left: 48px;
+  bottom: 0;
+  transform: rotate(3deg);
+  z-index: 2;
+  width: 148px;
+}
+
+.mland-hero__copy {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 22rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
 .mland-hero__title {
-  margin: 0 0 14px;
+  margin: 0 0 10px;
   max-width: 16ch;
-  font-size: clamp(1.65rem, 7.2vw, 2.05rem);
+  font-size: clamp(1.55rem, 6.8vw, 1.95rem);
   font-weight: 800;
   letter-spacing: -0.045em;
   line-height: 1.12;
@@ -47,11 +162,12 @@
 }
 
 .mland-hero__lead {
-  margin: 0 0 28px;
+  margin: 0 0 22px;
   max-width: 28ch;
-  font-size: 1rem;
+  font-size: 0.98rem;
   line-height: 1.45;
-  color: var(--mland-muted);
+  color: rgba(244, 244, 245, 0.68);
+  font-weight: 500;
 }
 
 .mland-btn {
@@ -60,51 +176,70 @@
   justify-content: center;
   gap: 8px;
   width: 100%;
-  max-width: 18rem;
-  padding: 14px 20px;
+  max-width: 22rem;
+  padding: 16px 22px;
   border-radius: 999px;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   text-decoration: none;
   border: none;
+  box-sizing: border-box;
 }
 
 .mland-btn--primary {
   background: var(--mland-lime);
   color: #0a0a0a;
-  box-shadow: 0 4px 20px rgba(230, 248, 170, 0.28);
+  box-shadow: 0 10px 28px rgba(230, 248, 170, 0.28);
+}
+
+.mland-btn--ghost {
+  background: #fff;
+  color: var(--mland-ink);
+  border: 1.5px solid rgba(10, 10, 10, 0.1);
+  box-shadow: var(--mland-shadow);
 }
 
 .mland-hero__trust {
-  margin: 18px 0 0;
+  margin: 14px 0 0;
   font-size: 0.78rem;
   line-height: 1.4;
   color: rgba(244, 244, 245, 0.5);
   font-weight: 500;
 }
 
+/* ——— Corps : stack de cartes ——— */
 .mland-main {
-  padding: 8px 20px 40px;
-  background: #f7f8f4;
-  color: #0a0a0a;
-  border-radius: 28px 28px 0 0;
+  padding: 8px 18px 32px;
+  background: var(--mland-bg);
+  color: var(--mland-ink);
+  margin-top: 0;
+  border-radius: var(--mland-radius) var(--mland-radius) 0 0;
   margin-top: -12px;
+  position: relative;
+  z-index: 2;
 }
 
 .mland-section-title {
   margin: 0 0 14px;
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   font-weight: 800;
   letter-spacing: -0.03em;
 }
 
 .mland-proof {
-  padding: 28px 0 8px;
+  padding: 8px 0 4px;
+}
+
+.mland-proof__wrap {
+  padding: 20px 18px 18px;
+  background: var(--mland-sheet);
+  border-radius: var(--mland-radius);
+  box-shadow: var(--mland-shadow);
 }
 
 .mland-proof__eyebrow {
   margin: 0 0 12px;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -113,10 +248,9 @@
 
 .mland-proof__card {
   padding: 14px;
-  border-radius: 18px;
-  background: #12141a;
+  border-radius: var(--mland-radius-sm);
+  background: var(--mland-dark);
   color: #f4f4f5;
-  box-shadow: 0 16px 40px rgba(10, 10, 10, 0.12);
 }
 
 .mland-proof__wa-head {
@@ -190,11 +324,15 @@
   margin: 14px 0 0;
   font-size: 0.9rem;
   line-height: 1.45;
-  color: #4b5563;
+  color: var(--mland-muted);
 }
 
 .mland-benefits {
-  padding: 24px 0 8px;
+  margin-top: 14px;
+  padding: 20px 18px 8px;
+  background: var(--mland-sheet);
+  border-radius: var(--mland-radius);
+  box-shadow: var(--mland-shadow);
 }
 
 .mland-benefits__list {
@@ -202,58 +340,122 @@
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 10px;
+  gap: 4px;
 }
 
-.mland-benefits__list li {
-  position: relative;
-  padding: 12px 14px 12px 36px;
+.mland-benefits__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 4px;
+  border-bottom: 1px solid rgba(10, 10, 10, 0.06);
+}
+
+.mland-benefits__row:last-child {
+  border-bottom: none;
+}
+
+.mland-benefits__icon {
+  width: 42px;
+  height: 42px;
   border-radius: 14px;
-  background: #fff;
-  border: 1px solid rgba(10, 10, 10, 0.06);
-  font-size: 0.92rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  background: #eef0e8;
+  flex-shrink: 0;
+  position: relative;
 }
 
-.mland-benefits__list li::before {
-  content: "✓";
+.mland-benefits__icon::after {
+  content: "";
   position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #5a6a1a;
-  font-weight: 800;
+  inset: 0;
+  margin: auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: #5a6a1a;
+}
+
+.is-wa .mland-benefits__icon::after {
+  border-radius: 999px;
+  background: #25d366;
+}
+
+.is-check .mland-benefits__icon::after {
+  width: 10px;
+  height: 6px;
+  border-radius: 0;
+  background: transparent;
+  border-left: 2.5px solid #5a6a1a;
+  border-bottom: 2.5px solid #5a6a1a;
+  transform: rotate(-45deg) translate(1px, -1px);
+}
+
+.mland-benefits__row strong {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.mland-benefits__row small {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.78rem;
+  color: var(--mland-muted);
+  font-weight: 500;
 }
 
 .mland-pricing-link {
-  padding: 20px 0 8px;
-  text-align: center;
+  padding: 18px 0 4px;
+  display: flex;
+  justify-content: center;
 }
 
 .mland-link {
-  color: #0a0a0a;
+  color: var(--mland-ink);
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   text-underline-offset: 3px;
 }
 
 .mland-offer {
-  padding: 16px 0 28px;
+  padding: 10px 0 8px;
+}
+
+.mland-offer__card {
+  padding: 22px 20px;
+  border-radius: var(--mland-radius);
+  background: var(--mland-dark);
+  color: #f4f4f5;
   text-align: center;
+  box-shadow: var(--mland-shadow);
+}
+
+.mland-offer__kicker {
+  margin: 0 0 8px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mland-lime);
 }
 
 .mland-offer__line {
-  margin: 0 0 10px;
-  font-size: 0.9rem;
+  margin: 0 0 14px;
+  font-size: 0.95rem;
   line-height: 1.45;
-  color: #4b5563;
+  color: rgba(244, 244, 245, 0.78);
+}
+
+.mland-offer__card .mland-link {
+  color: var(--mland-lime);
 }
 
 .mland-foot {
-  padding: 24px 20px 36px;
-  background: #0e1015;
-  color: rgba(244, 244, 245, 0.55);
+  padding: 28px 20px 40px;
+  background: transparent;
+  color: var(--mland-muted);
   text-align: center;
 }
 
@@ -261,18 +463,61 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 10px 16px;
+  gap: 10px 18px;
   margin-bottom: 14px;
 }
 
 .mland-foot__links a {
-  color: rgba(244, 244, 245, 0.85);
+  color: var(--mland-ink);
   font-weight: 600;
   font-size: 0.82rem;
   text-decoration: none;
+  opacity: 0.75;
 }
 
 .mland-foot__copy {
   margin: 0;
   font-size: 0.75rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .mland-mosaic__tile--a {
+    animation: mland-float-a 5.5s ease-in-out infinite;
+  }
+  .mland-mosaic__tile--b {
+    animation: mland-float-b 6.2s ease-in-out infinite;
+  }
+  .mland-mosaic__tile--c {
+    animation: mland-float-c 5.8s ease-in-out infinite;
+  }
+}
+
+@keyframes mland-float-a {
+  0%,
+  100% {
+    transform: rotate(-8deg) translateY(0);
+  }
+  50% {
+    transform: rotate(-6deg) translateY(-6px);
+  }
+}
+
+@keyframes mland-float-b {
+  0%,
+  100% {
+    transform: rotate(7deg) translateY(0);
+  }
+  50% {
+    transform: rotate(5deg) translateY(-8px);
+  }
+}
+
+@keyframes mland-float-c {
+  0%,
+  100% {
+    transform: rotate(3deg) translateY(0);
+  }
+  50% {
+    transform: rotate(1deg) translateY(-5px);
+  }
 }
