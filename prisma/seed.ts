@@ -41,9 +41,9 @@ async function main() {
   await prisma.sale.deleteMany();
   await prisma.supplierReceiptLine.deleteMany();
   await prisma.supplierReceipt.deleteMany();
-  await prisma.recipeIngredient.deleteMany();
-  await prisma.dish.deleteMany();
-  await prisma.ingredient.deleteMany();
+  await prisma.productStock.deleteMany();
+  await prisma.product.deleteMany();
+  await prisma.stockUnit.deleteMany();
   await prisma.kiosk.deleteMany();
   await prisma.supplier.deleteMany();
   await prisma.user.deleteMany();
@@ -110,8 +110,8 @@ async function main() {
     },
   });
 
-  // Produits (= Ingredient techniquement : la référence de stock).
-  const lait = await prisma.ingredient.create({
+  // Produits (= StockUnit techniquement : la référence de stock).
+  const lait = await prisma.stockUnit.create({
     data: {
       restaurantId: shop.id,
       name: "Lait demi-écrémé 1L",
@@ -121,7 +121,7 @@ async function main() {
       reorderQty: 48,
     },
   });
-  const tomates = await prisma.ingredient.create({
+  const tomates = await prisma.stockUnit.create({
     data: {
       restaurantId: shop.id,
       name: "Tomates",
@@ -131,7 +131,7 @@ async function main() {
       reorderQty: 8000,
     },
   });
-  const pain = await prisma.ingredient.create({
+  const pain = await prisma.stockUnit.create({
     data: {
       restaurantId: shop.id,
       name: "Pain (baguette)",
@@ -141,7 +141,7 @@ async function main() {
       reorderQty: 40,
     },
   });
-  const oeufs = await prisma.ingredient.create({
+  const oeufs = await prisma.stockUnit.create({
     data: {
       restaurantId: shop.id,
       name: "Œufs x6",
@@ -151,7 +151,7 @@ async function main() {
       reorderQty: 50,
     },
   });
-  const lessive = await prisma.ingredient.create({
+  const lessive = await prisma.stockUnit.create({
     data: {
       restaurantId: shop.id,
       name: "Lessive 1,5L",
@@ -161,7 +161,7 @@ async function main() {
       reorderQty: 24,
     },
   });
-  const farine = await prisma.ingredient.create({
+  const farine = await prisma.stockUnit.create({
     data: {
       restaurantId: shop.id,
       name: "Farine 1kg",
@@ -171,7 +171,7 @@ async function main() {
       reorderQty: 30,
     },
   });
-  const cafe = await prisma.ingredient.create({
+  const cafe = await prisma.stockUnit.create({
     data: {
       restaurantId: shop.id,
       name: "Café moulu 250g",
@@ -181,7 +181,7 @@ async function main() {
       reorderQty: 30,
     },
   });
-  const papier = await prisma.ingredient.create({
+  const papier = await prisma.stockUnit.create({
     data: {
       restaurantId: shop.id,
       name: "Papier toilette x6",
@@ -195,82 +195,82 @@ async function main() {
   // Comparatif multi-fournisseurs (mêmes références chez plusieurs fournisseurs)
   await prisma.supplierCatalogItem.createMany({
     data: [
-      { supplierId: grossiste.id, ingredientId: lait.id, price: 0.95, unit: "pcs", minOrderQty: 12 },
-      { supplierId: grossiste.id, ingredientId: pain.id, price: 0.42, unit: "pcs", minOrderQty: 20 },
-      { supplierId: grossiste.id, ingredientId: oeufs.id, price: 1.6, unit: "pcs", minOrderQty: 10 },
-      { supplierId: grossiste.id, ingredientId: farine.id, price: 1.1, unit: "pcs", minOrderQty: 6 },
-      { supplierId: grossiste.id, ingredientId: cafe.id, price: 2.6, unit: "pcs", minOrderQty: 6 },
-      { supplierId: grossiste.id, ingredientId: lessive.id, price: 6.2, unit: "pcs", minOrderQty: 6 },
-      { supplierId: primeur.id, ingredientId: tomates.id, price: 2.1, unit: "kg", minOrderQty: 1 },
-      { supplierId: droguerie.id, ingredientId: lessive.id, price: 5.5, unit: "pcs", minOrderQty: 6 },
-      { supplierId: droguerie.id, ingredientId: papier.id, price: 3.1, unit: "pcs", minOrderQty: 4 },
+      { supplierId: grossiste.id, stockUnitId: lait.id, price: 0.95, unit: "pcs", minOrderQty: 12 },
+      { supplierId: grossiste.id, stockUnitId: pain.id, price: 0.42, unit: "pcs", minOrderQty: 20 },
+      { supplierId: grossiste.id, stockUnitId: oeufs.id, price: 1.6, unit: "pcs", minOrderQty: 10 },
+      { supplierId: grossiste.id, stockUnitId: farine.id, price: 1.1, unit: "pcs", minOrderQty: 6 },
+      { supplierId: grossiste.id, stockUnitId: cafe.id, price: 2.6, unit: "pcs", minOrderQty: 6 },
+      { supplierId: grossiste.id, stockUnitId: lessive.id, price: 6.2, unit: "pcs", minOrderQty: 6 },
+      { supplierId: primeur.id, stockUnitId: tomates.id, price: 2.1, unit: "kg", minOrderQty: 1 },
+      { supplierId: droguerie.id, stockUnitId: lessive.id, price: 5.5, unit: "pcs", minOrderQty: 6 },
+      { supplierId: droguerie.id, stockUnitId: papier.id, price: 3.1, unit: "pcs", minOrderQty: 4 },
     ],
   });
 
-  // Fiches produit vendues (= Dish techniquement). Pas de "recette" cuisine :
+  // Fiches produit vendues (= Product techniquement). Pas de "recette" cuisine :
   // chaque produit consomme sa propre référence de stock, en 1 pour 1.
-  const dLait = await prisma.dish.create({
+  const dLait = await prisma.product.create({
     data: {
       restaurantId: shop.id,
       name: "Lait demi-écrémé 1L",
       salePrice: 1.2,
-      ingredients: { create: [{ ingredientId: lait.id, quantity: 1, unit: "pcs" }] },
+      productStocks: { create: [{ stockUnitId: lait.id, quantity: 1, unit: "pcs" }] },
     },
   });
-  const dTomates = await prisma.dish.create({
+  const dTomates = await prisma.product.create({
     data: {
       restaurantId: shop.id,
       name: "Tomates (le kg)",
       salePrice: 2.9,
-      ingredients: { create: [{ ingredientId: tomates.id, quantity: 1000, unit: "g" }] },
+      productStocks: { create: [{ stockUnitId: tomates.id, quantity: 1000, unit: "g" }] },
     },
   });
-  const dPain = await prisma.dish.create({
+  const dPain = await prisma.product.create({
     data: {
       restaurantId: shop.id,
       name: "Pain (baguette)",
       salePrice: 1.0,
-      ingredients: { create: [{ ingredientId: pain.id, quantity: 1, unit: "pcs" }] },
+      productStocks: { create: [{ stockUnitId: pain.id, quantity: 1, unit: "pcs" }] },
     },
   });
-  const dOeufs = await prisma.dish.create({
+  const dOeufs = await prisma.product.create({
     data: {
       restaurantId: shop.id,
       name: "Œufs x6",
       salePrice: 2.5,
-      ingredients: { create: [{ ingredientId: oeufs.id, quantity: 1, unit: "pcs" }] },
+      productStocks: { create: [{ stockUnitId: oeufs.id, quantity: 1, unit: "pcs" }] },
     },
   });
-  const dLessive = await prisma.dish.create({
+  const dLessive = await prisma.product.create({
     data: {
       restaurantId: shop.id,
       name: "Lessive 1,5L",
       salePrice: 6.9,
-      ingredients: { create: [{ ingredientId: lessive.id, quantity: 1, unit: "pcs" }] },
+      productStocks: { create: [{ stockUnitId: lessive.id, quantity: 1, unit: "pcs" }] },
     },
   });
-  await prisma.dish.create({
+  await prisma.product.create({
     data: {
       restaurantId: shop.id,
       name: "Farine 1kg",
       salePrice: 1.8,
-      ingredients: { create: [{ ingredientId: farine.id, quantity: 1, unit: "pcs" }] },
+      productStocks: { create: [{ stockUnitId: farine.id, quantity: 1, unit: "pcs" }] },
     },
   });
-  await prisma.dish.create({
+  await prisma.product.create({
     data: {
       restaurantId: shop.id,
       name: "Café moulu 250g",
       salePrice: 3.5,
-      ingredients: { create: [{ ingredientId: cafe.id, quantity: 1, unit: "pcs" }] },
+      productStocks: { create: [{ stockUnitId: cafe.id, quantity: 1, unit: "pcs" }] },
     },
   });
-  await prisma.dish.create({
+  await prisma.product.create({
     data: {
       restaurantId: shop.id,
       name: "Papier toilette x6",
       salePrice: 4.2,
-      ingredients: { create: [{ ingredientId: papier.id, quantity: 1, unit: "pcs" }] },
+      productStocks: { create: [{ stockUnitId: papier.id, quantity: 1, unit: "pcs" }] },
     },
   });
 
@@ -285,10 +285,10 @@ async function main() {
       channel: "dine_in",
       items: {
         create: [
-          { dishId: dLait.id, quantity: 2, unitPrice: 1.2 },
-          { dishId: dPain.id, quantity: 3, unitPrice: 1.0 },
-          { dishId: dOeufs.id, quantity: 1, unitPrice: 2.5 },
-          { dishId: dTomates.id, quantity: 1, unitPrice: 2.9 },
+          { productId: dLait.id, quantity: 2, unitPrice: 1.2 },
+          { productId: dPain.id, quantity: 3, unitPrice: 1.0 },
+          { productId: dOeufs.id, quantity: 1, unitPrice: 2.5 },
+          { productId: dTomates.id, quantity: 1, unitPrice: 2.9 },
         ],
       },
     },
@@ -443,7 +443,7 @@ async function main() {
       channel: "kiosk",
       kioskId: caisse1.id,
       items: {
-        create: [{ dishId: dLait.id, quantity: 1, unitPrice: 1.2 }],
+        create: [{ productId: dLait.id, quantity: 1, unitPrice: 1.2 }],
       },
     },
   });
@@ -517,7 +517,7 @@ async function main() {
       lines: {
         create: [
           {
-            ingredientId: tomates.id,
+            stockUnitId: tomates.id,
             quantity: 5000,
             unitPrice: 2.1,
             chosenReason: "Meilleur prix/kg chez Primeur du Coin.",
@@ -537,7 +537,7 @@ async function main() {
       lines: {
         create: [
           {
-            ingredientId: lessive.id,
+            stockUnitId: lessive.id,
             quantity: 6,
             unitPrice: 5.5,
             chosenReason: "Meilleur prix (5,50 € vs 6,20 € Grossiste Nord).",
@@ -556,19 +556,19 @@ async function main() {
       lines: {
         create: [
           {
-            ingredientId: lait.id,
+            stockUnitId: lait.id,
             theoreticalQty: 10,
             countedQty: 8,
             varianceQty: -2,
           },
           {
-            ingredientId: tomates.id,
+            stockUnitId: tomates.id,
             theoreticalQty: 3000,
             countedQty: 2800,
             varianceQty: -200,
           },
           {
-            ingredientId: pain.id,
+            stockUnitId: pain.id,
             theoreticalQty: 15,
             countedQty: 14,
             varianceQty: -1,
@@ -590,7 +590,7 @@ async function main() {
       cause: "Sous le seuil critique (12 bouteilles).",
       impact: "Rupture estimée demain si aucun réassort.",
       action: "Commander 48 bouteilles chez Grossiste Nord.",
-      ingredientId: lait.id,
+      stockUnitId: lait.id,
     },
   });
 

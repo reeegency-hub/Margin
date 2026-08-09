@@ -29,11 +29,11 @@ const HORIZON_DAYS = 3;
 
 async function avgDailyMap(
   restaurantId: string,
-  ingredientIds: string[],
+  stockUnitIds: string[],
   db: TenantDb
 ): Promise<Map<string, number>> {
   const map = new Map<string, number>();
-  if (!ingredientIds.length) return map;
+  if (!stockUnitIds.length) return map;
 
   const since = new Date();
   since.setDate(since.getDate() - 7);
@@ -41,28 +41,28 @@ async function avgDailyMap(
   const movements = await db.stockMovement.findMany({
     where: {
       restaurantId,
-      ingredientId: { in: ingredientIds },
+      stockUnitId: { in: stockUnitIds },
       type: "SALE",
       createdAt: { gte: since },
     },
-    select: { ingredientId: true, deltaQty: true },
+    select: { stockUnitId: true, deltaQty: true },
   });
 
   const totals = new Map<string, number>();
   for (const m of movements) {
     totals.set(
-      m.ingredientId,
-      (totals.get(m.ingredientId) || 0) + Math.abs(m.deltaQty)
+      m.stockUnitId,
+      (totals.get(m.stockUnitId) || 0) + Math.abs(m.deltaQty)
     );
   }
-  for (const id of ingredientIds) {
+  for (const id of stockUnitIds) {
     map.set(id, (totals.get(id) || 0) / 7);
   }
   return map;
 }
 
 export type ShoppingNeed = {
-  ingredientId: string;
+  stockUnitId: string;
   name: string;
   unit: string;
   quantity: number;
@@ -80,7 +80,7 @@ export async function computeShoppingNeeds(
   restaurantId: string,
   db: TenantDb = prisma
 ): Promise<ShoppingNeed[]> {
-  const ingredients = await db.ingredient.findMany({
+  const ingredients = await db.stockUnit.findMany({
     where: { restaurantId },
     orderBy: { name: "asc" },
   });
@@ -118,7 +118,7 @@ export async function computeShoppingNeeds(
     });
 
     needs.push({
-      ingredientId: ing.id,
+      stockUnitId: ing.id,
       name: ing.name,
       unit: ing.unit,
       quantity: Math.max(quantity, 1),
@@ -160,7 +160,7 @@ export async function proposePurchaseOrders(
 
   const self = await ensureSelfShopSupplier(restaurantId, db);
   const lines = needs.map((n) => ({
-    ingredientId: n.ingredientId,
+    stockUnitId: n.stockUnitId,
     quantity: n.quantity,
     unitPrice: 0,
     chosenReason:
@@ -190,16 +190,16 @@ export async function proposePurchaseOrders(
 export async function createManualPurchaseOrder(
   restaurantId: string,
   params: {
-    ingredientId: string;
+    stockUnitId: string;
     supplierId?: string;
     quantity: number;
   },
   db: TenantDb = prisma
 ) {
-  const ingredient = await db.ingredient.findFirst({
-    where: { id: params.ingredientId, restaurantId },
+  const ingredient = await db.stockUnit.findFirst({
+    where: { id: params.stockUnitId, restaurantId },
   });
-  if (!ingredient) throw new Error("Ingrédient introuvable");
+  if (!ingredient) throw new Error("Référence stock introuvable");
 
   const qty = Number(params.quantity);
   if (!(qty > 0)) throw new Error("Quantité invalide");
@@ -216,7 +216,7 @@ export async function createManualPurchaseOrder(
       lines: {
         create: [
           {
-            ingredientId: ingredient.id,
+            stockUnitId: ingredient.id,
             quantity: qty,
             unitPrice: 0,
             chosenReason: "Ajout manuel depuis le stock",
@@ -272,7 +272,7 @@ export async function validateAllOpenOrders(
     const lines = order.lines
       .filter((l) => l.quantity > 0)
       .map((l) => ({
-        ingredientId: l.ingredientId,
+        stockUnitId: l.stockUnitId,
         quantity: l.quantity,
       }));
     if (lines.length) {

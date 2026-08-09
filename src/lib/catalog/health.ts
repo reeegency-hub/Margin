@@ -35,9 +35,9 @@ export async function getCatalogHealth(
     stalePriceDishes,
     missingThresholdWithSales,
   ] = await Promise.all([
-    prisma.ingredient.count({ where: { restaurantId } }),
-    prisma.dish.count({ where: { restaurantId } }),
-    prisma.ingredient.count({
+    prisma.stockUnit.count({ where: { restaurantId } }),
+    prisma.product.count({ where: { restaurantId } }),
+    prisma.stockUnit.count({
       where: { restaurantId, criticalThreshold: { lte: 0 } },
     }),
     prisma.catalogIssue.count({
@@ -50,10 +50,10 @@ export async function getCatalogHealth(
         kind: { in: ["duplicate_ingredient", "duplicate_dish"] },
       },
     }),
-    prisma.dish.count({
+    prisma.product.count({
       where: { restaurantId, salePrice: { lte: 0 } },
     }),
-    prisma.dish.count({
+    prisma.product.count({
       where: { restaurantId, updatedAt: { lt: staleBefore }, salePrice: { gt: 0 } },
     }),
     prisma.catalogIssue.count({

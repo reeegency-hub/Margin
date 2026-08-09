@@ -17,7 +17,7 @@ type BuildInput = {
   ordersToValidate: {
     id: string;
     totalAmount: number;
-    lines: { quantity: number; ingredient: { name: string; unit: string } }[];
+    lines: { quantity: number; stockUnit: { name: string; unit: string } }[];
   }[];
   alertCount: number;
   outageCount: number;
@@ -63,7 +63,7 @@ export function buildHomeData(input: BuildInput): HomeData {
       id: order.id,
       badgeLabel: "1 action urgente",
       message: line
-        ? `Liste prête : ${formatQty(line.quantity, line.ingredient.unit, line.ingredient.name)} ${line.ingredient.name.toLowerCase()}.`
+        ? `Liste prête : ${formatQty(line.quantity, line.stockUnit.unit, line.stockUnit.name)} ${line.stockUnit.name.toLowerCase()}.`
         : "Une liste de courses attend d’être faite.",
       ctaLabel: "Ouvrir Courses",
       orderId: order.id,

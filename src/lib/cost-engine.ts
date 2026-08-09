@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 const PRICE_HIKE_PCT = 0.05; // 5 %
 
 export type PriceHike = {
-  ingredientId: string;
+  stockUnitId: string;
   name: string;
   unit: string;
   previousPrice: number;
@@ -14,7 +14,7 @@ export type PriceHike = {
 };
 
 export type TopDishCost = {
-  dishId: string;
+  productId: string;
   label: string;
   qty: number;
   pct: number;
@@ -35,7 +35,7 @@ export type WeeklyLossSummary = {
 };
 
 export type SupplierCompareRow = {
-  ingredientId: string;
+  stockUnitId: string;
   name: string;
   unit: string;
   currentSupplier: string | null;
@@ -64,14 +64,13 @@ function round2(n: number) {
 /** Coût matière d’un plat = Σ qty recette × dernier prix d’achat. */
 export async function computeDishFoodCost(
   restaurantId: string,
-  dishId: string
+  productId: string
 ): Promise<number | null> {
-  const dish = await prisma.dish.findFirst({
-    where: { id: dishId, restaurantId },
-    include: {
-      ingredients: {
+  const dish = await prisma.product.findFirst({
+    where: { id: productId, restaurantId },
+    include: { productStocks: {
         include: {
-          ingredient: {
+          stockUnit: {
             select: {
               lastPurchasePrice: true,
               catalogItems: { select: { price: true }, orderBy: { price: "asc" }, take: 1 },
@@ -81,14 +80,14 @@ export async function computeDishFoodCost(
       },
     },
   });
-  if (!dish || dish.ingredients.length === 0) return null;
+  if (!dish || dish.productStocks.length === 0) return null;
 
   let total = 0;
   let missing = 0;
-  for (const line of dish.ingredients) {
+  for (const line of dish.productStocks) {
     const unit =
-      line.ingredient.lastPurchasePrice ??
-      line.ingredient.catalogItems[0]?.price ??
+      line.stockUnit.lastPurchasePrice ??
+      line.stockUnit.catalogItems[0]?.price ??
       null;
     if (unit == null) {
       missing += 1;
@@ -96,24 +95,24 @@ export async function computeDishFoodCost(
     }
     total += line.quantity * unit;
   }
-  if (missing === dish.ingredients.length) return null;
+  if (missing === dish.productStocks.length) return null;
   return round2(total);
 }
 
 /** Recalcule et stocke le coût matière des plats touchés (jour même). */
 export async function refreshDishFoodCosts(
   restaurantId: string,
-  ingredientIds?: string[]
+  stockUnitIds?: string[]
 ) {
   const where =
-    ingredientIds && ingredientIds.length > 0
+    stockUnitIds && stockUnitIds.length > 0
       ? {
           restaurantId,
-          ingredients: { some: { ingredientId: { in: ingredientIds } } },
+          productStocks: { some: { stockUnitId: { in: stockUnitIds } } },
         }
       : { restaurantId, active: true };
 
-  const dishes = await prisma.dish.findMany({
+  const dishes = await prisma.product.findMany({
     where,
     select: { id: true },
   });
@@ -121,7 +120,7 @@ export async function refreshDishFoodCosts(
   const now = new Date();
   for (const d of dishes) {
     const foodCost = await computeDishFoodCost(restaurantId, d.id);
-    await prisma.dish.updateMany({
+    await prisma.product.updateMany({
       where: { id: d.id, restaurantId },
       data: { foodCost, foodCostUpdatedAt: now },
     });
@@ -135,16 +134,16 @@ export async function refreshDishFoodCosts(
  */
 export async function applyPurchasePrice(opts: {
   restaurantId: string;
-  ingredientId: string;
+  stockUnitId: string;
   unitPrice: number;
   supplierId?: string | null;
   source?: string;
 }): Promise<{ hiked: boolean; previous: number | null }> {
-  const { restaurantId, ingredientId, unitPrice, supplierId } = opts;
+  const { restaurantId, stockUnitId, unitPrice, supplierId } = opts;
   if (!(unitPrice > 0)) return { hiked: false, previous: null };
 
-  const ing = await prisma.ingredient.findFirst({
-    where: { id: ingredientId, restaurantId },
+  const ing = await prisma.stockUnit.findFirst({
+    where: { id: stockUnitId, restaurantId },
     select: { lastPurchasePrice: true, name: true },
   });
   if (!ing) return { hiked: false, previous: null };
@@ -156,18 +155,18 @@ export async function applyPurchasePrice(opts: {
     unitPrice > previous * (1 + PRICE_HIKE_PCT);
 
   await prisma.$transaction([
-    prisma.ingredientPriceEvent.create({
+    prisma.stockUnitPriceEvent.create({
       data: {
         restaurantId,
-        ingredientId,
+        stockUnitId,
         supplierId: supplierId || null,
         unitPrice,
         previousPrice: previous,
         source: opts.source || "RECEIPT",
       },
     }),
-    prisma.ingredient.updateMany({
-      where: { id: ingredientId, restaurantId },
+    prisma.stockUnit.updateMany({
+      where: { id: stockUnitId, restaurantId },
       data: {
         lastPurchasePrice: unitPrice,
         lastPurchaseAt: new Date(),
@@ -188,7 +187,7 @@ export async function applyPurchasePrice(opts: {
         cause: "Prix d’achat relevé sur une facture fournisseur.",
         impact: "Coût matière des plats concernés recalculé aujourd’hui.",
         action: "Vérifier la marge des best-sellers et négocier si besoin.",
-        ingredientId,
+        stockUnitId,
       },
     });
   }
@@ -200,13 +199,13 @@ export async function listPriceHikes(
   restaurantId: string,
   since: Date
 ): Promise<PriceHike[]> {
-  const events = await prisma.ingredientPriceEvent.findMany({
+  const events = await prisma.stockUnitPriceEvent.findMany({
     where: {
       restaurantId,
       createdAt: { gte: since },
       previousPrice: { not: null },
     },
-    include: { ingredient: { select: { name: true, unit: true } } },
+    include: { stockUnit: { select: { name: true, unit: true } } },
     orderBy: { createdAt: "desc" },
     take: 40,
   });
@@ -219,9 +218,9 @@ export async function listPriceHikes(
     .map((e) => {
       const previous = e.previousPrice!;
       return {
-        ingredientId: e.ingredientId,
-        name: e.ingredient.name,
-        unit: e.ingredient.unit,
+        stockUnitId: e.stockUnitId,
+        name: e.stockUnit.name,
+        unit: e.stockUnit.unit,
         previousPrice: previous,
         newPrice: e.unitPrice,
         deltaPct: round2(((e.unitPrice - previous) / previous) * 100),
@@ -239,7 +238,7 @@ export async function getTopDishCosts(
   weekAgo.setDate(weekAgo.getDate() - 7);
 
   const top = await prisma.saleItem.groupBy({
-    by: ["dishId"],
+    by: ["productId"],
     where: { sale: { restaurantId, soldAt: { gte: weekAgo } } },
     _sum: { quantity: true },
     orderBy: { _sum: { quantity: "desc" } },
@@ -247,8 +246,8 @@ export async function getTopDishCosts(
   });
 
   const totalQty = top.reduce((s, t) => s + (t._sum.quantity || 0), 0) || 1;
-  const dishes = await prisma.dish.findMany({
-    where: { id: { in: top.map((t) => t.dishId) }, restaurantId },
+  const dishes = await prisma.product.findMany({
+    where: { id: { in: top.map((t) => t.productId) }, restaurantId },
     select: {
       id: true,
       name: true,
@@ -260,13 +259,13 @@ export async function getTopDishCosts(
 
   const rows: TopDishCost[] = [];
   for (const t of top) {
-    const d = byId.get(t.dishId);
+    const d = byId.get(t.productId);
     if (!d) continue;
     let foodCost = d.foodCost;
     if (foodCost == null) {
       foodCost = await computeDishFoodCost(restaurantId, d.id);
       if (foodCost != null) {
-        await prisma.dish.updateMany({
+        await prisma.product.updateMany({
           where: { id: d.id, restaurantId },
           data: { foodCost, foodCostUpdatedAt: new Date() },
         });
@@ -278,7 +277,7 @@ export async function getTopDishCosts(
         ? round2((foodCost / d.salePrice) * 100)
         : null;
     rows.push({
-      dishId: d.id,
+      productId: d.id,
       label: d.name,
       qty,
       pct: round2((qty / totalQty) * 100),
@@ -318,7 +317,7 @@ export async function getWeeklyLossSummary(
     },
     include: {
       lines: {
-        include: { ingredient: { select: { name: true, unit: true } } },
+        include: { stockUnit: { select: { name: true, unit: true } } },
       },
     },
   });
@@ -336,15 +335,15 @@ export async function getWeeklyLossSummary(
       if (value == null) continue;
       if (value < 0) {
         lossEur += Math.abs(value);
-        const prev = lossMap.get(line.ingredientId) || {
-          name: line.ingredient.name,
+        const prev = lossMap.get(line.stockUnitId) || {
+          name: line.stockUnit.name,
           qty: 0,
-          unit: line.ingredient.unit,
+          unit: line.stockUnit.unit,
           eur: 0,
         };
         prev.qty += Math.abs(line.varianceQty);
         prev.eur += Math.abs(value);
-        lossMap.set(line.ingredientId, prev);
+        lossMap.set(line.stockUnitId, prev);
       } else if (value > 0) {
         gainEur += value;
       }
@@ -379,7 +378,7 @@ export async function compareSuppliers(
     where: { supplier: { restaurantId } },
     include: {
       supplier: { select: { name: true } },
-      ingredient: {
+      stockUnit: {
         select: {
           id: true,
           name: true,
@@ -392,9 +391,9 @@ export async function compareSuppliers(
 
   const byIng = new Map<string, typeof items>();
   for (const it of items) {
-    const list = byIng.get(it.ingredientId) || [];
+    const list = byIng.get(it.stockUnitId) || [];
     list.push(it);
-    byIng.set(it.ingredientId, list);
+    byIng.set(it.stockUnitId, list);
   }
 
   const rows: SupplierCompareRow[] = [];
@@ -405,17 +404,17 @@ export async function compareSuppliers(
     const current =
       sorted.find(
         (s) =>
-          s.ingredient.lastPurchasePrice != null &&
-          Math.abs(s.price - s.ingredient.lastPurchasePrice) < 0.001
+          s.stockUnit.lastPurchasePrice != null &&
+          Math.abs(s.price - s.stockUnit.lastPurchasePrice) < 0.001
       ) || sorted[sorted.length - 1]!;
 
     if (cheapest.price >= current.price) continue;
     const savingsEurPerUnit = round2(current.price - cheapest.price);
     const savingsPct = round2((savingsEurPerUnit / current.price) * 100);
     rows.push({
-      ingredientId: cheapest.ingredientId,
-      name: cheapest.ingredient.name,
-      unit: cheapest.ingredient.unit,
+      stockUnitId: cheapest.stockUnitId,
+      name: cheapest.stockUnit.name,
+      unit: cheapest.stockUnit.unit,
       currentSupplier: current.supplier.name,
       currentPrice: current.price,
       cheapestSupplier: cheapest.supplier.name,

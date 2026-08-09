@@ -58,7 +58,7 @@ export async function commitImportInventory(input: {
     return { ok: false as const, error: "storeId ne correspond pas à la session." };
   }
 
-  const existing = await prisma.ingredient.findMany({
+  const existing = await prisma.stockUnit.findMany({
     where: { restaurantId: input.restaurantId },
     select: { id: true, name: true },
   });
@@ -89,13 +89,13 @@ export async function commitImportInventory(input: {
 
     const existingId = known.get(key);
     if (existingId) {
-      await prisma.ingredient.update({
+      await prisma.stockUnit.update({
         where: { id: existingId },
         data,
       });
       updated += 1;
     } else {
-      const createdRow = await prisma.ingredient.create({
+      const createdRow = await prisma.stockUnit.create({
         data: {
           restaurantId: input.restaurantId,
           name,

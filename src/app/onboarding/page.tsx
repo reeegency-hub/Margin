@@ -23,7 +23,7 @@ export default async function OnboardingPage() {
   }
 
   const [dishCount, openai] = await Promise.all([
-    prisma.dish.count({
+    prisma.product.count({
       where: { restaurantId: restaurant.id, active: true },
     }),
     getOpenAIConfig(restaurant.id),

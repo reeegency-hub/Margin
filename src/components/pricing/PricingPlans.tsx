@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import {
   PLANS,
   SETUP_FEE_EUR,
@@ -11,6 +10,7 @@ import {
   planPeriodSuffix,
   planPrice,
 } from "@/lib/plans";
+import { supportMailto } from "@/lib/support";
 
 function PlanDescription({
   text,
@@ -115,12 +115,12 @@ export function PricingPlans({
                     {selected ? "Sélectionné" : plan.cta}
                   </button>
                 ) : (
-                  <Link
-                    href={`/signup?plan=${plan.id}&billing=${period}`}
+                  <a
+                    href={supportMailto(`Place pilote — plan ${plan.name}`)}
                     className={`pricing-card__cta${featured ? " is-lime" : ""}`}
                   >
-                    {plan.cta}
-                  </Link>
+                    Demander une place pilote
+                  </a>
                 )}
               </div>
               <ul className="pricing-card__features">

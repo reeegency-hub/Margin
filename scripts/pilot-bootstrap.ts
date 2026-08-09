@@ -87,11 +87,11 @@ async function main() {
   });
   await prisma.sale.deleteMany({ where: { restaurantId } });
   await prisma.stockMovement.deleteMany({ where: { restaurantId } });
-  await prisma.recipeIngredient.deleteMany({
-    where: { dish: { restaurantId } },
+  await prisma.productStock.deleteMany({
+    where: { product: { restaurantId } },
   });
-  await prisma.dish.deleteMany({ where: { restaurantId } });
-  await prisma.ingredient.deleteMany({ where: { restaurantId } });
+  await prisma.product.deleteMany({ where: { restaurantId } });
+  await prisma.stockUnit.deleteMany({ where: { restaurantId } });
 
   const catalog = [
     { name: "Lait 1L", unit: "pcs", stock: 24, threshold: 8, price: 1.2 },
@@ -129,7 +129,7 @@ async function main() {
   const dishes: { id: string; name: string; stockBefore: number }[] = [];
 
   for (const row of catalog) {
-    const ing = await prisma.ingredient.create({
+    const ing = await prisma.stockUnit.create({
       data: {
         restaurantId,
         name: row.name,
@@ -139,14 +139,13 @@ async function main() {
         reorderQty: row.threshold * 3,
       },
     });
-    const dish = await prisma.dish.create({
+    const dish = await prisma.product.create({
       data: {
         restaurantId,
         name: row.name,
         salePrice: row.price,
         active: true,
-        ingredients: {
-          create: [{ ingredientId: ing.id, quantity: 1, unit: row.unit }],
+        productStocks: { create: [{ stockUnitId: ing.id, quantity: 1, unit: row.unit }],
         },
       },
     });
@@ -154,12 +153,12 @@ async function main() {
   }
 
   const target = dishes[0]!;
-  await recordSale(restaurantId, [{ dishId: target.id, quantity: 2 }], {
+  await recordSale(restaurantId, [{ productId: target.id, quantity: 2 }], {
     channel: "dine_in",
     externalOrderId: `PILOT-TEST-${Date.now()}`,
   });
 
-  const after = await prisma.ingredient.findFirst({
+  const after = await prisma.stockUnit.findFirst({
     where: { restaurantId, name: target.name },
   });
   const expected = target.stockBefore - 2;

@@ -58,10 +58,10 @@ function rowFromName(name: string): Omit<Row, "key"> {
 }
 
 type FuzzyItem = {
-  dishIdx: number;
+  productIdx: number;
   ingIdx: number;
-  dish: string;
-  ingredient: string;
+  product: string;
+  stockUnit: string;
   quantity: number;
   unit: "g" | "ml" | "pcs";
   reason: string;
@@ -123,14 +123,14 @@ export function IngredientAddPanel({
   const missingQty = useMemo((): FuzzyItem[] => {
     if (!dishes) return [];
     const out: FuzzyItem[] = [];
-    dishes.forEach((d, dishIdx) => {
+    dishes.forEach((d, productIdx) => {
       d.ingredients.forEach((i, ingIdx) => {
         if (!isFuzzyIng(i)) return;
         out.push({
-          dishIdx,
+          productIdx,
           ingIdx,
-          dish: d.name,
-          ingredient: i.name,
+          product: d.name,
+          stockUnit: i.name,
           quantity: i.quantity,
           unit: i.unit,
           reason: fuzzyReason(i),
@@ -143,21 +143,21 @@ export function IngredientAddPanel({
   const fuzzyByDish = useMemo(() => {
     const map = new Map<string, FuzzyItem[]>();
     for (const m of missingQty) {
-      const list = map.get(m.dish) ?? [];
+      const list = map.get(m.product) ?? [];
       list.push(m);
-      map.set(m.dish, list);
+      map.set(m.product, list);
     }
     return [...map.entries()];
   }, [missingQty]);
 
-  const fuzzyKey = (m: FuzzyItem) => `${m.dishIdx}:${m.ingIdx}`;
+  const fuzzyKey = (m: FuzzyItem) => `${m.productIdx}:${m.ingIdx}`;
 
   const openFixModal = useCallback(
     (items: FuzzyItem[] = missingQty) => {
       const draft: Record<string, { quantity: string; unit: "g" | "ml" | "pcs" }> =
         {};
       for (const m of items) {
-        const sug = suggestFuzzyQty(m.ingredient, m.unit);
+        const sug = suggestFuzzyQty(m.stockUnit, m.unit);
         draft[fuzzyKey(m)] = {
           quantity: String(m.quantity > 0 ? m.quantity : sug.quantity),
           unit: m.quantity > 0 ? m.unit : sug.unit,
@@ -225,14 +225,14 @@ export function IngredientAddPanel({
       `${next.length} produit(s) détecté(s) — vérifiez puis enregistrez pour créer le catalogue + le stock.`
     );
     const fuzzy: FuzzyItem[] = [];
-    next.forEach((d, dishIdx) => {
+    next.forEach((d, productIdx) => {
       d.ingredients.forEach((i, ingIdx) => {
         if (!isFuzzyIng(i)) return;
         fuzzy.push({
-          dishIdx,
+          productIdx,
           ingIdx,
-          dish: d.name,
-          ingredient: i.name,
+          product: d.name,
+          stockUnit: i.name,
           quantity: i.quantity,
           unit: i.unit,
           reason: fuzzyReason(i),
@@ -243,8 +243,8 @@ export function IngredientAddPanel({
       const draft: Record<string, { quantity: string; unit: "g" | "ml" | "pcs" }> =
         {};
       for (const m of fuzzy) {
-        const sug = suggestFuzzyQty(m.ingredient, m.unit);
-        draft[`${m.dishIdx}:${m.ingIdx}`] = {
+        const sug = suggestFuzzyQty(m.stockUnit, m.unit);
+        draft[`${m.productIdx}:${m.ingIdx}`] = {
           quantity: String(m.quantity > 0 ? m.quantity : sug.quantity),
           unit: m.quantity > 0 ? m.unit : sug.unit,
         };
@@ -315,14 +315,14 @@ export function IngredientAddPanel({
   );
 
   const updateDishIng = (
-    dishIdx: number,
+    productIdx: number,
     ingIdx: number,
     patch: { quantity?: number; unit?: "g" | "ml" | "pcs" }
   ) => {
     setDishes((prev) => {
       if (!prev) return prev;
       return prev.map((d, di) => {
-        if (di !== dishIdx) return d;
+        if (di !== productIdx) return d;
         return {
           ...d,
           ingredients: d.ingredients.map((ing, ii) => {
@@ -352,7 +352,7 @@ export function IngredientAddPanel({
       const qty = Number(draft.quantity);
       if (!(qty > 0)) continue;
       next = next.map((d, di) => {
-        if (di !== m.dishIdx) return d;
+        if (di !== m.productIdx) return d;
         return {
           ...d,
           ingredients: d.ingredients.map((ing, ii) =>
@@ -400,7 +400,7 @@ export function IngredientAddPanel({
     setFixDraft((prev) => {
       const next = { ...prev };
       for (const m of missingQty) {
-        const sug = suggestFuzzyQty(m.ingredient, m.unit);
+        const sug = suggestFuzzyQty(m.stockUnit, m.unit);
         next[fuzzyKey(m)] = {
           quantity: String(sug.quantity),
           unit: sug.unit,
@@ -413,7 +413,7 @@ export function IngredientAddPanel({
   const confirmRecipes = () => {
     if (!dishes?.length) return;
     if (missingQty.length > 0) {
-      const dishNames = [...new Set(missingQty.map((m) => m.dish))];
+      const dishNames = [...new Set(missingQty.map((m) => m.product))];
       setError(
         `${missingQty.length} quantité(s) floue(s) dans ${dishNames.length} produit(s) : ${dishNames
           .slice(0, 4)
@@ -688,7 +688,7 @@ export function IngredientAddPanel({
                   <li key={dish}>
                     <strong>{dish}</strong> —{" "}
                     {items
-                      .map((i) => `${i.ingredient} (${i.reason})`)
+                      .map((i) => `${i.stockUnit} (${i.reason})`)
                       .join(", ")}
                   </li>
                 ))}
@@ -828,7 +828,7 @@ export function IngredientAddPanel({
                         <li key={key}>
                           <div className="fuzzy-fix-row">
                             <div>
-                              <strong>{m.ingredient}</strong>
+                              <strong>{m.stockUnit}</strong>
                               <span className="fuzzy-fix-reason">
                                 {m.reason}
                               </span>

@@ -33,9 +33,7 @@ export default async function AdminStorePage({
       externalPosConnections: { orderBy: { createdAt: "desc" }, take: 3 },
       employees: { where: { active: true }, orderBy: { name: "asc" } },
       _count: {
-        select: {
-          dishes: true,
-          ingredients: true,
+        select: { products: true, stockUnits: true,
           employees: true,
         },
       },
@@ -246,7 +244,7 @@ export default async function AdminStorePage({
       <div className="dash-card dash-card--dark space-y-3">
         <h2 className="text-lg font-semibold">Catalogue & équipe</h2>
         <p className="text-[13px] opacity-70">
-          {store._count.dishes} produits · {store._count.ingredients} stock ·{" "}
+          {store._count.products} produits · {store._count.stockUnits} stock ·{" "}
           {store._count.employees} employés
         </p>
         <ul className="text-[13px] opacity-80">

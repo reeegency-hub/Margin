@@ -41,7 +41,7 @@ export type DashboardViewProps = {
     id: string;
     totalAmount: number;
     supplier: { name: string };
-    lines: { quantity: number; ingredient: { name: string; unit: string } }[];
+    lines: { quantity: number; stockUnit: { name: string; unit: string } }[];
   }[];
   focuses: DayFocusItem[];
   costKpis: CostHomeKpis;

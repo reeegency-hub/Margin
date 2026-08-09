@@ -109,13 +109,13 @@ model Restaurant {
   updatedAt             DateTime  @updatedAt
 
   users                       User[]
-  ingredients                 Ingredient[]
-  dishes                      Dish[]
+  stockUnits                  StockUnit[]
+  products                    Product[]
   sales                       Sale[]
   stockMovements              StockMovement[]
   suppliers                   Supplier[]
   supplierReceipts            SupplierReceipt[]
-  ingredientPriceEvents       IngredientPriceEvent[]
+  stockUnitPriceEvents        StockUnitPriceEvent[]
   alerts                      Alert[]
   catalogIssues               CatalogIssue[]
   employees                   Employee[]
@@ -260,7 +260,7 @@ model StripeReconciliationRun {
   @@index([restaurantId, createdAt])
 }
 
-model Ingredient {
+model StockUnit {
   id                String     @id @default(cuid())
   restaurantId      String
   restaurant        Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
@@ -279,17 +279,18 @@ model Ingredient {
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
 
-  recipeIngredients   RecipeIngredient[]
+  productStocks       ProductStock[]
   stockMovements      StockMovement[]
   receiptLines        SupplierReceiptLine[]
   alerts              Alert[]
   catalogItems        SupplierCatalogItem[]
   purchaseOrderLines  PurchaseOrderLine[]
   inventoryCountLines InventoryCountLine[]
-  priceEvents         IngredientPriceEvent[]
+  priceEvents         StockUnitPriceEvent[]
 
   @@index([restaurantId])
   @@index([restaurantId, criticalThreshold])
+  @@map("Ingredient")
 }
 
 /// Anomalies catalogue (doublons, unités, prix, seuils) — assistant de nettoyage
@@ -303,9 +304,9 @@ model CatalogIssue {
   status         String   @default("OPEN")
   title          String
   detail         String?
-  ingredientId   String?
-  ingredientIdB  String?
-  dishId         String?
+  stockUnitId    String?  @map("ingredientId")
+  stockUnitIdB   String?  @map("ingredientIdB")
+  productId      String?  @map("dishId")
   payloadJson    String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -314,7 +315,7 @@ model CatalogIssue {
   @@index([restaurantId, kind, status])
 }
 
-model Dish {
+model Product {
   id               String     @id @default(cuid())
   restaurantId     String
   restaurant       Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
@@ -331,23 +332,25 @@ model Dish {
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
 
-  ingredients RecipeIngredient[]
-  saleItems   SaleItem[]
+  productStocks ProductStock[]
+  saleItems     SaleItem[]
 
   @@index([restaurantId])
   @@unique([restaurantId, externalSku])
+  @@map("Dish")
 }
 
-model RecipeIngredient {
-  id           String     @id @default(cuid())
-  dishId       String
-  dish         Dish       @relation(fields: [dishId], references: [id], onDelete: Cascade)
-  ingredientId String
-  ingredient   Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
-  quantity     Float
-  unit         String
+model ProductStock {
+  id          String    @id @default(cuid())
+  productId   String    @map("dishId")
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  stockUnitId String    @map("ingredientId")
+  stockUnit   StockUnit @relation(fields: [stockUnitId], references: [id], onDelete: Cascade)
+  quantity    Float
+  unit        String
 
-  @@unique([dishId, ingredientId])
+  @@unique([productId, stockUnitId])
+  @@map("RecipeIngredient")
 }
 
 model Sale {
@@ -370,11 +373,11 @@ model Sale {
 }
 
 model SaleItem {
-  id        String @id @default(cuid())
+  id        String  @id @default(cuid())
   saleId    String
-  sale      Sale   @relation(fields: [saleId], references: [id], onDelete: Cascade)
-  dishId    String
-  dish      Dish   @relation(fields: [dishId], references: [id])
+  sale      Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId String  @map("dishId")
+  product   Product @relation(fields: [productId], references: [id])
   quantity  Int
   unitPrice Float
 }
@@ -383,15 +386,15 @@ model StockMovement {
   id           String     @id @default(cuid())
   restaurantId String
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  ingredientId String
-  ingredient   Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  stockUnitId  String     @map("ingredientId")
+  stockUnit    StockUnit  @relation(fields: [stockUnitId], references: [id], onDelete: Cascade)
   type         String
   deltaQty     Float
   refType      String?
   refId        String?
   createdAt    DateTime   @default(now())
 
-  @@index([restaurantId, ingredientId, createdAt])
+  @@index([restaurantId, stockUnitId, createdAt])
 }
 
 model Supplier {
@@ -413,16 +416,16 @@ model Supplier {
 }
 
 model SupplierCatalogItem {
-  id           String     @id @default(cuid())
-  supplierId   String
-  supplier     Supplier   @relation(fields: [supplierId], references: [id], onDelete: Cascade)
-  ingredientId String
-  ingredient   Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
-  price        Float
-  unit         String
-  minOrderQty  Float      @default(1)
+  id          String    @id @default(cuid())
+  supplierId  String
+  supplier    Supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  stockUnitId String    @map("ingredientId")
+  stockUnit   StockUnit @relation(fields: [stockUnitId], references: [id], onDelete: Cascade)
+  price       Float
+  unit        String
+  minOrderQty Float     @default(1)
 
-  @@unique([supplierId, ingredientId])
+  @@unique([supplierId, stockUnitId])
 }
 
 model PurchaseOrder {
@@ -447,14 +450,14 @@ model PurchaseOrder {
 }
 
 model PurchaseOrderLine {
-  id            String        @id @default(cuid())
-  orderId       String
-  order         PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  ingredientId  String
-  ingredient    Ingredient    @relation(fields: [ingredientId], references: [id])
-  quantity      Float
-  unitPrice     Float
-  chosenReason  String?
+  id          String        @id @default(cuid())
+  orderId     String
+  order       PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  stockUnitId String        @map("ingredientId")
+  stockUnit   StockUnit     @relation(fields: [stockUnitId], references: [id])
+  quantity    Float
+  unitPrice   Float
+  chosenReason String?
 }
 
 model SupplierReceipt {
@@ -473,23 +476,23 @@ model SupplierReceipt {
 }
 
 model SupplierReceiptLine {
-  id           String          @id @default(cuid())
-  receiptId    String
-  receipt      SupplierReceipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
-  ingredientId String
-  ingredient   Ingredient      @relation(fields: [ingredientId], references: [id])
-  quantity     Float
+  id          String          @id @default(cuid())
+  receiptId   String
+  receipt     SupplierReceipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  stockUnitId String          @map("ingredientId")
+  stockUnit   StockUnit       @relation(fields: [stockUnitId], references: [id])
+  quantity    Float
   /// Prix unitaire facturé (€) — saisi depuis la facture fournisseur
-  unitPrice    Float?
+  unitPrice   Float?
 }
 
 /// Historique des prix d’achat (hausses / baisses)
-model IngredientPriceEvent {
+model StockUnitPriceEvent {
   id            String     @id @default(cuid())
   restaurantId  String
   restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  ingredientId  String
-  ingredient    Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  stockUnitId   String     @map("ingredientId")
+  stockUnit     StockUnit  @relation(fields: [stockUnitId], references: [id], onDelete: Cascade)
   supplierId    String?
   unitPrice     Float
   previousPrice Float?
@@ -498,7 +501,8 @@ model IngredientPriceEvent {
   createdAt     DateTime   @default(now())
 
   @@index([restaurantId, createdAt])
-  @@index([restaurantId, ingredientId, createdAt])
+  @@index([restaurantId, stockUnitId, createdAt])
+  @@map("IngredientPriceEvent")
 }
 
 model InventoryCount {
@@ -520,8 +524,8 @@ model InventoryCountLine {
   id               String         @id @default(cuid())
   inventoryCountId String
   inventoryCount   InventoryCount @relation(fields: [inventoryCountId], references: [id], onDelete: Cascade)
-  ingredientId     String
-  ingredient       Ingredient     @relation(fields: [ingredientId], references: [id])
+  stockUnitId      String         @map("ingredientId")
+  stockUnit        StockUnit      @relation(fields: [stockUnitId], references: [id])
   theoreticalQty   Float
   countedQty       Float
   varianceQty      Float
@@ -850,8 +854,8 @@ model Alert {
   cause          String?
   impact         String
   action         String
-  ingredientId   String?
-  ingredient     Ingredient? @relation(fields: [ingredientId], references: [id])
+  stockUnitId    String?  @map("ingredientId")
+  stockUnit      StockUnit? @relation(fields: [stockUnitId], references: [id])
   whatsappSentAt DateTime?
   /// Mis en file pour batch WhatsApp (null une fois envoyé ou résolu)
   whatsappPendingAt DateTime?

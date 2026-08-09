@@ -5,12 +5,12 @@ import { normalizeSku, skusEqual } from "@/lib/pos/sku";
 
 export type AcceptPendingResult = {
   accepted: number;
-  ingredientIds: string[];
-  dishIds: string[];
+  stockUnitIds: string[];
+  productIds: string[];
 };
 
 /**
- * Accept pending POS products → Dish + Ingredient 1:1 (shop pattern) with externalSku.
+ * Accept pending POS products → Product + StockUnit 1:1 (shop pattern) with externalSku.
  */
 export async function acceptPosPendingProducts(
   restaurantId: string,
@@ -24,8 +24,8 @@ export async function acceptPosPendingProducts(
     },
   });
 
-  const ingredientIds: string[] = [];
-  const dishIds: string[] = [];
+  const stockUnitIds: string[] = [];
+  const productIds: string[] = [];
   let accepted = 0;
 
   await prisma.$transaction(async (tx) => {
@@ -37,7 +37,7 @@ export async function acceptPosPendingProducts(
       const unit = defaults.unit;
 
       // Reuse existing ingredient by normalized name if present
-      const existingIngredients = await tx.ingredient.findMany({
+      const existingIngredients = await tx.stockUnit.findMany({
         where: { restaurantId },
       });
       let ingredient = existingIngredients.find(
@@ -45,7 +45,7 @@ export async function acceptPosPendingProducts(
       );
 
       if (!ingredient) {
-        ingredient = await tx.ingredient.create({
+        ingredient = await tx.stockUnit.create({
           data: {
             restaurantId,
             name,
@@ -56,19 +56,19 @@ export async function acceptPosPendingProducts(
           },
         });
       }
-      ingredientIds.push(ingredient.id);
+      stockUnitIds.push(ingredient.id);
 
-      const allDishes = await tx.dish.findMany({ where: { restaurantId } });
+      const allDishes = await tx.product.findMany({ where: { restaurantId } });
       const skuNorm = normalizeSku(p.externalSku);
       const existingDish =
         (skuNorm &&
           allDishes.find((d) => skusEqual(d.externalSku, skuNorm))) ||
         allDishes.find((d) => normalizePosName(d.name) === normalizePosName(name));
 
-      let dishId: string;
+      let productId: string;
       if (existingDish) {
-        dishId = existingDish.id;
-        await tx.dish.update({
+        productId = existingDish.id;
+        await tx.product.update({
           where: { id: existingDish.id },
           data: {
             externalSku: skuNorm || existingDish.externalSku,
@@ -79,31 +79,30 @@ export async function acceptPosPendingProducts(
             active: true,
           },
         });
-        const link = await tx.recipeIngredient.findFirst({
-          where: { dishId: existingDish.id, ingredientId: ingredient.id },
+        const link = await tx.productStock.findFirst({
+          where: { productId: existingDish.id, stockUnitId: ingredient.id },
         });
         if (!link) {
-          await tx.recipeIngredient.create({
+          await tx.productStock.create({
             data: {
-              dishId: existingDish.id,
-              ingredientId: ingredient.id,
+              productId: existingDish.id,
+              stockUnitId: ingredient.id,
               quantity: 1,
               unit,
             },
           });
         }
       } else {
-        const dish = await tx.dish.create({
+        const dish = await tx.product.create({
           data: {
             restaurantId,
             name,
             salePrice: p.lastUnitPrice != null && p.lastUnitPrice > 0 ? p.lastUnitPrice : 0,
             externalSku: skuNorm,
             active: true,
-            ingredients: {
-              create: [
+            productStocks: { create: [
                 {
-                  ingredientId: ingredient.id,
+                  stockUnitId: ingredient.id,
                   quantity: 1,
                   unit,
                 },
@@ -111,10 +110,10 @@ export async function acceptPosPendingProducts(
             },
           },
         });
-        dishId = dish.id;
+        productId = dish.id;
       }
 
-      dishIds.push(dishId);
+      productIds.push(productId);
 
       await tx.posPendingProduct.update({
         where: { id: p.id },
@@ -124,7 +123,7 @@ export async function acceptPosPendingProducts(
     }
   });
 
-  return { accepted, ingredientIds, dishIds };
+  return { accepted, stockUnitIds, productIds };
 }
 
 export async function ignorePosPendingProducts(

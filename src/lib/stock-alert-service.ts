@@ -4,7 +4,7 @@ import { formatQty } from "@/lib/stock-engine";
 import { buildWaMeLink } from "@/lib/wa-link";
 
 export type StockAlertLine = {
-  ingredientId: string;
+  stockUnitId: string;
   nom: string;
   stock_restant: number;
   seuil: number;
@@ -34,7 +34,7 @@ function fingerprintOf(liste: StockAlertLine[]): string {
   return liste
     .map(
       (l) =>
-        `${l.ingredientId}:${Math.round(l.stock_restant)}:${Math.round(l.quantite_a_commander)}`
+        `${l.stockUnitId}:${Math.round(l.stock_restant)}:${Math.round(l.quantite_a_commander)}`
     )
     .sort()
     .join("|");
@@ -57,7 +57,7 @@ export class StockAlertService {
     });
     if (!restaurant) return null;
 
-    const ingredients = await prisma.ingredient.findMany({
+    const ingredients = await prisma.stockUnit.findMany({
       where: { restaurantId },
       orderBy: { name: "asc" },
     });
@@ -74,7 +74,7 @@ export class StockAlertService {
         ing
       );
       liste.push({
-        ingredientId: ing.id,
+        stockUnitId: ing.id,
         nom: ing.name,
         stock_restant: ing.stockTheoretical,
         seuil: ing.criticalThreshold,
@@ -272,7 +272,7 @@ export class StockAlertService {
         "3": listText.slice(0, 800),
       },
       body,
-      alertIds: summary.liste.map((l) => l.ingredientId),
+      alertIds: summary.liste.map((l) => l.stockUnitId),
     });
 
     if (!result.ok) {
@@ -299,7 +299,7 @@ export class StockAlertService {
         restaurantId,
         type: "STOCK_CRITICAL",
         status: "ACTIVE",
-        ingredientId: { in: summary.liste.map((l) => l.ingredientId) },
+        stockUnitId: { in: summary.liste.map((l) => l.stockUnitId) },
         whatsappSentAt: null,
       },
       data: {

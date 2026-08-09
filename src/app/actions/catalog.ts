@@ -14,7 +14,7 @@ export async function createIngredient(formData: FormData) {
     if (!gate.ok) {
       throw new Error(gate.error);
     }
-    await db.ingredient.create({
+    await db.stockUnit.create({
       data: {
         restaurantId: ctx.tenantId,
         name: String(formData.get("name") || "").trim(),
@@ -48,7 +48,7 @@ export async function createIngredientsBulkAction(
   }
 
   const result = await requireTenantDb(async (db, ctx) => {
-    const existing = await db.ingredient.findMany({
+    const existing = await db.stockUnit.findMany({
       where: { restaurantId: ctx.tenantId },
       select: { name: true },
     });
@@ -89,7 +89,7 @@ export async function createIngredientsBulkAction(
 
     for (const item of toCreate) {
       const name = String(item.name || "").trim();
-      await db.ingredient.create({
+      await db.stockUnit.create({
         data: {
           restaurantId: ctx.tenantId,
           name,
@@ -151,7 +151,7 @@ export async function updateIngredient(formData: FormData) {
   }
 
   await requireTenantDb(async (db, ctx) => {
-    await db.ingredient.updateMany({
+    await db.stockUnit.updateMany({
       where: { id, restaurantId: ctx.tenantId },
       data: {
         name: String(formData.get("name") || "").trim(),
@@ -172,7 +172,7 @@ export async function updateIngredient(formData: FormData) {
 export async function deleteIngredient(formData: FormData) {
   const id = String(formData.get("id"));
   await requireTenantDb(async (db, ctx) => {
-    await db.ingredient.deleteMany({
+    await db.stockUnit.deleteMany({
       where: { id, restaurantId: ctx.tenantId },
     });
   });
@@ -192,7 +192,7 @@ export async function createDish(formData: FormData) {
   const { normalizeSku } = await import("@/lib/pos/sku");
   const externalSku = normalizeSku(externalSkuRaw);
 
-  const ingredientIds = formData.getAll("ingredientId").map(String);
+  const stockUnitIds = formData.getAll("stockUnitId").map(String);
   const newIngredientNames = formData.getAll("newIngredientName").map(String);
   const quantities = formData.getAll("quantity").map(Number);
   const units = formData.getAll("unit").map(String);
@@ -220,21 +220,21 @@ export async function createDish(formData: FormData) {
   }
 
   return requireTenantDb(async (db, ctx) => {
-    const lines: { ingredientId: string; quantity: number; unit: string }[] =
+    const lines: { stockUnitId: string; quantity: number; unit: string }[] =
       [];
     let newIngredientSlots = 0;
 
     for (
       let i = 0;
-      i < Math.max(ingredientIds.length, newIngredientNames.length);
+      i < Math.max(stockUnitIds.length, newIngredientNames.length);
       i++
     ) {
       const qty = quantities[i];
       if (!(qty > 0)) continue;
-      const ingredientId = ingredientIds[i]?.trim() || "";
+      const stockUnitId = stockUnitIds[i]?.trim() || "";
       const newName = newIngredientNames[i]?.trim() || "";
-      if (!ingredientId && newName) {
-        const existing = await db.ingredient.findFirst({
+      if (!stockUnitId && newName) {
+        const existing = await db.stockUnit.findFirst({
           where: { restaurantId: ctx.tenantId, name: { equals: newName } },
           select: { id: true },
         });
@@ -252,27 +252,27 @@ export async function createDish(formData: FormData) {
 
     for (
       let i = 0;
-      i < Math.max(ingredientIds.length, newIngredientNames.length);
+      i < Math.max(stockUnitIds.length, newIngredientNames.length);
       i++
     ) {
       const qty = quantities[i];
       const unit = units[i] || "g";
       if (!(qty > 0)) continue;
 
-      let ingredientId = ingredientIds[i]?.trim() || "";
+      let stockUnitId = stockUnitIds[i]?.trim() || "";
       const newName = newIngredientNames[i]?.trim() || "";
 
-      if (!ingredientId && newName) {
-        const existing = await db.ingredient.findFirst({
+      if (!stockUnitId && newName) {
+        const existing = await db.stockUnit.findFirst({
           where: {
             restaurantId: ctx.tenantId,
             name: { equals: newName },
           },
         });
         if (existing) {
-          ingredientId = existing.id;
+          stockUnitId = existing.id;
         } else {
-          const created = await db.ingredient.create({
+          const created = await db.stockUnit.create({
             data: {
               restaurantId: ctx.tenantId,
               name: newName,
@@ -282,16 +282,16 @@ export async function createDish(formData: FormData) {
               reorderQty: 0,
             },
           });
-          ingredientId = created.id;
+          stockUnitId = created.id;
         }
       }
 
-      if (ingredientId) {
-        lines.push({ ingredientId, quantity: qty, unit });
+      if (stockUnitId) {
+        lines.push({ stockUnitId, quantity: qty, unit });
       }
     }
 
-    const byId = new Map(lines.map((l) => [l.ingredientId, l]));
+    const byId = new Map(lines.map((l) => [l.stockUnitId, l]));
     const uniqueLines = [...byId.values()];
 
     if (!name || uniqueLines.length === 0) {
@@ -301,7 +301,7 @@ export async function createDish(formData: FormData) {
       };
     }
 
-    await db.dish.create({
+    await db.product.create({
       data: {
         restaurantId: ctx.tenantId,
         name,
@@ -310,7 +310,7 @@ export async function createDish(formData: FormData) {
         allergens,
         imageUrl,
         externalSku,
-        ingredients: { create: uniqueLines },
+        productStocks: { create: uniqueLines },
       },
     });
 
@@ -325,7 +325,7 @@ export async function deleteDish(formData: FormData) {
   const id = String(formData.get("id"));
   const from = String(formData.get("from") || "").trim();
   await requireTenantDb(async (db, ctx) => {
-    await db.dish.deleteMany({
+    await db.product.deleteMany({
       where: { id, restaurantId: ctx.tenantId },
     });
   });

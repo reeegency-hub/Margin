@@ -4,7 +4,7 @@
  *
  * Usage:
  *   const tdb = tenantScopedClient(session.user.restaurantId);
- *   const rows = await tdb.ingredient.findMany({ where: { … } });
+ *   const rows = await tdb.stockUnit.findMany({ where: { … } });
  */
 import type { Prisma } from "@prisma/client";
 import { prisma, type TenantDb } from "@/lib/db";
@@ -20,37 +20,37 @@ export function tenantScopedClient(
   return {
     restaurantId,
 
-    ingredient: {
-      findFirst: (args?: Prisma.IngredientFindFirstArgs) =>
-        db.ingredient.findFirst({
+    stockUnit: {
+      findFirst: (args?: Prisma.StockUnitFindFirstArgs) =>
+        db.stockUnit.findFirst({
           ...args,
           where: { ...args?.where, restaurantId },
         }),
-      findMany: (args?: Prisma.IngredientFindManyArgs) =>
-        db.ingredient.findMany({
+      findMany: (args?: Prisma.StockUnitFindManyArgs) =>
+        db.stockUnit.findMany({
           ...args,
           where: { ...args?.where, restaurantId },
         }),
-      count: (args?: Prisma.IngredientCountArgs) =>
-        db.ingredient.count({
+      count: (args?: Prisma.StockUnitCountArgs) =>
+        db.stockUnit.count({
           ...args,
           where: { ...args?.where, restaurantId },
         }),
-      create: (args: Prisma.IngredientCreateArgs) =>
-        db.ingredient.create({
+      create: (args: Prisma.StockUnitCreateArgs) =>
+        db.stockUnit.create({
           ...args,
           data: {
-            ...(args.data as Prisma.IngredientUncheckedCreateInput),
+            ...(args.data as Prisma.StockUnitUncheckedCreateInput),
             restaurantId,
           },
         }),
-      updateMany: (args: Prisma.IngredientUpdateManyArgs) =>
-        db.ingredient.updateMany({
+      updateMany: (args: Prisma.StockUnitUpdateManyArgs) =>
+        db.stockUnit.updateMany({
           ...args,
           where: { ...args.where, restaurantId },
         }),
-      deleteMany: (args?: Prisma.IngredientDeleteManyArgs) =>
-        db.ingredient.deleteMany({
+      deleteMany: (args?: Prisma.StockUnitDeleteManyArgs) =>
+        db.stockUnit.deleteMany({
           ...args,
           where: { ...args?.where, restaurantId },
         }),

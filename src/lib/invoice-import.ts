@@ -7,7 +7,7 @@ export type ProposedReceiptLine = {
   quantity: number;
   unitPrice: number | null;
   /** Matched stock product id, if any */
-  ingredientId: string | null;
+  stockUnitId: string | null;
   matchName: string | null;
 };
 
@@ -70,14 +70,14 @@ export function matchIngredient(
 }
 
 function attachMatches(
-  lines: Omit<ProposedReceiptLine, "ingredientId" | "matchName">[],
+  lines: Omit<ProposedReceiptLine, "stockUnitId" | "matchName">[],
   catalog: IngredientMatch[]
 ): ProposedReceiptLine[] {
   return lines.map((l) => {
     const m = matchIngredient(l.name, catalog);
     return {
       ...l,
-      ingredientId: m?.id ?? null,
+      stockUnitId: m?.id ?? null,
       matchName: m?.name ?? null,
     };
   });
@@ -125,7 +125,7 @@ export function parseInvoiceCsv(
   const rows = parseCsvText(text);
   if (!rows.length) return null;
 
-  const lines: Omit<ProposedReceiptLine, "ingredientId" | "matchName">[] = [];
+  const lines: Omit<ProposedReceiptLine, "stockUnitId" | "matchName">[] = [];
   let supplierName: string | null = null;
   let note: string | null = null;
 
@@ -162,7 +162,7 @@ export function parseInvoiceTextLocal(
   text: string,
   catalog: IngredientMatch[]
 ): ProposedReceipt | null {
-  const lines: Omit<ProposedReceiptLine, "ingredientId" | "matchName">[] = [];
+  const lines: Omit<ProposedReceiptLine, "stockUnitId" | "matchName">[] = [];
   for (const raw of text.split(/\n+/)) {
     const line = raw.trim();
     if (!line || line.length < 3) continue;

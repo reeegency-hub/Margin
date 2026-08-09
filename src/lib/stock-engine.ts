@@ -11,7 +11,7 @@ export function formatQty(qty: number, unit: string, name?: string): string {
 /** Average daily consumption over the last 7 days from SALE movements (absolute). */
 export async function avgDailyConsumption(
   restaurantId: string,
-  ingredientId: string,
+  stockUnitId: string,
   db: TenantDb = prisma
 ): Promise<number> {
   const since = new Date();
@@ -20,7 +20,7 @@ export async function avgDailyConsumption(
   const movements = await db.stockMovement.findMany({
     where: {
       restaurantId,
-      ingredientId,
+      stockUnitId,
       type: "SALE",
       createdAt: { gte: since },
     },
@@ -51,12 +51,12 @@ export function estimateRuptureLabel(
 
 export async function syncIngredientAlert(
   restaurantId: string,
-  ingredientId: string,
+  stockUnitId: string,
   options?: { notify?: boolean; flushImmediate?: boolean; db?: TenantDb }
 ): Promise<void> {
   const db = options?.db ?? prisma;
-  const ingredient = await db.ingredient.findFirst({
-    where: { id: ingredientId, restaurantId },
+  const ingredient = await db.stockUnit.findFirst({
+    where: { id: stockUnitId, restaurantId },
     include: {
       restaurant: { include: { suppliers: { take: 1 } } },
     },
@@ -66,7 +66,7 @@ export async function syncIngredientAlert(
   const existing = await db.alert.findFirst({
     where: {
       restaurantId,
-      ingredientId,
+      stockUnitId,
       type: "STOCK_CRITICAL",
       status: "ACTIVE",
     },
@@ -102,7 +102,7 @@ export async function syncIngredientAlert(
     return;
   }
 
-  const avgDaily = await avgDailyConsumption(restaurantId, ingredientId, db);
+  const avgDaily = await avgDailyConsumption(restaurantId, stockUnitId, db);
   const impact = estimateRuptureLabel(ingredient.stockTheoretical, avgDaily);
   const supplierName =
     ingredient.restaurant.suppliers[0]?.name ?? "ton fournisseur habituel";
@@ -137,7 +137,7 @@ export async function syncIngredientAlert(
     const created = await db.alert.create({
       data: {
         restaurantId,
-        ingredientId,
+        stockUnitId,
         type: "STOCK_CRITICAL",
         status: "ACTIVE",
         ...payload,
@@ -166,7 +166,7 @@ export async function sendAlertWhatsApp(
 }> {
   const alert = await prisma.alert.findFirst({
     where: { id: alertId, restaurantId },
-    include: { restaurant: true, ingredient: true },
+    include: { restaurant: true, stockUnit: true },
   });
   if (!alert || alert.status !== "ACTIVE") {
     return { sent: false, reason: "Alerte introuvable ou résolue" };
@@ -181,7 +181,7 @@ export async function sendAlertWhatsApp(
   }
 
   const vars = {
-    "1": alert.ingredient?.name || alert.title,
+    "1": alert.stockUnit?.name || alert.title,
     "2": [alert.constat, alert.impact].filter(Boolean).join(" "),
     "3": alert.action,
   };
@@ -207,7 +207,7 @@ export async function sendAlertWhatsApp(
   return { sent: true };
 }
 
-type SaleLineInput = { dishId: string; quantity: number };
+type SaleLineInput = { productId: string; quantity: number };
 
 export type SaleOptions = {
   channel?: string;
@@ -225,13 +225,13 @@ export async function recordSale(
   if (lines.length === 0) throw new Error("Aucune ligne de vente");
   const db = options?.db ?? prisma;
 
-  const dishIds = lines.map((l) => l.dishId);
-  const dishes = await db.dish.findMany({
-    where: { restaurantId, id: { in: dishIds }, active: true },
-    include: { ingredients: true },
+  const productIds = lines.map((l) => l.productId);
+  const dishes = await db.product.findMany({
+    where: { restaurantId, id: { in: productIds }, active: true },
+    include: { productStocks: true },
   });
-  if (dishes.length !== new Set(dishIds).size) {
-    throw new Error("Plat introuvable");
+  if (dishes.length !== new Set(productIds).size) {
+    throw new Error("Produit introuvable");
   }
 
   const dishMap = new Map(dishes.map((d) => [d.id, d]));
@@ -239,11 +239,11 @@ export async function recordSale(
   const consumption = new Map<string, number>();
 
   for (const line of lines) {
-    const dish = dishMap.get(line.dishId)!;
+    const dish = dishMap.get(line.productId)!;
     totalAmount += dish.salePrice * line.quantity;
-    for (const ri of dish.ingredients) {
+    for (const ri of dish.productStocks) {
       const delta = ri.quantity * line.quantity;
-      consumption.set(ri.ingredientId, (consumption.get(ri.ingredientId) ?? 0) + delta);
+      consumption.set(ri.stockUnitId, (consumption.get(ri.stockUnitId) ?? 0) + delta);
     }
   }
 
@@ -258,9 +258,9 @@ export async function recordSale(
         soldAt: options?.soldAt ?? undefined,
         items: {
           create: lines.map((line) => {
-            const dish = dishMap.get(line.dishId)!;
+            const dish = dishMap.get(line.productId)!;
             return {
-              dishId: line.dishId,
+              productId: line.productId,
               quantity: line.quantity,
               unitPrice: dish.salePrice,
             };
@@ -270,15 +270,15 @@ export async function recordSale(
       include: { items: true },
     });
 
-    for (const [ingredientId, qty] of consumption) {
-      await tx.ingredient.updateMany({
-        where: { id: ingredientId, restaurantId },
+    for (const [stockUnitId, qty] of consumption) {
+      await tx.stockUnit.updateMany({
+        where: { id: stockUnitId, restaurantId },
         data: { stockTheoretical: { decrement: qty } },
       });
       await tx.stockMovement.create({
         data: {
           restaurantId,
-          ingredientId,
+          stockUnitId,
           type: "SALE",
           deltaQty: -qty,
           refType: "Sale",
@@ -291,8 +291,8 @@ export async function recordSale(
   });
 
   // Alertes dashboard produit par produit (sans WA) + un seul récap modal
-  for (const ingredientId of consumption.keys()) {
-    await syncIngredientAlert(restaurantId, ingredientId, { notify: false, db });
+  for (const stockUnitId of consumption.keys()) {
+    await syncIngredientAlert(restaurantId, stockUnitId, { notify: false, db });
   }
   await StockAlertService.run(restaurantId);
 
@@ -326,33 +326,33 @@ export async function voidSaleByExternalOrderId(
     return { found: true, alreadyVoided: true, saleId: sale.id };
   }
 
-  const dishIds = sale.items.map((i) => i.dishId);
-  const dishes = await db.dish.findMany({
-    where: { restaurantId, id: { in: dishIds } },
-    include: { ingredients: true },
+  const productIds = sale.items.map((i) => i.productId);
+  const dishes = await db.product.findMany({
+    where: { restaurantId, id: { in: productIds } },
+    include: { productStocks: true },
   });
   const dishMap = new Map(dishes.map((d) => [d.id, d]));
   const restore = new Map<string, number>();
 
   for (const item of sale.items) {
-    const dish = dishMap.get(item.dishId);
+    const dish = dishMap.get(item.productId);
     if (!dish) continue;
-    for (const ri of dish.ingredients) {
+    for (const ri of dish.productStocks) {
       const delta = ri.quantity * item.quantity;
-      restore.set(ri.ingredientId, (restore.get(ri.ingredientId) ?? 0) + delta);
+      restore.set(ri.stockUnitId, (restore.get(ri.stockUnitId) ?? 0) + delta);
     }
   }
 
   await runTenantTx(db, async (tx) => {
-    for (const [ingredientId, qty] of restore) {
-      await tx.ingredient.updateMany({
-        where: { id: ingredientId, restaurantId },
+    for (const [stockUnitId, qty] of restore) {
+      await tx.stockUnit.updateMany({
+        where: { id: stockUnitId, restaurantId },
         data: { stockTheoretical: { increment: qty } },
       });
       await tx.stockMovement.create({
         data: {
           restaurantId,
-          ingredientId,
+          stockUnitId,
           type: "VOID_SALE",
           deltaQty: qty,
           refType: "Sale",
@@ -366,8 +366,8 @@ export async function voidSaleByExternalOrderId(
     });
   });
 
-  for (const ingredientId of restore.keys()) {
-    await syncIngredientAlert(restaurantId, ingredientId, { notify: false, db });
+  for (const stockUnitId of restore.keys()) {
+    await syncIngredientAlert(restaurantId, stockUnitId, { notify: false, db });
   }
   await StockAlertService.run(restaurantId);
 
@@ -375,7 +375,7 @@ export async function voidSaleByExternalOrderId(
 }
 
 type ReceiptLineInput = {
-  ingredientId: string;
+  stockUnitId: string;
   quantity: number;
   unitPrice?: number | null;
 };
@@ -389,14 +389,14 @@ export async function recordReceipt(
 ) {
   if (lines.length === 0) throw new Error("Aucune ligne de réception");
 
-  const ingredients = await db.ingredient.findMany({
+  const ingredients = await db.stockUnit.findMany({
     where: {
       restaurantId,
-      id: { in: lines.map((l) => l.ingredientId) },
+      id: { in: lines.map((l) => l.stockUnitId) },
     },
   });
-  if (ingredients.length !== new Set(lines.map((l) => l.ingredientId)).size) {
-    throw new Error("Ingrédient introuvable");
+  if (ingredients.length !== new Set(lines.map((l) => l.stockUnitId)).size) {
+    throw new Error("Référence stock introuvable");
   }
 
   const supplier = await db.supplier.findFirst({
@@ -412,7 +412,7 @@ export async function recordReceipt(
         note: note || null,
         lines: {
           create: lines.map((l) => ({
-            ingredientId: l.ingredientId,
+            stockUnitId: l.stockUnitId,
             quantity: l.quantity,
             unitPrice:
               l.unitPrice != null && l.unitPrice > 0 ? l.unitPrice : null,
@@ -423,14 +423,14 @@ export async function recordReceipt(
     });
 
     for (const line of lines) {
-      await tx.ingredient.updateMany({
-        where: { id: line.ingredientId, restaurantId },
+      await tx.stockUnit.updateMany({
+        where: { id: line.stockUnitId, restaurantId },
         data: { stockTheoretical: { increment: line.quantity } },
       });
       await tx.stockMovement.create({
         data: {
           restaurantId,
-          ingredientId: line.ingredientId,
+          stockUnitId: line.stockUnitId,
           type: "RECEIPT",
           deltaQty: line.quantity,
           refType: "SupplierReceipt",
@@ -450,12 +450,12 @@ export async function recordReceipt(
     if (line.unitPrice != null && line.unitPrice > 0) {
       await applyPurchasePrice({
         restaurantId,
-        ingredientId: line.ingredientId,
+        stockUnitId: line.stockUnitId,
         unitPrice: line.unitPrice,
         supplierId,
         source: "RECEIPT",
       });
-      pricedIds.push(line.ingredientId);
+      pricedIds.push(line.stockUnitId);
     }
   }
 
@@ -465,7 +465,7 @@ export async function recordReceipt(
   }
 
   for (const line of lines) {
-    await syncIngredientAlert(restaurantId, line.ingredientId, {
+    await syncIngredientAlert(restaurantId, line.stockUnitId, {
       notify: false,
       db,
     });

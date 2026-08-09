@@ -156,7 +156,7 @@ export function PosConnectionPanel({
             <form action={startInventoryForIngredientsAction}>
               <input
                 type="hidden"
-                name="ingredientIds"
+                name="stockUnitIds"
                 value={countIngredientIds}
               />
               <input

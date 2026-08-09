@@ -101,15 +101,13 @@ export function MobileLandingHero() {
             <p className="mland-hero__lead">
               Relié à votre caisse. Zéro ressaisie.
             </p>
-            <Link href="/signup" className="mland-btn mland-btn--primary">
-              Profiter de l&apos;offre
+            <Link href="#demo" className="mland-btn mland-btn--primary">
+              Rejoindre les 5 commerces pilotes
             </Link>
             <p className="mland-hero__trust">
-              <span>
-                −{LAUNCH_OFFER.discountPercent}&nbsp;% le 1<sup>er</sup> mois
-              </span>
+              <span>Programme pilote · places limitées</span>
               <span className="mland-hero__trust-dot" aria-hidden />
-              <span>WhatsApp en {LAUNCH_OFFER.setupMinutes}&nbsp;min</span>
+              <span>Config WhatsApp en {LAUNCH_OFFER.setupMinutes}&nbsp;min</span>
             </p>
           </div>
         </div>

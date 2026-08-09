@@ -12,6 +12,43 @@ type Status =
   | "none"
   | "legacy";
 
+type ConnectorId = "openai" | "anthropic";
+
+type Connector = {
+  id: ConnectorId;
+  provider?: Provider;
+  name: string;
+  product: string;
+  hint: string;
+  keyHint: string;
+  docsUrl: string;
+  available: boolean;
+};
+
+/** Soft-launch : uniquement les connecteurs réellement branchés (pas de « bientôt »). */
+const CONNECTORS: Connector[] = [
+  {
+    id: "openai",
+    provider: "openai",
+    name: "ChatGPT",
+    product: "OpenAI",
+    hint: "GPT-4o · clé API OpenAI",
+    keyHint: "sk-… ou sk-proj-…",
+    docsUrl: "https://platform.openai.com/api-keys",
+    available: true,
+  },
+  {
+    id: "anthropic",
+    provider: "anthropic",
+    name: "Claude",
+    product: "Anthropic",
+    hint: "Claude · clé API Anthropic",
+    keyHint: "sk-ant-…",
+    docsUrl: "https://console.anthropic.com/settings/keys",
+    available: true,
+  },
+];
+
 const STATUS_LABEL: Record<Status, string> = {
   untested: "Non testée",
   valid: "Valide",
@@ -20,6 +57,15 @@ const STATUS_LABEL: Record<Status, string> = {
   none: "Absente",
   legacy: "Legacy",
 };
+
+function ConnectorMark({ id }: { id: ConnectorId }) {
+  const letter = id === "openai" ? "G" : "C";
+  return (
+    <span className={`llm-conn__mark llm-conn__mark--${id}`} aria-hidden>
+      {letter}
+    </span>
+  );
+}
 
 export function LlmByokForm({
   initial,
@@ -32,16 +78,31 @@ export function LlmByokForm({
     source: "byok" | "legacy" | "platform" | null;
   };
 }) {
-  const [provider, setProvider] = useState<Provider>(
-    initial.provider === "anthropic" ? "anthropic" : "openai"
-  );
+  const initialConnector: ConnectorId =
+    initial.provider === "anthropic" ? "anthropic" : "openai";
+  const [connectorId, setConnectorId] =
+    useState<ConnectorId>(initialConnector);
   const [apiKey, setApiKey] = useState("");
   const [meta, setMeta] = useState(initial);
   const [error, setError] = useState<string | null>(null);
   const [okMsg, setOkMsg] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
+  const selected =
+    CONNECTORS.find((c) => c.id === connectorId) || CONNECTORS[0]!;
+  const provider = selected.provider;
+
+  function selectConnector(c: Connector) {
+    setConnectorId(c.id);
+    setError(null);
+    setOkMsg(null);
+    if (!c.available) {
+      setApiKey("");
+    }
+  }
+
   function connect() {
+    if (!provider || !selected.available) return;
     setError(null);
     setOkMsg(null);
     startTransition(async () => {
@@ -58,7 +119,7 @@ export function LlmByokForm({
       }
       setApiKey("");
       setOkMsg(
-        "Clé enregistrée (chiffrée). Statut : non testée — validée au premier usage."
+        "Connecté. La clé est chiffrée — validée au premier message du Copilote."
       );
       setMeta({
         configured: true,
@@ -86,7 +147,7 @@ export function LlmByokForm({
         setError("Impossible de révoquer la clé.");
         return;
       }
-      setOkMsg("Clé révoquée — secret effacé côté serveur.");
+      setOkMsg("Déconnecté — secret effacé côté serveur.");
       setMeta({
         configured: false,
         provider: null,
@@ -97,14 +158,23 @@ export function LlmByokForm({
     });
   }
 
+  const connectedLabel =
+    meta.provider === "anthropic"
+      ? "Claude"
+      : meta.provider === "openai"
+        ? "ChatGPT"
+        : meta.provider === "platform"
+          ? "Plateforme"
+          : null;
+
   return (
     <div className="llm-byok ms-spot__card settings-guided__card">
       <div className="llm-byok__head">
         <div>
-          <p className="llm-byok__title">Connecter mon IA</p>
+          <p className="llm-byok__title">Connecteurs IA</p>
           <p className="llm-byok__lead">
-            Votre clé Anthropic ou OpenAI — facturée sur votre compte provider.
-            Jamais renvoyée au navigateur après enregistrement.
+            Choisissez votre outil, collez la clé API — facturée chez le
+            provider, pas chez Margin.
           </p>
         </div>
         <span
@@ -117,71 +187,89 @@ export function LlmByokForm({
 
       {meta.configured && meta.fingerprintDisplay ? (
         <p className="llm-byok__fp">
-          {meta.provider === "anthropic"
-            ? "Anthropic"
-            : meta.provider === "openai"
-              ? "OpenAI"
-              : "Plateforme"}{" "}
-          · {meta.fingerprintDisplay}
+          Connecté · {connectedLabel} · {meta.fingerprintDisplay}
           {meta.source === "legacy" ? " (ancienne clé)" : ""}
         </p>
       ) : (
         <p className="llm-byok__fp llm-byok__fp--muted">
-          Sans clé : les imports CSV/PDF restent possibles ; le chat libre
-          demande une clé Anthropic ou OpenAI (facturée sur votre compte).
+          1 clic sur un connecteur → coller la clé → Enregistrer. Les imports
+          CSV/PDF marchent aussi sans clé.
         </p>
       )}
 
-      <div className="llm-byok__providers" role="group" aria-label="Provider">
-        <button
-          type="button"
-          className={`llm-byok__prov${provider === "openai" ? " is-on" : ""}`}
-          onClick={() => setProvider("openai")}
-        >
-          OpenAI
-        </button>
-        <button
-          type="button"
-          className={`llm-byok__prov${provider === "anthropic" ? " is-on" : ""}`}
-          onClick={() => setProvider("anthropic")}
-        >
-          Anthropic
-        </button>
+      <div className="llm-conn" role="list" aria-label="Connecteurs IA">
+        {CONNECTORS.map((c) => {
+          const active = connectorId === c.id;
+          const isConnected =
+            meta.configured &&
+            ((c.provider === "openai" && meta.provider === "openai") ||
+              (c.provider === "anthropic" && meta.provider === "anthropic"));
+          return (
+            <button
+              key={c.id}
+              type="button"
+              role="listitem"
+              className={`llm-conn__card${active ? " is-on" : ""}${
+                !c.available ? " is-soon" : ""
+              }${isConnected ? " is-linked" : ""}`}
+              onClick={() => selectConnector(c)}
+              aria-pressed={active}
+              aria-disabled={!c.available}
+            >
+              <ConnectorMark id={c.id} />
+              <span className="llm-conn__meta">
+                <span className="llm-conn__name">{c.name}</span>
+                <span className="llm-conn__product">{c.product}</span>
+              </span>
+              <span className="llm-conn__state">
+                {isConnected ? "Lié" : active ? "Choisir" : "Dispo"}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
-      <Field label="Clé API">
-        <input
-          className={inputClass}
-          type="password"
-          autoComplete="off"
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-          placeholder={
-            provider === "anthropic" ? "sk-ant-…" : "sk-… ou sk-proj-…"
-          }
-        />
-      </Field>
+      {provider ? (
+        <>
+          <p className="llm-conn__step">
+            Clé {selected.name} —{" "}
+            <a href={selected.docsUrl} target="_blank" rel="noreferrer">
+              créer une clé ici
+            </a>
+          </p>
+          <Field label={`Clé API ${selected.product}`}>
+            <input
+              className={inputClass}
+              type="password"
+              autoComplete="off"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder={selected.keyHint}
+            />
+          </Field>
 
-      <div className="llm-byok__actions">
-        <button
-          type="button"
-          className="btn-lime"
-          disabled={pending || apiKey.trim().length < 20}
-          onClick={connect}
-        >
-          {pending ? "Enregistrement…" : "Enregistrer"}
-        </button>
-        {meta.configured && meta.source !== "platform" ? (
-          <button
-            type="button"
-            className="ms-spot__later"
-            disabled={pending}
-            onClick={disconnect}
-          >
-            Déconnecter
-          </button>
-        ) : null}
-      </div>
+          <div className="llm-byok__actions">
+            <button
+              type="button"
+              className="btn-lime"
+              disabled={pending || apiKey.trim().length < 20}
+              onClick={connect}
+            >
+              {pending ? "Connexion…" : `Connecter ${selected.name}`}
+            </button>
+            {meta.configured && meta.source !== "platform" ? (
+              <button
+                type="button"
+                className="ms-spot__later"
+                disabled={pending}
+                onClick={disconnect}
+              >
+                Déconnecter
+              </button>
+            ) : null}
+          </div>
+        </>
+      ) : null}
 
       {okMsg ? <p className="llm-byok__ok">{okMsg}</p> : null}
       {error ? <p className="llm-byok__err">{error}</p> : null}

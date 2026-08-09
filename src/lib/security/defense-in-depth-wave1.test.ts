@@ -6,13 +6,13 @@ import { withTenantWhere } from "@/lib/tenant";
 
 function main() {
   const restaurantId = "resto-a";
-  const ingredientId = "ing-1";
+  const stockUnitId = "ing-1";
   const saleId = "sale-1";
   const orderId = "po-1";
   const employeeId = "emp-1";
 
-  assert.deepEqual(withTenantWhere(restaurantId, { id: ingredientId }), {
-    id: ingredientId,
+  assert.deepEqual(withTenantWhere(restaurantId, { id: stockUnitId }), {
+    id: stockUnitId,
     restaurantId,
   });
   assert.deepEqual(withTenantWhere(restaurantId, { id: saleId }), {
@@ -29,7 +29,7 @@ function main() {
   });
 
   // Un where id-seul ne doit jamais être le contrat post-vague-1
-  const bad = { id: ingredientId } as Record<string, unknown>;
+  const bad = { id: stockUnitId } as Record<string, unknown>;
   assert.equal("restaurantId" in bad, false);
   const good = withTenantWhere(restaurantId, bad);
   assert.equal(good.restaurantId, restaurantId);

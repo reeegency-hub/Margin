@@ -50,7 +50,7 @@ export async function seedDefaultThresholds(
   opts?: { onlyZero?: boolean }
 ): Promise<number> {
   const onlyZero = opts?.onlyZero !== false;
-  const ingredients = await prisma.ingredient.findMany({
+  const ingredients = await prisma.stockUnit.findMany({
     where: {
       restaurantId,
       ...(onlyZero ? { criticalThreshold: 0 } : {}),
@@ -61,7 +61,7 @@ export async function seedDefaultThresholds(
   let updated = 0;
   for (const ing of ingredients) {
     const d = defaultThresholdForIngredient(ing.name, ing.unit);
-    await prisma.ingredient.update({
+    await prisma.stockUnit.update({
       where: { id: ing.id },
       data: {
         criticalThreshold: d.criticalThreshold,
@@ -83,7 +83,7 @@ export async function refreshVelocityThresholds(
   restaurantId: string
 ): Promise<{ updated: number; skipped: number }> {
   const since = new Date(Date.now() - MIN_HISTORY_DAYS * 86400000);
-  const ingredients = await prisma.ingredient.findMany({
+  const ingredients = await prisma.stockUnit.findMany({
     where: {
       restaurantId,
       OR: [
@@ -109,7 +109,7 @@ export async function refreshVelocityThresholds(
     const firstSale = await prisma.stockMovement.findFirst({
       where: {
         restaurantId,
-        ingredientId: ing.id,
+        stockUnitId: ing.id,
         type: "SALE",
       },
       orderBy: { createdAt: "asc" },
@@ -129,7 +129,7 @@ export async function refreshVelocityThresholds(
     const critical = Math.max(1, Math.ceil(avg * VELOCITY_COVER_DAYS));
     const reorder = Math.max(critical * 2, Math.ceil(avg * VELOCITY_REORDER_DAYS));
 
-    await prisma.ingredient.update({
+    await prisma.stockUnit.update({
       where: { id: ing.id },
       data: {
         criticalThreshold: critical,

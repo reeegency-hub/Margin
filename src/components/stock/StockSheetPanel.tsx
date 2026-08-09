@@ -98,7 +98,7 @@ export function StockSheetPanel({
         display
       );
       return {
-        ingredientId: ing.id,
+        stockUnitId: ing.id,
         name: ing.name,
         quantity: Math.max(ing.reorderQty || 0, ing.criticalThreshold * 2 || 1),
         quantityLabel: `${qty} ${displayUnitLabel(display)}`,
@@ -116,7 +116,7 @@ export function StockSheetPanel({
     startTransition(async () => {
       for (const item of items) {
         const fd = new FormData();
-        fd.set("ingredientId", item.ingredientId);
+        fd.set("stockUnitId", item.stockUnitId);
         fd.set("quantity", String(item.quantity));
         await createStockOrderAction(fd);
       }
@@ -207,7 +207,7 @@ export function StockSheetPanel({
         ) : null}
         <div className="stock-live__rows">
           {visible.map((ing) => (
-            <IngredientRow key={ing.id} ingredient={ing} />
+            <IngredientRow key={ing.id} stockUnit={ing} />
           ))}
           {filtered.length === 0 ? (
             <p className="stock-live__empty">Aucun produit ici.</p>
@@ -230,7 +230,8 @@ export function StockSheetPanel({
   );
 }
 
-function IngredientRow({ ingredient }: { ingredient: StockIngredient }) {
+function IngredientRow({ stockUnit }: { stockUnit: StockIngredient }) {
+  const ingredient = stockUnit;
   const statut = statutOf(ingredient);
   const seuil =
     ingredient.criticalThreshold > 0 ? ingredient.criticalThreshold : 0;

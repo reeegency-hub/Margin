@@ -32,8 +32,8 @@ type AlertLike = {
   impact: string;
   action: string;
   type: string;
-  ingredientId: string | null;
-  ingredient: {
+  stockUnitId: string | null;
+  stockUnit: {
     name: string;
     unit: string;
     stockTheoretical: number;
@@ -47,7 +47,7 @@ type OrderLike = {
   totalAmount: number;
   status?: string;
   supplier: { name: string };
-  lines: { quantity: number; ingredient: { name: string; unit: string } }[];
+  lines: { quantity: number; stockUnit: { name: string; unit: string } }[];
 };
 
 type KioskLike = { id: string; name: string; locationLabel: string };
@@ -108,9 +108,9 @@ export function buildFocusIssue(input: {
   // 2) Stock critique (alerte ou liste)
   const stockAlert =
     input.alerts.find((a) => a.type === "STOCK_CRITICAL") ||
-    input.alerts.find((a) => a.ingredientId);
-  if (stockAlert?.ingredient) {
-    const ing = stockAlert.ingredient;
+    input.alerts.find((a) => a.stockUnitId);
+  if (stockAlert?.stockUnit) {
+    const ing = stockAlert.stockUnit;
     const lostCovers = Math.max(
       8,
       Math.round((ing.criticalThreshold - ing.stockTheoretical) / 40)
@@ -144,7 +144,7 @@ export function buildFocusIssue(input: {
     const lines = order.lines
       .map(
         (l) =>
-          `${formatQty(l.quantity, l.ingredient.unit, l.ingredient.name)} ${l.ingredient.name}`
+          `${formatQty(l.quantity, l.stockUnit.unit, l.stockUnit.name)} ${l.stockUnit.name}`
       )
       .join(", ");
     return {
@@ -221,7 +221,7 @@ export function buildFocusIssue(input: {
       costLabel: "À traiter",
       costDetail: other.impact,
       ctaLabel: "Corriger maintenant",
-      ctaHref: other.ingredientId ? "/orders" : "/",
+      ctaHref: other.stockUnitId ? "/orders" : "/",
       ctaForm: "resolveAlert",
       ctaId: other.id,
       details: [

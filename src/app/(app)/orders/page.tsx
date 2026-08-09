@@ -35,7 +35,7 @@ export default async function OrdersPage({
       where: { restaurantId: rid },
       include: {
         supplier: true,
-        lines: { include: { ingredient: true } },
+        lines: { include: { stockUnit: true } },
       },
       orderBy: { proposedAt: "desc" },
     }),
@@ -43,7 +43,7 @@ export default async function OrdersPage({
   ]);
 
   const lines = needs.map((n) => ({
-    ingredientId: n.ingredientId,
+    stockUnitId: n.stockUnitId,
     name: n.name,
     quantityLabel: formatKitchenQty(n.quantity, n.unit, n.name),
     stockLabel: formatKitchenQty(n.stock, n.unit, n.name),
@@ -159,20 +159,20 @@ export default async function OrdersPage({
               (l) =>
                 formatKitchenQty(
                   l.quantity,
-                  l.ingredient.unit,
-                  l.ingredient.name
-                ) + ` ${l.ingredient.name}`
+                  l.stockUnit.unit,
+                  l.stockUnit.name
+                ) + ` ${l.stockUnit.name}`
             )
             .join(" · "),
           waLines: o.lines.map((l) => ({
-            name: l.ingredient.name,
+            name: l.stockUnit.name,
             quantityLabel: formatKitchenQty(
               l.quantity,
-              l.ingredient.unit,
-              l.ingredient.name
+              l.stockUnit.unit,
+              l.stockUnit.name
             ),
           })),
-          productNames: o.lines.map((l) => l.ingredient.name),
+          productNames: o.lines.map((l) => l.stockUnit.name),
           proposedAt: o.proposedAt.toISOString(),
           doneAt: (o.validatedAt || o.sentAt)?.toISOString() ?? null,
         }))}

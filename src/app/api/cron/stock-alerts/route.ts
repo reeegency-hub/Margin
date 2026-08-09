@@ -38,7 +38,7 @@ export async function GET(request: Request) {
     url.searchParams.get("thresholds") === "1" || hour === 5;
 
   for (const r of restaurants) {
-    const ingredients = await prisma.ingredient.findMany({
+    const ingredients = await prisma.stockUnit.findMany({
       where: { restaurantId: r.id },
       select: { id: true },
     });

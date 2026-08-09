@@ -4,6 +4,7 @@ import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { ManageBillingButton } from "@/components/settings/ManageBillingButton";
 import { LlmByokForm } from "@/components/settings/LlmByokForm";
+import { SUPPORT, supportMailto } from "@/lib/support";
 import "@/components/mobile/app/mobile-app.css";
 
 type LlmStatus = {
@@ -61,23 +62,41 @@ export function SettingsScreen({
           <span className="mapp-settings__label">IA Copilote</span>
           <span className="mapp-settings__value">
             {llm.configured
-              ? llm.fingerprintDisplay || "Connectée"
+              ? llm.source === "platform"
+                ? "Incluse (pilote)"
+                : llm.fingerprintDisplay || "Connectée"
               : "Non connectée"}
           </span>
           <span className="mapp-settings__hint">
             {llm.configured
-              ? "Clé chiffrée · usage sur votre compte provider"
-              : "Requis pour discuter librement avec le Copilote"}
+              ? llm.source === "platform"
+                ? "Copilote prêt — pas de clé à coller"
+                : "Clé chiffrée · usage sur votre compte provider"
+              : "Optionnel si vous voulez votre propre clé ChatGPT/Claude"}
           </span>
         </div>
       </div>
 
       <div className="mapp-settings__card mapp-settings__card--llm">
-        <h2 className="mapp-settings__section-title">Connecter mon IA</h2>
+        <h2 className="mapp-settings__section-title">Connecteurs IA</h2>
         <p className="mapp-settings__hint">
-          Anthropic ou OpenAI — facturée chez le provider, pas chez Margin.
+          ChatGPT ou Claude — uniquement ces deux connecteurs.
         </p>
         <LlmByokForm initial={llm} />
+      </div>
+
+      <div className="mapp-settings__card">
+        <h2 className="mapp-settings__section-title">Besoin d’aide ?</h2>
+        <p className="mapp-settings__hint">
+          Un seul canal pour les pilotes — réponse sous 24&nbsp;h ouvrées.
+        </p>
+        <a
+          className="mapp-settings__btn mapp-settings__btn--ghost"
+          href={supportMailto()}
+        >
+          Écrire à {SUPPORT.label}
+        </a>
+        <p className="mapp-settings__hint">{SUPPORT.email}</p>
       </div>
 
       <div className="mapp-settings__actions">

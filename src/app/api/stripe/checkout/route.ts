@@ -99,6 +99,10 @@ export async function POST(request: Request) {
     ...(discounts ? { discounts } : {}),
     success_url: successUrl,
     cancel_url: cancelUrl,
+    // Compte Live avec Managed Payments : Checkout classique abonnement.
+    ...( {
+      managed_payments: { enabled: false },
+    } as Record<string, unknown>),
     metadata: {
       plan,
       billingPeriod,
@@ -114,7 +118,7 @@ export async function POST(request: Request) {
         referredByRestaurantId,
       },
     },
-  });
+  } as Parameters<typeof stripe.checkout.sessions.create>[0]);
 
   return NextResponse.json({ url: checkout.url });
 }

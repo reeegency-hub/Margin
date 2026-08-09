@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { ingestPosWebhook } from "@/lib/pos/ingest";
 import { asRecord, pickString } from "@/lib/pos/helpers";
 import { authenticatePosWebhook } from "@/lib/pos/webhook-auth";
+import {
+  posWebhookHttpResponse,
+  runPosWebhookIngest,
+} from "@/lib/pos/webhook-response";
 
 export async function POST(
   req: NextRequest,
@@ -45,64 +48,22 @@ export async function POST(
       connectionId,
       vendor: connection.vendor,
       status: auth.status,
-      // pas de payload / secret dans les logs
     });
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
-  const result = await ingestPosWebhook({
-    restaurantId: connection.restaurantId,
-    connectionId: connection.id,
-    vendor: connection.vendor,
+  const result = await runPosWebhookIngest(
+    {
+      id: connection.id,
+      restaurantId: connection.restaurantId,
+      vendor: connection.vendor,
+      webhookSecret: connection.webhookSecret,
+    },
     body,
-  });
+    { matchMode: "sku_then_name" }
+  );
 
-  if (result.duplicate) {
-    return NextResponse.json({
-      ok: true,
-      duplicate: true,
-      recorded: result.recorded,
-      pending: result.pending,
-      externalOrderId: result.externalOrderId,
-      eventId: result.eventId,
-      status: result.status,
-    });
-  }
-
-  if (result.error?.startsWith("SCHEMA:")) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: result.error,
-        eventId: result.eventId,
-        status: result.status,
-      },
-      { status: 422 }
-    );
-  }
-
-  if (result.recorded === 0 && result.pending === 0) {
-    return NextResponse.json(
-      {
-        error: result.error || "No items",
-        recorded: 0,
-        pending: 0,
-        eventId: result.eventId,
-        status: result.status,
-      },
-      { status: 400 }
-    );
-  }
-
-  return NextResponse.json({
-    ok: true,
-    recorded: result.recorded,
-    pending: result.pending,
-    unmatchedNames: result.unmatchedNames,
-    externalOrderId: result.externalOrderId,
-    eventId: result.eventId,
-    status: result.status,
-  });
+  return posWebhookHttpResponse(result);
 }
 
 /** Health minimal — pas de name/vendor (réduction surface IDOR). */

@@ -80,7 +80,7 @@ export function StockRuptureRecapModal({
 
         <ul className="stock-recap-list">
           {summary.liste.map((l) => (
-            <li key={l.ingredientId} className="stock-recap-list__item">
+            <li key={l.stockUnitId} className="stock-recap-list__item">
               <div>
                 <strong>{l.nom}</strong>
                 <p>

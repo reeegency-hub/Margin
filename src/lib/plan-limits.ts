@@ -8,7 +8,7 @@ function resolvePlan(plan: string | null | undefined) {
 
 /**
  * Gate catalogue : refuse d’ajouter `addCount` produits si le plan est plafonné.
- * Compte les Ingredient (produits stock) du tenant.
+ * Compte les StockUnit (produits stock) du tenant.
  */
 export async function assertCanAddProducts(
   restaurantId: string,
@@ -24,7 +24,7 @@ export async function assertCanAddProducts(
   const plan = resolvePlan(restaurant?.plan);
   if (plan.maxProducts == null) return { ok: true };
 
-  const current = await db.ingredient.count({ where: { restaurantId } });
+  const current = await db.stockUnit.count({ where: { restaurantId } });
   if (current + addCount > plan.maxProducts) {
     return {
       ok: false,

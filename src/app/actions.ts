@@ -94,11 +94,11 @@ export async function deleteDish(formData: FormData) {
 }
 
 export async function createSale(formData: FormData) {
-  const dishIds = formData.getAll("dishId").map(String);
+  const productIds = formData.getAll("productId").map(String);
   const quantities = formData.getAll("quantity").map(Number);
-  const lines = dishIds
-    .map((dishId, i) => ({ dishId, quantity: quantities[i] || 0 }))
-    .filter((l) => l.dishId && l.quantity > 0);
+  const lines = productIds
+    .map((productId, i) => ({ productId, quantity: quantities[i] || 0 }))
+    .filter((l) => l.productId && l.quantity > 0);
 
   await requireTenantDb(async (db, ctx) => {
     await recordSale(ctx.tenantId, lines, { db });
@@ -112,20 +112,20 @@ export async function createSale(formData: FormData) {
 export async function createReceipt(formData: FormData) {
   const supplierId = String(formData.get("supplierId"));
   const note = String(formData.get("note") || "");
-  const ingredientIds = formData.getAll("ingredientId").map(String);
+  const stockUnitIds = formData.getAll("stockUnitId").map(String);
   const quantities = formData.getAll("quantity").map(Number);
   const unitPrices = formData.getAll("unitPrice").map((v) => {
     const n = Number(v);
     return Number.isFinite(n) && n > 0 ? n : null;
   });
 
-  const lines = ingredientIds
-    .map((ingredientId, i) => ({
-      ingredientId,
+  const lines = stockUnitIds
+    .map((stockUnitId, i) => ({
+      stockUnitId,
       quantity: quantities[i] || 0,
       unitPrice: unitPrices[i] ?? null,
     }))
-    .filter((l) => l.ingredientId && l.quantity > 0);
+    .filter((l) => l.stockUnitId && l.quantity > 0);
 
   await requireTenantDb(async (db, ctx) => {
     await recordReceipt(ctx.tenantId, supplierId, lines, note, db);
@@ -151,7 +151,7 @@ export async function uploadInvoiceFileAction(formData: FormData): Promise<
 
   const buffer = Buffer.from(await file.arrayBuffer());
   const [catalog, openai] = await Promise.all([
-    prisma.ingredient.findMany({
+    prisma.stockUnit.findMany({
       where: { restaurantId: session.user.restaurantId },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
@@ -173,12 +173,12 @@ export async function uploadInvoiceFileAction(formData: FormData): Promise<
 export async function confirmInvoiceImportAction(payload: {
   supplierId: string;
   note?: string | null;
-  lines: { ingredientId: string; quantity: number; unitPrice: number | null }[];
+  lines: { stockUnitId: string; quantity: number; unitPrice: number | null }[];
 }): Promise<{ ok: true; count: number } | { ok: false; error: string }> {
   const session = await requireSession();
   const supplierId = String(payload.supplierId || "");
   const lines = (payload.lines || []).filter(
-    (l) => l.ingredientId && l.quantity > 0
+    (l) => l.stockUnitId && l.quantity > 0
   );
   if (!supplierId) return { ok: false, error: "Fournisseur requis." };
   if (!lines.length) {
@@ -191,7 +191,7 @@ export async function confirmInvoiceImportAction(payload: {
         ctx.tenantId,
         supplierId,
         lines.map((l) => ({
-          ingredientId: l.ingredientId,
+          stockUnitId: l.stockUnitId,
           quantity: l.quantity,
           unitPrice: l.unitPrice,
         })),
@@ -458,7 +458,7 @@ export async function createStockOrderAction(formData: FormData): Promise<
       createManualPurchaseOrder(
         ctx.tenantId,
         {
-          ingredientId: String(formData.get("ingredientId") || ""),
+          stockUnitId: String(formData.get("stockUnitId") || ""),
           quantity: Number(formData.get("quantity") || 0),
         },
         db
@@ -533,15 +533,15 @@ export async function startInventory() {
 
 /** Vérification filtrée sur une liste d'ingrédients (ex. produits découverts caisse) */
 export async function startInventoryForIngredientsAction(formData: FormData) {
-  const raw = String(formData.get("ingredientIds") || "");
-  const ingredientIds = raw
+  const raw = String(formData.get("stockUnitIds") || "");
+  const stockUnitIds = raw
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
   const note = String(formData.get("note") || "Vérification produits caisse").trim();
   const inv = await requireTenantDb(async (db, ctx) =>
     createDraftInventory(ctx.tenantId, note || undefined, {
-      ...(ingredientIds.length ? { ingredientIds } : {}),
+      ...(stockUnitIds.length ? { stockUnitIds } : {}),
       db,
     })
   );
@@ -763,7 +763,7 @@ export async function analyzeMenuAction(menuText: string): Promise<
   }
 
   const [existing, openai] = await Promise.all([
-    prisma.ingredient.findMany({
+    prisma.stockUnit.findMany({
       where: { restaurantId: session.user.restaurantId },
       select: { name: true },
     }),
@@ -818,7 +818,7 @@ export async function confirmMenuRecipesAction(
       let createdDishes = 0;
       let createdIngredients = 0;
 
-      const existing = await db.ingredient.findMany({
+      const existing = await db.stockUnit.findMany({
         where: { restaurantId },
       });
       const byNorm = new Map(existing.map((i) => [normalizeName(i.name), i]));
@@ -848,7 +848,7 @@ export async function confirmMenuRecipesAction(
         if (!name || !dish.ingredients?.length) continue;
 
         const lines: {
-          ingredientId: string;
+          stockUnitId: string;
           quantity: number;
           unit: string;
         }[] = [];
@@ -871,7 +871,7 @@ export async function confirmMenuRecipesAction(
                 : defaults.category === "piece"
                   ? "pcs"
                   : "g";
-            ingredient = await db.ingredient.create({
+            ingredient = await db.stockUnit.create({
               data: {
                 restaurantId,
                 name: ingName,
@@ -891,7 +891,7 @@ export async function confirmMenuRecipesAction(
           }
 
           lines.push({
-            ingredientId: ingredient.id,
+            stockUnitId: ingredient.id,
             quantity: ing.quantity,
             unit: ing.unit || ingredient.unit,
           });
@@ -901,23 +901,23 @@ export async function confirmMenuRecipesAction(
 
         const merged = new Map<
           string,
-          { ingredientId: string; quantity: number; unit: string }
+          { stockUnitId: string; quantity: number; unit: string }
         >();
         for (const line of lines) {
-          const prev = merged.get(line.ingredientId);
+          const prev = merged.get(line.stockUnitId);
           if (prev) {
             prev.quantity += line.quantity;
           } else {
-            merged.set(line.ingredientId, { ...line });
+            merged.set(line.stockUnitId, { ...line });
           }
         }
 
-        await db.dish.create({
+        await db.product.create({
           data: {
             restaurantId,
             name,
             salePrice: Number(dish.salePrice) || 0,
-            ingredients: { create: [...merged.values()] },
+            productStocks: { create: [...merged.values()] },
           },
         });
         createdDishes += 1;
@@ -959,7 +959,7 @@ export async function validateMenuDraftAction(
   dishes: ProposedDish[]
 ): Promise<ReturnType<typeof validateProposedCatalog>> {
   const session = await requireSession();
-  const existing = await prisma.ingredient.findMany({
+  const existing = await prisma.stockUnit.findMany({
     where: { restaurantId: session.user.restaurantId },
     select: { name: true },
   });
@@ -987,12 +987,12 @@ export async function mergeCatalogIngredientsAction(
 }
 
 export async function fixCatalogUnitAction(
-  ingredientId: string
+  stockUnitId: string
 ): Promise<{ ok: boolean }> {
   const session = await requireSession();
   const res = await applySuggestedUnit(
     session.user.restaurantId,
-    ingredientId
+    stockUnitId
   );
   await syncCatalogIssues(session.user.restaurantId);
   revalidatePath("/ingredients");
@@ -1000,12 +1000,12 @@ export async function fixCatalogUnitAction(
 }
 
 export async function fixCatalogThresholdAction(
-  ingredientId: string
+  stockUnitId: string
 ): Promise<{ ok: boolean }> {
   const session = await requireSession();
   const res = await applySuggestedThreshold(
     session.user.restaurantId,
-    ingredientId
+    stockUnitId
   );
   await syncCatalogIssues(session.user.restaurantId);
   revalidatePath("/ingredients");
@@ -1058,7 +1058,7 @@ export async function uploadMenuFileAction(formData: FormData): Promise<
 
   const buffer = Buffer.from(await file.arrayBuffer());
   const [existing, openai] = await Promise.all([
-    prisma.ingredient.findMany({
+    prisma.stockUnit.findMany({
       where: { restaurantId: session.user.restaurantId },
       select: { name: true },
     }),
@@ -1112,7 +1112,7 @@ export async function applyVoiceInventoryAction(
       restaurantId: session.user.restaurantId,
       status: "DRAFT",
     },
-    include: { lines: { include: { ingredient: true } } },
+    include: { lines: { include: { stockUnit: true } } },
   });
   if (!inv) return { ok: false, error: "Inventaire introuvable." };
 
@@ -1121,12 +1121,12 @@ export async function applyVoiceInventoryAction(
 
   for (const item of intent.items) {
     const line = inv.lines.find((l) =>
-      l.ingredient.name.toLowerCase().includes(item.name.toLowerCase())
+      l.stockUnit.name.toLowerCase().includes(item.name.toLowerCase())
     );
     if (!line) continue;
     let qty = item.quantity;
-    if (item.unit === "kg" && line.ingredient.unit === "g") qty *= 1000;
-    if (item.unit === "l" && line.ingredient.unit === "ml") qty *= 1000;
+    if (item.unit === "kg" && line.stockUnit.unit === "g") qty *= 1000;
+    if (item.unit === "l" && line.stockUnit.unit === "ml") qty *= 1000;
     batch.push({ lineId: line.id, countedQty: qty });
     updated[line.id] = qty;
   }
@@ -1369,9 +1369,9 @@ export async function acceptPosPendingProductsAction(formData: FormData) {
   revalidatePath("/dishes");
   revalidatePath("/ingredients");
   revalidatePath("/inventory");
-  const ingredientIds = result.ingredientIds.join(",");
+  const stockUnitIds = result.stockUnitIds.join(",");
   redirect(
-    `/kiosks?accepted=${result.accepted}&countIngredients=${encodeURIComponent(ingredientIds)}`
+    `/kiosks?accepted=${result.accepted}&countIngredients=${encodeURIComponent(stockUnitIds)}`
   );
 }
 

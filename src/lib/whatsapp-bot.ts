@@ -320,7 +320,7 @@ async function handleAlertOrder(restaurantId: string, phone: string): Promise<st
 
   const orders = await prisma.purchaseOrder.findMany({
     where: { restaurantId, status: "TO_VALIDATE" },
-    include: { supplier: true, lines: { include: { ingredient: true } } },
+    include: { supplier: true, lines: { include: { stockUnit: true } } },
     take: 3,
   });
 
@@ -373,7 +373,7 @@ async function startInventoryFlow(
 ): Promise<string> {
   const existing = await prisma.inventoryCount.findFirst({
     where: { restaurantId, status: "DRAFT" },
-    include: { lines: { include: { ingredient: true }, orderBy: { ingredient: { name: "asc" } } } },
+    include: { lines: { include: { stockUnit: true }, orderBy: { stockUnit: { name: "asc" } } } },
   });
 
   const inv =
@@ -395,7 +395,7 @@ async function startInventoryFlow(
   });
 
   const line = lines[0];
-  return `Inventaire — produit 1/${lines.length}\n${line.ingredient.name}\nThéorique : ${formatQty(line.theoreticalQty, line.ingredient.unit)}\n\nRépondez avec la quantité comptée (ex: 12.5).`;
+  return `Inventaire — produit 1/${lines.length}\n${line.stockUnit.name}\nThéorique : ${formatQty(line.theoreticalQty, line.stockUnit.unit)}\n\nRépondez avec la quantité comptée (ex: 12.5).`;
 }
 
 async function handleInventoryStep(
@@ -435,7 +435,7 @@ async function handleInventoryStep(
     include: {
       lines: {
         where: { id: payload.lineIds[nextStep] },
-        include: { ingredient: true },
+        include: { stockUnit: true },
       },
     },
   });
@@ -452,7 +452,7 @@ async function handleInventoryStep(
     payload,
   });
 
-  return `Produit ${nextStep + 1}/${payload.lineIds.length}\n${line.ingredient.name}\nThéorique : ${formatQty(line.theoreticalQty, line.ingredient.unit)}\n\nQuantité comptée ?`;
+  return `Produit ${nextStep + 1}/${payload.lineIds.length}\n${line.stockUnit.name}\nThéorique : ${formatQty(line.theoreticalQty, line.stockUnit.unit)}\n\nQuantité comptée ?`;
 }
 
 async function handleDeliveryChoice(
@@ -498,7 +498,7 @@ async function applyVoiceIntent(
   if (intent.type === "inventory") {
     const draft = await prisma.inventoryCount.findFirst({
       where: { restaurantId, status: "DRAFT" },
-      include: { lines: { include: { ingredient: true } } },
+      include: { lines: { include: { stockUnit: true } } },
     });
     if (!draft) {
       return "Lancez d'abord un inventaire (tapez « inventaire »).";
@@ -507,12 +507,12 @@ async function applyVoiceIntent(
     const updates: { lineId: string; countedQty: number }[] = [];
     for (const item of intent.items) {
       const line = draft.lines.find((l) =>
-        l.ingredient.name.toLowerCase().includes(item.name.toLowerCase())
+        l.stockUnit.name.toLowerCase().includes(item.name.toLowerCase())
       );
       if (line) {
         let qty = item.quantity;
-        if (item.unit === "kg" && line.ingredient.unit === "g") qty *= 1000;
-        if (item.unit === "l" && line.ingredient.unit === "ml") qty *= 1000;
+        if (item.unit === "kg" && line.stockUnit.unit === "g") qty *= 1000;
+        if (item.unit === "l" && line.stockUnit.unit === "ml") qty *= 1000;
         updates.push({ lineId: line.id, countedQty: qty });
       }
     }
@@ -528,7 +528,7 @@ async function applyVoiceIntent(
 
   if (intent.type === "recipe") {
     await logAction(restaurantId, phone, "voice_recipe", {
-      dish: intent.dishName,
+      product: intent.dishName,
       items: intent.items.length,
     });
     return `Recette « ${intent.dishName} » reçue (${intent.items.length} ingrédients). Finalisez depuis Recettes dans l'app.`;
@@ -582,7 +582,7 @@ export async function notifyPurchaseOrderWhatsApp(
 
   const order = await prisma.purchaseOrder.findFirst({
     where: { id: orderId, restaurantId },
-    include: { supplier: true, lines: { include: { ingredient: true } } },
+    include: { supplier: true, lines: { include: { stockUnit: true } } },
   });
   if (!order) return;
 
@@ -590,7 +590,7 @@ export async function notifyPurchaseOrderWhatsApp(
     .slice(0, 3)
     .map(
       (l) =>
-        `• ${l.ingredient.name} × ${formatQty(l.quantity, l.ingredient.unit)}`
+        `• ${l.stockUnit.name} × ${formatQty(l.quantity, l.stockUnit.unit)}`
     )
     .join("\n");
 

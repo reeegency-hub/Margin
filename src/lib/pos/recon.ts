@@ -70,7 +70,7 @@ export async function runInternalPosReconciliation(opts?: {
       else if (row.status === "DEFERRED") counts.deferred += n;
     }
 
-    const negativeStock = await prisma.ingredient.count({
+    const negativeStock = await prisma.stockUnit.count({
       where: {
         restaurantId: restaurant.id,
         stockTheoretical: { lt: 0 },

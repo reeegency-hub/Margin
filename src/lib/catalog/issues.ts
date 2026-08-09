@@ -13,8 +13,8 @@ export async function syncCatalogIssues(restaurantId: string): Promise<{
   created: number;
 }> {
   const [ingredients, dishes, ignored] = await Promise.all([
-    prisma.ingredient.findMany({ where: { restaurantId } }),
-    prisma.dish.findMany({
+    prisma.stockUnit.findMany({ where: { restaurantId } }),
+    prisma.product.findMany({
       where: { restaurantId },
       select: {
         id: true,
@@ -26,7 +26,7 @@ export async function syncCatalogIssues(restaurantId: string): Promise<{
     }),
     prisma.catalogIssue.findMany({
       where: { restaurantId, status: "IGNORED" },
-      select: { kind: true, ingredientId: true, ingredientIdB: true, dishId: true, payloadJson: true },
+      select: { kind: true, stockUnitId: true, stockUnitIdB: true, productId: true, payloadJson: true },
     }),
   ]);
 
@@ -34,7 +34,7 @@ export async function syncCatalogIssues(restaurantId: string): Promise<{
     ignored.map(
       (i) =>
         i.payloadJson ||
-        `${i.kind}:${i.ingredientId || ""}:${i.ingredientIdB || ""}:${i.dishId || ""}`
+        `${i.kind}:${i.stockUnitId || ""}:${i.stockUnitIdB || ""}:${i.productId || ""}`
     )
   );
 
@@ -42,9 +42,9 @@ export async function syncCatalogIssues(restaurantId: string): Promise<{
     kind: string;
     title: string;
     detail?: string;
-    ingredientId?: string;
-    ingredientIdB?: string;
-    dishId?: string;
+    stockUnitId?: string;
+    stockUnitIdB?: string;
+    productId?: string;
     payloadKey: string;
   }> = [];
 
@@ -67,8 +67,8 @@ export async function syncCatalogIssues(restaurantId: string): Promise<{
         kind: "duplicate_ingredient",
         title: `Doublon stock : « ${keep.name} » / « ${dup.name} »`,
         detail: "Fusionnez pour éviter des seuils et alertes divergents.",
-        ingredientId: keep.id,
-        ingredientIdB: dup.id,
+        stockUnitId: keep.id,
+        stockUnitIdB: dup.id,
         payloadKey,
       });
     }
@@ -92,7 +92,7 @@ export async function syncCatalogIssues(restaurantId: string): Promise<{
         kind: "duplicate_dish",
         title: `Doublon produit : « ${keep.name} »`,
         detail: "Deux fiches avec le même nom — renommez ou archivez.",
-        dishId: dup.id,
+        productId: dup.id,
         payloadKey,
       });
     }
@@ -107,7 +107,7 @@ export async function syncCatalogIssues(restaurantId: string): Promise<{
         desired.push({
           kind: "zero_price",
           title: `Prix à 0 — ${d.name}`,
-          dishId: d.id,
+          productId: d.id,
           payloadKey,
         });
       }
@@ -117,7 +117,7 @@ export async function syncCatalogIssues(restaurantId: string): Promise<{
         desired.push({
           kind: "aberrant_price",
           title: `Prix aberrant (${d.salePrice} €) — ${d.name}`,
-          dishId: d.id,
+          productId: d.id,
           payloadKey,
         });
       }
@@ -128,7 +128,7 @@ export async function syncCatalogIssues(restaurantId: string): Promise<{
           kind: "stale_price",
           title: `Prix non mis à jour depuis ${STALE_PRICE_DAYS} j — ${d.name}`,
           detail: `Dernière touche : ${d.updatedAt.toLocaleDateString("fr-FR")}`,
-          dishId: d.id,
+          productId: d.id,
           payloadKey,
         });
       }
@@ -144,7 +144,7 @@ export async function syncCatalogIssues(restaurantId: string): Promise<{
           kind: "bad_unit",
           title: `Unité invalide « ${ing.unit} » — ${ing.name}`,
           detail: `Suggéré : ${applyUnitDefaults(ing.name).unit}`,
-          ingredientId: ing.id,
+          stockUnitId: ing.id,
           payloadKey,
         });
       }
@@ -153,7 +153,7 @@ export async function syncCatalogIssues(restaurantId: string): Promise<{
 
   // Seuils manquants avec mouvement de stock / ventes
   const withSales = await prisma.stockMovement.groupBy({
-    by: ["ingredientId"],
+    by: ["stockUnitId"],
     where: {
       restaurantId,
       type: "SALE",
@@ -161,7 +161,7 @@ export async function syncCatalogIssues(restaurantId: string): Promise<{
     },
     _count: { _all: true },
   });
-  const soldIds = new Set(withSales.map((r) => r.ingredientId));
+  const soldIds = new Set(withSales.map((r) => r.stockUnitId));
 
   for (const ing of ingredients) {
     if (ing.criticalThreshold > 0) continue;
@@ -175,7 +175,7 @@ export async function syncCatalogIssues(restaurantId: string): Promise<{
           kind: "missing_threshold",
           title: `Pas de seuil — ${ing.name} a des ventes`,
           detail: "Configurez un seuil pour être alerté avant rupture.",
-          ingredientId: ing.id,
+          stockUnitId: ing.id,
           payloadKey,
         });
       }
@@ -202,9 +202,9 @@ export async function syncCatalogIssues(restaurantId: string): Promise<{
         status: "OPEN",
         title: d.title,
         detail: d.detail || null,
-        ingredientId: d.ingredientId || null,
-        ingredientIdB: d.ingredientIdB || null,
-        dishId: d.dishId || null,
+        stockUnitId: d.stockUnitId || null,
+        stockUnitIdB: d.stockUnitIdB || null,
+        productId: d.productId || null,
         payloadJson: d.payloadKey,
       },
     });
@@ -238,70 +238,70 @@ export async function mergeIngredients(
     return { ok: false, error: "Même référence" };
   }
   const [keep, remove] = await Promise.all([
-    prisma.ingredient.findFirst({ where: { id: keepId, restaurantId } }),
-    prisma.ingredient.findFirst({ where: { id: removeId, restaurantId } }),
+    prisma.stockUnit.findFirst({ where: { id: keepId, restaurantId } }),
+    prisma.stockUnit.findFirst({ where: { id: removeId, restaurantId } }),
   ]);
   if (!keep || !remove) return { ok: false, error: "Référence introuvable" };
 
   await prisma.$transaction(async (tx) => {
     // Reassign recipe lines (merge quantities if both on same dish)
-    const removeLines = await tx.recipeIngredient.findMany({
-      where: { ingredientId: removeId },
+    const removeLines = await tx.productStock.findMany({
+      where: { stockUnitId: removeId },
     });
     for (const line of removeLines) {
-      const existing = await tx.recipeIngredient.findUnique({
+      const existing = await tx.productStock.findUnique({
         where: {
-          dishId_ingredientId: {
-            dishId: line.dishId,
-            ingredientId: keepId,
+          productId_stockUnitId: {
+            productId: line.productId,
+            stockUnitId: keepId,
           },
         },
       });
       if (existing) {
-        await tx.recipeIngredient.update({
+        await tx.productStock.update({
           where: { id: existing.id },
           data: { quantity: existing.quantity + line.quantity },
         });
-        await tx.recipeIngredient.delete({ where: { id: line.id } });
+        await tx.productStock.delete({ where: { id: line.id } });
       } else {
-        await tx.recipeIngredient.update({
+        await tx.productStock.update({
           where: { id: line.id },
-          data: { ingredientId: keepId },
+          data: { stockUnitId: keepId },
         });
       }
     }
 
     await tx.stockMovement.updateMany({
-      where: { restaurantId, ingredientId: removeId },
-      data: { ingredientId: keepId },
+      where: { restaurantId, stockUnitId: removeId },
+      data: { stockUnitId: keepId },
     });
     await tx.alert.updateMany({
-      where: { restaurantId, ingredientId: removeId },
-      data: { ingredientId: keepId },
+      where: { restaurantId, stockUnitId: removeId },
+      data: { stockUnitId: keepId },
     });
     await tx.supplierCatalogItem.deleteMany({
       where: {
-        ingredientId: removeId,
+        stockUnitId: removeId,
         supplier: { restaurantId },
       },
     });
     await tx.purchaseOrderLine.updateMany({
       where: {
-        ingredientId: removeId,
+        stockUnitId: removeId,
         order: { restaurantId },
       },
-      data: { ingredientId: keepId },
+      data: { stockUnitId: keepId },
     });
     await tx.inventoryCountLine.updateMany({
       where: {
-        ingredientId: removeId,
+        stockUnitId: removeId,
         inventoryCount: { restaurantId },
       },
-      data: { ingredientId: keepId },
+      data: { stockUnitId: keepId },
     });
 
     // Merge stock
-    await tx.ingredient.update({
+    await tx.stockUnit.update({
       where: { id: keepId },
       data: {
         stockTheoretical: keep.stockTheoretical + remove.stockTheoretical,
@@ -314,16 +314,16 @@ export async function mergeIngredients(
       },
     });
 
-    await tx.ingredient.delete({ where: { id: removeId } });
+    await tx.stockUnit.delete({ where: { id: removeId } });
 
     await tx.catalogIssue.updateMany({
       where: {
         restaurantId,
         status: "OPEN",
         OR: [
-          { ingredientId: removeId },
-          { ingredientIdB: removeId },
-          { ingredientId: keepId, ingredientIdB: removeId },
+          { stockUnitId: removeId },
+          { stockUnitIdB: removeId },
+          { stockUnitId: keepId, stockUnitIdB: removeId },
         ],
       },
       data: { status: "RESOLVED" },
@@ -335,15 +335,15 @@ export async function mergeIngredients(
 
 export async function applySuggestedUnit(
   restaurantId: string,
-  ingredientId: string
+  stockUnitId: string
 ): Promise<{ ok: boolean }> {
-  const ing = await prisma.ingredient.findFirst({
-    where: { id: ingredientId, restaurantId },
+  const ing = await prisma.stockUnit.findFirst({
+    where: { id: stockUnitId, restaurantId },
   });
   if (!ing) return { ok: false };
   const defaults = applyUnitDefaults(ing.name);
-  await prisma.ingredient.update({
-    where: { id: ingredientId },
+  await prisma.stockUnit.update({
+    where: { id: stockUnitId },
     data: {
       unit: defaults.unit,
       category: inferCategory(ing.name),
@@ -352,7 +352,7 @@ export async function applySuggestedUnit(
   await prisma.catalogIssue.updateMany({
     where: {
       restaurantId,
-      ingredientId,
+      stockUnitId,
       kind: { in: ["bad_unit", "missing_unit"] },
       status: "OPEN",
     },
@@ -363,15 +363,15 @@ export async function applySuggestedUnit(
 
 export async function applySuggestedThreshold(
   restaurantId: string,
-  ingredientId: string
+  stockUnitId: string
 ): Promise<{ ok: boolean }> {
-  const ing = await prisma.ingredient.findFirst({
-    where: { id: ingredientId, restaurantId },
+  const ing = await prisma.stockUnit.findFirst({
+    where: { id: stockUnitId, restaurantId },
   });
   if (!ing) return { ok: false };
   const defaults = applyUnitDefaults(ing.name);
-  await prisma.ingredient.update({
-    where: { id: ingredientId },
+  await prisma.stockUnit.update({
+    where: { id: stockUnitId },
     data: {
       criticalThreshold: defaults.criticalThreshold,
       reorderQty:
@@ -383,7 +383,7 @@ export async function applySuggestedThreshold(
   await prisma.catalogIssue.updateMany({
     where: {
       restaurantId,
-      ingredientId,
+      stockUnitId,
       kind: "missing_threshold",
       status: "OPEN",
     },

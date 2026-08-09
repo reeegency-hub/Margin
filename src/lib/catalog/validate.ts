@@ -57,7 +57,7 @@ export function validateProposedCatalog(
     existingIngredientNames.map(normalizeCatalogName).filter(Boolean)
   );
   const seenDish = new Map<string, number>();
-  const seenIngInBatch = new Map<string, { dish: string; count: number }>();
+  const seenIngInBatch = new Map<string, { product: string; count: number }>();
 
   dishes.forEach((dish, dishIndex) => {
     const dName = (dish.name || "").trim();
@@ -157,7 +157,7 @@ export function validateProposedCatalog(
       if (prev) {
         prev.count += 1;
       } else {
-        seenIngInBatch.set(iKey, { dish: dName, count: 1 });
+        seenIngInBatch.set(iKey, { product: dName, count: 1 });
       }
     }
   });

@@ -53,7 +53,7 @@ export default async function FounderAdminPage({
         orderBy: { createdAt: "desc" },
       },
       _count: {
-        select: { dishes: true, ingredients: true, employees: true },
+        select: { products: true, stockUnits: true, employees: true },
       },
     },
   });
@@ -468,7 +468,7 @@ export default async function FounderAdminPage({
                       )}
                     </td>
                     <td>
-                      {s._count.dishes} prod.
+                      {s._count.products} prod.
                       {h ? (
                         <div className="text-[11px] opacity-70">
                           Santé {h.grade}

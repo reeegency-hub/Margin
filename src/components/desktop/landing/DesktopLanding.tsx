@@ -8,6 +8,7 @@ import {
 } from "@/components/marketing/CalendlyEmbed";
 import { AFFILIATE, LAUNCH_OFFER } from "@/lib/affiliate";
 import { getCalendlyUrl } from "@/lib/calendly";
+import { supportMailto } from "@/lib/support";
 import { SETUP_FEE_EUR } from "@/lib/plans";
 
 /** Landing desktop — figée. Ne pas modifier pour le chantier mobile. */
@@ -398,14 +399,16 @@ export default function DesktopLanding() {
             </p>
             <div className="land-hero__cta">
               <a href="#demo" className="land-btn land-btn--lime land-btn--lg">
-                Profiter de l&apos;offre de lancement
+                Rejoindre les 5 commerces pilotes
                 <span aria-hidden>→</span>
               </a>
               <a href="#tarifs" className="land-btn land-btn--ghost-light">
                 Voir les tarifs
               </a>
             </div>
-            <p className="land-hero__trust">{LAUNCH_OFFER.short}</p>
+            <p className="land-hero__trust">
+              Programme pilote · places limitées · config WhatsApp offerte
+            </p>
           </div>
         </div>
 
@@ -586,15 +589,14 @@ export default function DesktopLanding() {
 
           <div className="land-mid-cta" id="offre">
             <div className="land-mid-cta__copy">
-              <h2>L&apos;offre de lancement</h2>
+              <h2>Programme pilote · 5 commerces</h2>
               <p>
-                −{LAUNCH_OFFER.discountPercent}&nbsp;% le premier mois.
-                Configuration WhatsApp offerte, en {LAUNCH_OFFER.setupMinutes}{" "}
-                minutes.
+                Places limitées. Configuration WhatsApp offerte, en{" "}
+                {LAUNCH_OFFER.setupMinutes} minutes.
               </p>
             </div>
             <a href="#demo" className="land-btn land-btn--dark land-btn--lg">
-              Profiter de l&apos;offre
+              Demander une place pilote
               <span aria-hidden>→</span>
             </a>
           </div>
@@ -643,7 +645,7 @@ export default function DesktopLanding() {
                   s&apos;organise.
                 </p>
                 <a
-                  href="mailto:contact@marginshop.app?subject=Config%20WhatsApp%20offerte%20Margin"
+                  href={supportMailto("Config WhatsApp offerte Margin")}
                   className="land-btn land-btn--lime land-btn--lg"
                 >
                   Réserver mes 30 minutes
@@ -684,13 +686,13 @@ export default function DesktopLanding() {
         <div className="land-pricing__bg" aria-hidden />
         <div className="land-pricing__inner">
           <div className="land-pricing__offer">
-            <p className="land-pricing__offer-kicker">Offre de lancement</p>
+            <p className="land-pricing__offer-kicker">Programme pilote · 5 commerces</p>
             <p className="land-pricing__offer-title">
-              −{LAUNCH_OFFER.discountPercent}&nbsp;% le premier mois +
-              configuration WhatsApp offerte ({LAUNCH_OFFER.setupMinutes} min)
+              Places limitées · configuration WhatsApp offerte (
+              {LAUNCH_OFFER.setupMinutes} min)
             </p>
             <a href="#demo" className="land-btn land-btn--lime">
-              Profiter de l&apos;offre
+              Demander une place pilote
               <span aria-hidden>→</span>
             </a>
           </div>
@@ -742,10 +744,10 @@ export default function DesktopLanding() {
           </ul>
 
           <div className="land-affiliate__cta">
-            <Link href="/signup" className="land-btn land-btn--dark land-btn--lg">
-              Créer mon compte
+            <a href="#demo" className="land-btn land-btn--dark land-btn--lg">
+              Demander une place pilote
               <span aria-hidden>→</span>
-            </Link>
+            </a>
             <Link href="/login" className="land-btn land-btn--ghost-dark">
               Je suis déjà client
             </Link>
@@ -770,7 +772,7 @@ export default function DesktopLanding() {
         </div>
         <div className="land-mid-cta land-mid-cta--faq">
           <a href="#demo" className="land-btn land-btn--dark land-btn--lg">
-            Profiter de l&apos;offre
+            Demander une place pilote
             <span aria-hidden>→</span>
           </a>
           <a href="#tarifs" className="land-btn land-btn--ghost-dark">
@@ -802,7 +804,7 @@ export default function DesktopLanding() {
             <Link href="/legal/cgu">CGU</Link>
             <Link href="/legal/cgv">CGV</Link>
             <Link href="/legal/cookies">Cookies</Link>
-            <a href="mailto:contact@marginshop.app">Contact</a>
+            <a href={supportMailto()}>Contact</a>
           </nav>
         </div>
       </footer>

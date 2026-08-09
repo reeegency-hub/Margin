@@ -21,7 +21,7 @@ export default async function InventoryListPage({
       orderBy: { createdAt: "desc" },
       take: 6,
     }),
-    prisma.ingredient.findMany({
+    prisma.stockUnit.findMany({
       where: { restaurantId: rid },
       orderBy: { name: "asc" },
     }),

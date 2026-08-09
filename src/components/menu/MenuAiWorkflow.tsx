@@ -416,7 +416,7 @@ export function MenuAiWorkflow({
                     </Field>
                   </div>
                   <p className="mb-2 mt-5 text-[13px] font-semibold">
-                    Ingrédients
+                    Composition
                   </p>
                   <div className="space-y-2">
                     {selected.ingredients.map((ing, ii) => (
@@ -426,7 +426,7 @@ export function MenuAiWorkflow({
                       >
                         <input
                           className={inputClass}
-                          placeholder="Ingrédient"
+                          placeholder="Référence stock"
                           value={ing.name}
                           list="menu-ai-existing-ingredients"
                           onChange={(e) =>
@@ -467,7 +467,7 @@ export function MenuAiWorkflow({
                     className="btn-ghost btn-ghost--sm mt-3"
                     onClick={() => addIngredient(selectedIdx)}
                   >
-                    + Ingrédient
+                    + Référence
                   </button>
                 </>
               ) : null}

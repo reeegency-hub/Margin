@@ -90,7 +90,7 @@ async function main() {
       const ids = otherRestaurantIds;
       console.log(`\nClearing dependents for ${ids.length} restaurant(s)…`);
 
-      // Lines with Restrict on Ingredient / diamond FKs — must go before restaurant cascade.
+      // Lines with Restrict on StockUnit / diamond FKs — must go before restaurant cascade.
       const steps: Array<[string, () => Promise<{ count: number }>]> = [
         [
           "SaleItem",
@@ -100,10 +100,10 @@ async function main() {
             }),
         ],
         [
-          "RecipeIngredient",
+          "ProductStock",
           () =>
-            prisma.recipeIngredient.deleteMany({
-              where: { dish: { restaurantId: { in: ids } } },
+            prisma.productStock.deleteMany({
+              where: { product: { restaurantId: { in: ids } } },
             }),
         ],
         [
@@ -142,9 +142,9 @@ async function main() {
             }),
         ],
         [
-          "IngredientPriceEvent",
+          "StockUnitPriceEvent",
           () =>
-            prisma.ingredientPriceEvent.deleteMany({
+            prisma.stockUnitPriceEvent.deleteMany({
               where: { restaurantId: { in: ids } },
             }),
         ],

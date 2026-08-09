@@ -10,15 +10,15 @@ const prisma = new PrismaClient();
 
 async function main() {
   const restaurant = await prisma.restaurant.findFirstOrThrow();
-  const tomate = await prisma.ingredient.findFirstOrThrow({
+  const tomate = await prisma.stockUnit.findFirstOrThrow({
     where: { restaurantId: restaurant.id, name: "Tomate" },
   });
-  const dish = await prisma.dish.findFirstOrThrow({
+  const dish = await prisma.product.findFirstOrThrow({
     where: { restaurantId: restaurant.id, name: "Burger Signature" },
-    include: { ingredients: true },
+    include: { productStocks: true },
   });
 
-  await prisma.ingredient.update({
+  await prisma.stockUnit.update({
     where: { id: tomate.id },
     data: { stockTheoretical: 100, criticalThreshold: 1500 },
   });
@@ -32,13 +32,13 @@ async function main() {
     },
   });
 
-  const before = await prisma.ingredient.findUniqueOrThrow({
+  const before = await prisma.stockUnit.findUniqueOrThrow({
     where: { id: tomate.id },
   });
 
-  await recordSale(restaurant.id, [{ dishId: dish.id, quantity: 1 }]);
+  await recordSale(restaurant.id, [{ productId: dish.id, quantity: 1 }]);
 
-  const afterSale = await prisma.ingredient.findUniqueOrThrow({
+  const afterSale = await prisma.stockUnit.findUniqueOrThrow({
     where: { id: tomate.id },
   });
   const expected = before.stockTheoretical - 40; // burger uses 40g tomate
@@ -51,7 +51,7 @@ async function main() {
   const alert = await prisma.alert.findFirst({
     where: {
       restaurantId: restaurant.id,
-      ingredientId: tomate.id,
+      stockUnitId: tomate.id,
       status: "ACTIVE",
       type: "STOCK_CRITICAL",
     },
@@ -63,7 +63,7 @@ async function main() {
     throw new Error("Expected pending StockAlertSummary after sale");
   }
   const tomateLine = pending.summary.liste.find(
-    (l) => l.ingredientId === tomate.id
+    (l) => l.stockUnitId === tomate.id
   );
   if (!tomateLine || tomateLine.quantite_a_commander <= 0) {
     throw new Error("Expected recommended qty for Tomate in recap");
@@ -74,10 +74,10 @@ async function main() {
   });
 
   await recordReceipt(restaurant.id, supplier.id, [
-    { ingredientId: tomate.id, quantity: 5000 },
+    { stockUnitId: tomate.id, quantity: 5000 },
   ]);
 
-  const afterReceipt = await prisma.ingredient.findUniqueOrThrow({
+  const afterReceipt = await prisma.stockUnit.findUniqueOrThrow({
     where: { id: tomate.id },
   });
   if (afterReceipt.stockTheoretical <= afterReceipt.criticalThreshold) {
@@ -93,7 +93,7 @@ async function main() {
   // Tomate no longer critical; other seed criticals may remain
   if (pendingAfter) {
     const stillTomate = pendingAfter.summary.liste.some(
-      (l) => l.ingredientId === tomate.id
+      (l) => l.stockUnitId === tomate.id
     );
     if (stillTomate) {
       throw new Error("Tomate should not remain in pending recap");

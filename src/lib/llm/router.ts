@@ -143,25 +143,51 @@ function platformFallbackKey(): string | null {
   return k || null;
 }
 
+const LLM_FETCH_TIMEOUT_MS = 15_000;
+
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs = LLM_FETCH_TIMEOUT_MS
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      const timeoutErr = new Error("LLM_TIMEOUT") as Error & { status: number };
+      timeoutErr.status = 408;
+      throw timeoutErr;
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function callOpenAI(
   apiKey: string,
   model: string,
   req: LLMRequest
 ): Promise<LLMResponse["message"]> {
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model,
-      temperature: req.temperature ?? 0.2,
-      max_tokens: req.maxTokens ?? 1024,
-      messages: req.messages,
-      ...(req.tools?.length ? { tools: req.tools, tool_choice: "auto" } : {}),
-    }),
-  });
+  const res = await fetchWithTimeout(
+    "https://api.openai.com/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        temperature: req.temperature ?? 0.2,
+        max_tokens: req.maxTokens ?? 1024,
+        messages: req.messages,
+        ...(req.tools?.length ? { tools: req.tools, tool_choice: "auto" } : {}),
+      }),
+    }
+  );
   if (!res.ok) {
     const err = new Error(`OpenAI ${res.status}`) as Error & { status: number };
     err.status = res.status;
@@ -198,7 +224,7 @@ async function callAnthropic(
     input_schema: t.function.parameters || { type: "object", properties: {} },
   }));
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetchWithTimeout("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
       "x-api-key": apiKey,

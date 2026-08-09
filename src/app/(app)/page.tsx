@@ -20,7 +20,7 @@ export default async function HomePage() {
       where: { restaurantId: rid, status: "TO_VALIDATE" },
       include: {
         supplier: true,
-        lines: { include: { ingredient: true } },
+        lines: { include: { stockUnit: true } },
       },
       take: 5,
     }),

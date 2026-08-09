@@ -123,30 +123,30 @@ export async function getDashboardMetrics(restaurantId: string) {
     weekSaleIds.length === 0
       ? []
       : await prisma.saleItem.groupBy({
-          by: ["dishId"],
+          by: ["productId"],
           where: { saleId: { in: weekSaleIds } },
           _sum: { quantity: true },
           orderBy: { _sum: { quantity: "desc" } },
           take: 5,
         });
-  const dishIds = topItems.map((t) => t.dishId);
+  const productIds = topItems.map((t) => t.productId);
   const dishes =
-    dishIds.length === 0
+    productIds.length === 0
       ? []
-      : await prisma.dish.findMany({
-          where: { id: { in: dishIds }, restaurantId },
+      : await prisma.product.findMany({
+          where: { id: { in: productIds }, restaurantId },
           select: { id: true, name: true },
         });
   const dishName = new Map(dishes.map((d) => [d.id, d.name]));
   const topQty = topItems.map((t) => t._sum.quantity ?? 0);
   const maxQty = Math.max(1, ...topQty);
   const topDishes: TopDishBar[] = topItems.map((t) => ({
-    label: dishName.get(t.dishId) ?? "Plat",
+    label: dishName.get(t.productId) ?? "Produit",
     qty: t._sum.quantity ?? 0,
     pct: Math.round(((t._sum.quantity ?? 0) / maxQty) * 100),
   }));
 
-  const criticalIngredients = await prisma.ingredient.findMany({
+  const criticalIngredients = await prisma.stockUnit.findMany({
     where: { restaurantId },
     orderBy: { stockTheoretical: "asc" },
   });
@@ -157,7 +157,7 @@ export async function getDashboardMetrics(restaurantId: string) {
 
   const alerts = await prisma.alert.findMany({
     where: { restaurantId, status: "ACTIVE" },
-    include: { ingredient: true },
+    include: { stockUnit: true },
     orderBy: [{ severity: "asc" }, { createdAt: "desc" }],
   });
 

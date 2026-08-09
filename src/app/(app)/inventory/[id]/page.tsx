@@ -20,8 +20,8 @@ export default async function InventoryDetailPage({
     where: { id, restaurantId: session.user.restaurantId },
     include: {
       lines: {
-        include: { ingredient: true },
-        orderBy: { ingredient: { name: "asc" } },
+        include: { stockUnit: true },
+        orderBy: { stockUnit: { name: "asc" } },
       },
     },
   });
@@ -30,14 +30,14 @@ export default async function InventoryDetailPage({
   const editable = inv.status === "DRAFT";
   const lines = inv.lines.map((line) => ({
     id: line.id,
-    name: line.ingredient.name,
-    unit: line.ingredient.unit,
+    name: line.stockUnit.name,
+    unit: line.stockUnit.unit,
     theoreticalQty: line.theoreticalQty,
     countedQty: line.countedQty,
     critical:
-      line.ingredient.criticalThreshold > 0 &&
-      line.ingredient.stockTheoretical <= line.ingredient.criticalThreshold,
-    threshold: line.ingredient.criticalThreshold,
+      line.stockUnit.criticalThreshold > 0 &&
+      line.stockUnit.stockTheoretical <= line.stockUnit.criticalThreshold,
+    threshold: line.stockUnit.criticalThreshold,
   }));
 
   return (

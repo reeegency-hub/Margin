@@ -16,9 +16,9 @@ export type CleanupIssue = {
   kind: string;
   title: string;
   detail: string | null;
-  ingredientId: string | null;
-  ingredientIdB: string | null;
-  dishId: string | null;
+  stockUnitId: string | null;
+  stockUnitIdB: string | null;
+  productId: string | null;
 };
 
 const KIND_LABEL: Record<string, string> = {
@@ -134,8 +134,8 @@ export function CatalogCleanupPanel({
               </div>
               <div className="stock-quality__row-actions">
                 {issue.kind === "duplicate_ingredient" &&
-                issue.ingredientId &&
-                issue.ingredientIdB ? (
+                issue.stockUnitId &&
+                issue.stockUnitIdB ? (
                   <button
                     type="button"
                     className="btn-lime"
@@ -144,8 +144,8 @@ export function CatalogCleanupPanel({
                       run(
                         () =>
                           mergeCatalogIngredientsAction(
-                            issue.ingredientId!,
-                            issue.ingredientIdB!
+                            issue.stockUnitId!,
+                            issue.stockUnitIdB!
                           ),
                         "Références fusionnées."
                       )
@@ -155,14 +155,14 @@ export function CatalogCleanupPanel({
                   </button>
                 ) : null}
                 {(issue.kind === "bad_unit" || issue.kind === "missing_unit") &&
-                issue.ingredientId ? (
+                issue.stockUnitId ? (
                   <button
                     type="button"
                     className="btn-lime"
                     disabled={pending}
                     onClick={() =>
                       run(
-                        () => fixCatalogUnitAction(issue.ingredientId!),
+                        () => fixCatalogUnitAction(issue.stockUnitId!),
                         "Unité corrigée."
                       )
                     }
@@ -170,14 +170,14 @@ export function CatalogCleanupPanel({
                     Corriger
                   </button>
                 ) : null}
-                {issue.kind === "missing_threshold" && issue.ingredientId ? (
+                {issue.kind === "missing_threshold" && issue.stockUnitId ? (
                   <button
                     type="button"
                     className="btn-lime"
                     disabled={pending}
                     onClick={() =>
                       run(
-                        () => fixCatalogThresholdAction(issue.ingredientId!),
+                        () => fixCatalogThresholdAction(issue.stockUnitId!),
                         "Seuil appliqué."
                       )
                     }

@@ -15,13 +15,13 @@ export default async function IngredientsPage() {
   await syncCatalogIssues(rid).catch(() => null);
 
   const [ingredients, dishes, restaurant, catalogIssues] = await Promise.all([
-    prisma.ingredient.findMany({
+    prisma.stockUnit.findMany({
       where: { restaurantId: rid },
       orderBy: { name: "asc" },
     }),
-    prisma.dish.findMany({
+    prisma.product.findMany({
       where: { restaurantId: rid },
-      include: { ingredients: { include: { ingredient: true } } },
+      include: { productStocks: { include: { stockUnit: true } } },
       orderBy: { name: "asc" },
     }),
     prisma.restaurant.findUniqueOrThrow({ where: { id: rid } }),
@@ -139,9 +139,9 @@ export default async function IngredientsPage() {
             kind: i.kind,
             title: i.title,
             detail: i.detail,
-            ingredientId: i.ingredientId,
-            ingredientIdB: i.ingredientIdB,
-            dishId: i.dishId,
+            stockUnitId: i.stockUnitId,
+            stockUnitIdB: i.stockUnitIdB,
+            productId: i.productId,
           }))}
           dishes={dishes.map((dish) => ({
             id: dish.id,
@@ -151,14 +151,14 @@ export default async function IngredientsPage() {
             imageUrl: dish.imageUrl,
             salePrice: dish.salePrice,
             externalSku: dish.externalSku,
-            recipeLines: dish.ingredients.map((ri) => ({
-              name: ri.ingredient.name,
+            recipeLines: dish.productStocks.map((ri) => ({
+              name: ri.stockUnit.name,
               qtyLabel: formatQty(ri.quantity, ri.unit),
             })),
-            ingredientsLabel: dish.ingredients
+            ingredientsLabel: dish.productStocks
               .map(
                 (ri) =>
-                  `${ri.ingredient.name} ${formatQty(ri.quantity, ri.unit)}`
+                  `${ri.stockUnit.name} ${formatQty(ri.quantity, ri.unit)}`
               )
               .join(" · "),
           }))}

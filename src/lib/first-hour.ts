@@ -113,7 +113,7 @@ async function loadProgress(restaurantId: string): Promise<Progress | null> {
     posAccepted,
     deliveryConfigured,
   ] = await Promise.all([
-    prisma.ingredient.count({ where: { restaurantId } }),
+    prisma.stockUnit.count({ where: { restaurantId } }),
     prisma.inventoryCount.count({ where: { restaurantId } }),
     prisma.inventoryCount.count({
       where: { restaurantId, status: "VALIDATED" },
@@ -133,18 +133,18 @@ async function loadProgress(restaurantId: string): Promise<Progress | null> {
     prisma.supplierReceiptLine.count({
       where: { receipt: { restaurantId }, unitPrice: { not: null } },
     }),
-    prisma.dish.count({
+    prisma.product.count({
       where: { restaurantId, foodCost: { not: null } },
     }),
     prisma.supplierCatalogItem
       .findMany({
         where: { supplier: { restaurantId } },
-        select: { ingredientId: true },
+        select: { stockUnitId: true },
       })
       .then((all) => {
         const map = new Map<string, number>();
         for (const r of all)
-          map.set(r.ingredientId, (map.get(r.ingredientId) || 0) + 1);
+          map.set(r.stockUnitId, (map.get(r.stockUnitId) || 0) + 1);
         return [...map.values()].filter((c) => c > 1).length;
       }),
     prisma.employee.count({ where: { restaurantId, active: true } }),

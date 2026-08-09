@@ -39,7 +39,7 @@ export default async function CostsPage({
       where: { restaurantId: rid },
       orderBy: { name: "asc" },
     }),
-    prisma.ingredient.findMany({
+    prisma.stockUnit.findMany({
       where: { restaurantId: rid },
       orderBy: { name: "asc" },
       take: 80,
@@ -56,7 +56,7 @@ export default async function CostsPage({
       include: {
         supplier: true,
         lines: {
-          include: { ingredient: { select: { name: true, unit: true } } },
+          include: { stockUnit: { select: { name: true, unit: true } } },
         },
       },
     }),
@@ -217,7 +217,7 @@ export default async function CostsPage({
         {snapshot.hikesWeek.length ? (
           <ul className="costs-rows">
             {snapshot.hikesWeek.map((h) => (
-              <li key={`${h.ingredientId}-${h.at.toISOString()}`}>
+              <li key={`${h.stockUnitId}-${h.at.toISOString()}`}>
                 <div>
                   <strong>{h.name}</strong>
                   <span className="costs-rows__meta">
@@ -248,7 +248,7 @@ export default async function CostsPage({
         {foodReady ? (
           <ul className="costs-rows">
             {snapshot.topDishCosts.map((d) => (
-              <li key={d.dishId}>
+              <li key={d.productId}>
                 <div>
                   <strong>{d.label}</strong>
                   <span className="costs-rows__meta">
@@ -334,7 +334,7 @@ export default async function CostsPage({
         {compareReady ? (
           <ul className="costs-rows">
             {snapshot.supplierCompare.map((r) => (
-              <li key={r.ingredientId}>
+              <li key={r.stockUnitId}>
                 <div>
                   <strong>{r.name}</strong>
                   <span className="costs-rows__meta">

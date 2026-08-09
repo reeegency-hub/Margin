@@ -14,12 +14,12 @@ export default async function MenuAiPage() {
 
   const session = await requireSession();
   const [ingredients, dishCount, openai] = await Promise.all([
-    prisma.ingredient.findMany({
+    prisma.stockUnit.findMany({
       where: { restaurantId: session.user.restaurantId },
       select: { name: true },
       orderBy: { name: "asc" },
     }),
-    prisma.dish.count({
+    prisma.product.count({
       where: { restaurantId: session.user.restaurantId, active: true },
     }),
     getOpenAIConfig(session.user.restaurantId),

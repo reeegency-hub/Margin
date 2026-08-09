@@ -56,7 +56,7 @@ async function ensureFixtures(tenantCount: number) {
           restaurantId,
         },
       });
-      const dish = await prisma.dish.create({
+      const dish = await prisma.product.create({
         data: {
           restaurantId,
           name: `Produit LT ${i}`,
@@ -65,7 +65,7 @@ async function ensureFixtures(tenantCount: number) {
           active: true,
         },
       });
-      const ing = await prisma.ingredient.create({
+      const ing = await prisma.stockUnit.create({
         data: {
           restaurantId,
           name: `Stock LT ${i}`,
@@ -75,25 +75,25 @@ async function ensureFixtures(tenantCount: number) {
           reorderQty: 100,
         },
       });
-      await prisma.recipeIngredient.create({
+      await prisma.productStock.create({
         data: {
-          dishId: dish.id,
-          ingredientId: ing.id,
+          productId: dish.id,
+          stockUnitId: ing.id,
           quantity: 1,
           unit: "u",
         },
       });
     } else {
       restaurantId = user.restaurantId;
-      await prisma.dish.updateMany({
+      await prisma.product.updateMany({
         where: { restaurantId, externalSku: `LT-SKU-${i}` },
         data: { active: true },
       });
-      const hasDish = await prisma.dish.findFirst({
+      const hasDish = await prisma.product.findFirst({
         where: { restaurantId, externalSku: `LT-SKU-${i}` },
       });
       if (!hasDish) {
-        const dish = await prisma.dish.create({
+        const dish = await prisma.product.create({
           data: {
             restaurantId,
             name: `Produit LT ${i}`,
@@ -102,11 +102,11 @@ async function ensureFixtures(tenantCount: number) {
             active: true,
           },
         });
-        let ing = await prisma.ingredient.findFirst({
+        let ing = await prisma.stockUnit.findFirst({
           where: { restaurantId, name: `Stock LT ${i}` },
         });
         if (!ing) {
-          ing = await prisma.ingredient.create({
+          ing = await prisma.stockUnit.create({
             data: {
               restaurantId,
               name: `Stock LT ${i}`,
@@ -117,10 +117,10 @@ async function ensureFixtures(tenantCount: number) {
             },
           });
         }
-        await prisma.recipeIngredient.create({
+        await prisma.productStock.create({
           data: {
-            dishId: dish.id,
-            ingredientId: ing.id,
+            productId: dish.id,
+            stockUnitId: ing.id,
             quantity: 1,
             unit: "u",
           },

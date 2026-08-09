@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { PLANS, planPeriodSuffix } from "@/lib/plans";
 import { LAUNCH_OFFER } from "@/lib/affiliate";
+import { supportMailto } from "@/lib/support";
 
 /** Tarifs Commerce / Franchise — affichés directement. */
 export function MobileLandingPricing() {
@@ -10,7 +10,8 @@ export function MobileLandingPricing() {
         <p className="mland-pricing__eyebrow">Tarifs</p>
         <h2 className="mland-section-title">Commerce ou Franchise</h2>
         <p className="mland-pricing__lead">
-          −{LAUNCH_OFFER.discountPercent}&nbsp;% le 1<sup>er</sup> mois · HT
+          Programme pilote · −{LAUNCH_OFFER.discountPercent}&nbsp;% le 1
+          <sup>er</sup> mois · HT
         </p>
 
         <div className="mland-pricing__grid">
@@ -35,14 +36,14 @@ export function MobileLandingPricing() {
                     <li key={f.label}>{f.label}</li>
                   ))}
               </ul>
-              <Link
-                href={`/signup?plan=${plan.id}`}
+              <a
+                href={supportMailto(`Place pilote — plan ${plan.name}`)}
                 className={`mland-btn ${
                   plan.featured ? "mland-btn--primary" : "mland-btn--ghost"
                 }`}
               >
-                {plan.cta}
-              </Link>
+                Demander une place
+              </a>
             </article>
           ))}
         </div>

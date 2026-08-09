@@ -35,18 +35,18 @@ export class ForecastService {
 
   static async recommendForIngredient(
     restaurantId: string,
-    ingredient: {
+    stockUnit: {
       id: string;
       stockTheoretical: number;
       criticalThreshold: number;
       reorderQty: number;
     }
   ): Promise<number> {
-    const avgDaily = await avgDailyConsumption(restaurantId, ingredient.id);
+    const avgDaily = await avgDailyConsumption(restaurantId, stockUnit.id);
     return ForecastService.recommendQty({
-      stockTheoretical: ingredient.stockTheoretical,
-      criticalThreshold: ingredient.criticalThreshold,
-      reorderQty: ingredient.reorderQty,
+      stockTheoretical: stockUnit.stockTheoretical,
+      criticalThreshold: stockUnit.criticalThreshold,
+      reorderQty: stockUnit.reorderQty,
       avgDaily,
     });
   }

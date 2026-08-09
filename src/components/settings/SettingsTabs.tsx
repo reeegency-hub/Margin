@@ -246,21 +246,21 @@ export function SettingsTabs({
         <div className="settings-guided__panel">
           <div className="ms-spot__card settings-guided__card">
             <p className="ms-spot__eyebrow">Copilote</p>
-            <h3 className="ms-spot__title">Bring Your Own Key</h3>
+            <h3 className="ms-spot__title">Connecteurs IA</h3>
             <p className="ms-spot__lead">
-              Votre clé Anthropic ou OpenAI alimente le Copilote (imports
-              intelligents, chat). Facturée chez le provider — pas chez Margin.
+              ChatGPT, Claude… branchez votre clé. Facturée chez le provider —
+              pas chez Margin.
             </p>
             <ul className="ms-spot__list">
-              <li>Validation format à la saisie (zéro coût)</li>
+              <li>Choisissez ChatGPT ou Claude puis collez la clé</li>
               <li>Chiffrée au repos · révocable en un clic</li>
-              <li>Statut : non testée → valide au 1er appel OK</li>
+              <li>Facturée chez le provider — pas chez Margin</li>
             </ul>
           </div>
 
           <FeatureSection
             title="Connecter mon IA"
-            subtitle="Anthropic ou OpenAI — usage sur votre compte provider."
+            subtitle="Un connecteur, une clé — ChatGPT ou Claude."
           />
           <LlmByokForm initial={llm} />
 

@@ -153,11 +153,11 @@ export async function ingestDeliveryOrderAsSale(
   }[]
 ): Promise<{ recorded: number; unmatched: string[] }> {
   const { recordSale } = await import("@/lib/stock-engine");
-  const dishes = await prisma.dish.findMany({
+  const dishes = await prisma.product.findMany({
     where: { restaurantId, active: true },
   });
 
-  const saleLines: { dishId: string; quantity: number }[] = [];
+  const saleLines: { productId: string; quantity: number }[] = [];
   const unmatched: string[] = [];
 
   for (const item of items) {
@@ -176,7 +176,7 @@ export async function ingestDeliveryOrderAsSale(
       continue;
     }
     saleLines.push({
-      dishId: dish.id,
+      productId: dish.id,
       quantity: Math.max(1, item.quantity ?? 1),
     });
   }

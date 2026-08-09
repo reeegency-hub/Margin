@@ -61,7 +61,7 @@ export async function flushStockAlertBatch(
       whatsappSentAt: null,
       whatsappPendingAt: { not: null },
     },
-    include: { ingredient: true },
+    include: { stockUnit: true },
     orderBy: { severity: "asc" },
   });
 
@@ -101,7 +101,7 @@ export async function flushStockAlertBatch(
   }
 
   const lines = pending.map((a) => {
-    const ing = a.ingredient;
+    const ing = a.stockUnit;
     if (ing) {
       return `• ${ing.name} — reste ${formatQty(ing.stockTheoretical, ing.unit, ing.name)}`;
     }

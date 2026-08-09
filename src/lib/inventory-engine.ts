@@ -4,14 +4,14 @@ import { formatQty, syncIngredientAlert } from "@/lib/stock-engine";
 export async function createDraftInventory(
   restaurantId: string,
   note?: string,
-  opts?: { ingredientIds?: string[]; db?: TenantDb }
+  opts?: { stockUnitIds?: string[]; db?: TenantDb }
 ) {
   const db = opts?.db ?? prisma;
-  const filtered = Boolean(opts?.ingredientIds?.length);
-  const ingredients = await db.ingredient.findMany({
+  const filtered = Boolean(opts?.stockUnitIds?.length);
+  const ingredients = await db.stockUnit.findMany({
     where: {
       restaurantId,
-      ...(filtered ? { id: { in: opts!.ingredientIds } } : {}),
+      ...(filtered ? { id: { in: opts!.stockUnitIds } } : {}),
     },
   });
 
@@ -39,14 +39,14 @@ export async function createDraftInventory(
       note: note || null,
       lines: {
         create: ordered.map((ing) => ({
-          ingredientId: ing.id,
+          stockUnitId: ing.id,
           theoreticalQty: ing.stockTheoretical,
           countedQty: ing.stockTheoretical,
           varianceQty: 0,
         })),
       },
     },
-    include: { lines: { include: { ingredient: true } } },
+    include: { lines: { include: { stockUnit: true } } },
   });
 }
 
@@ -85,7 +85,7 @@ export async function validateInventory(
   const inv = await db.inventoryCount.findFirst({
     where: { id: inventoryId, restaurantId, status: "DRAFT" },
     include: {
-      lines: { include: { ingredient: true } },
+      lines: { include: { stockUnit: true } },
     },
   });
   if (!inv) throw new Error("Inventaire introuvable ou déjà validé");
@@ -93,7 +93,7 @@ export async function validateInventory(
   await runTenantTx(db, async (tx) => {
     for (const line of inv.lines) {
       const delta = line.countedQty - line.theoreticalQty;
-      const unitCost = line.ingredient.lastPurchasePrice ?? 0;
+      const unitCost = line.stockUnit.lastPurchasePrice ?? 0;
       const varianceValueEur =
         unitCost > 0 ? Math.round(delta * unitCost * 100) / 100 : null;
 
@@ -102,15 +102,15 @@ export async function validateInventory(
         data: { varianceValueEur },
       });
 
-      await tx.ingredient.update({
-        where: { id: line.ingredientId },
+      await tx.stockUnit.update({
+        where: { id: line.stockUnitId },
         data: { stockTheoretical: line.countedQty },
       });
       if (delta !== 0) {
         await tx.stockMovement.create({
           data: {
             restaurantId,
-            ingredientId: line.ingredientId,
+            stockUnitId: line.stockUnitId,
             type: "INVENTORY",
             deltaQty: delta,
             refType: "InventoryCount",
@@ -133,7 +133,7 @@ export async function validateInventory(
       line.theoreticalQty > 0 ? line.theoreticalQty * 0.05 : 0;
     if (absVar < threshold && absVar < 1) continue;
 
-    const unitCost = line.ingredient.lastPurchasePrice;
+    const unitCost = line.stockUnit.lastPurchasePrice;
     const lossEur =
       unitCost != null && unitCost > 0
         ? Math.round(absVar * unitCost * 100) / 100
@@ -145,18 +145,18 @@ export async function validateInventory(
         type: "ACTION_URGENT",
         severity: 2,
         status: "ACTIVE",
-        title: `Gaspillage — ${line.ingredient.name}`,
-        constat: `Écart inventaire : ${formatQty(line.varianceQty, line.ingredient.unit)} sur ${line.ingredient.name}${
+        title: `Gaspillage — ${line.stockUnit.name}`,
+        constat: `Écart inventaire : ${formatQty(line.varianceQty, line.stockUnit.unit)} sur ${line.stockUnit.name}${
           lossEur != null ? ` ≈ ${lossEur.toFixed(2)} €` : ""
         }.`,
         cause: "Stock réel inférieur au théorique (casse, démarrage, erreur recette).",
         impact: "Coût matière non facturé — marge réelle en baisse.",
         action: "Vérifier la fiche recette et former l’équipe sur les portions.",
-        ingredientId: line.ingredientId,
+        stockUnitId: line.stockUnitId,
       },
     });
 
-    await syncIngredientAlert(restaurantId, line.ingredientId, {
+    await syncIngredientAlert(restaurantId, line.stockUnitId, {
       notify: false,
       db,
     });

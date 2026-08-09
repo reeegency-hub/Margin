@@ -26,12 +26,12 @@ export function InvoiceImportPanel({ suppliers, ingredients }: Props) {
   const [note, setNote] = useState("");
 
   const matchedCount = useMemo(
-    () => lines.filter((l) => l.ingredientId).length,
+    () => lines.filter((l) => l.stockUnitId).length,
     [lines]
   );
 
   const reviewReady = useMemo(() => {
-    const kept = lines.filter((l) => l.ingredientId);
+    const kept = lines.filter((l) => l.stockUnitId);
     if (!kept.length) return false;
     return kept.every(
       (l) =>
@@ -76,8 +76,8 @@ export function InvoiceImportPanel({ suppliers, ingredients }: Props) {
         prev.map((l, i) => {
           if (i !== index) return l;
           const next = { ...l, ...patch };
-          if (patch.ingredientId) {
-            const ing = ingredients.find((x) => x.id === patch.ingredientId);
+          if (patch.stockUnitId) {
+            const ing = ingredients.find((x) => x.id === patch.stockUnitId);
             next.matchName = ing?.name ?? null;
           }
           return next;
@@ -91,13 +91,13 @@ export function InvoiceImportPanel({ suppliers, ingredients }: Props) {
     const payloadLines = lines
       .filter(
         (l) =>
-          l.ingredientId &&
+          l.stockUnitId &&
           l.quantity > 0 &&
           l.unitPrice != null &&
           l.unitPrice > 0
       )
       .map((l) => ({
-        ingredientId: l.ingredientId!,
+        stockUnitId: l.stockUnitId!,
         quantity: l.quantity,
         unitPrice: l.unitPrice,
       }));
@@ -178,10 +178,10 @@ export function InvoiceImportPanel({ suppliers, ingredients }: Props) {
                 {line.name}
               </span>
               <select
-                value={line.ingredientId || ""}
+                value={line.stockUnitId || ""}
                 onChange={(e) =>
                   updateLine(i, {
-                    ingredientId: e.target.value || null,
+                    stockUnitId: e.target.value || null,
                   })
                 }
               >

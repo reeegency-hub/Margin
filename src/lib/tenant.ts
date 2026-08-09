@@ -53,19 +53,19 @@ export function isTenantScopedModel(modelName: string): boolean {
 
 /**
  * Tables Prisma qui portent `restaurantId` (tenant_id).
- * Les tables enfants (RecipeIngredient, SaleItem…) héritent via le parent.
+ * Les tables enfants (ProductStock, SaleItem…) héritent via le parent.
  * Maintenir à jour quand on ajoute un model — le script `test:tenant` le vérifie.
  */
 export const TENANT_SCOPED_MODELS = new Set([
   "User",
-  "Ingredient",
-  "Dish",
+  "StockUnit",
+  "Product",
   "Sale",
   "StockMovement",
   "Supplier",
   "PurchaseOrder",
   "SupplierReceipt",
-  "IngredientPriceEvent",
+  "StockUnitPriceEvent",
   "InventoryCount",
   "Employee",
   "Kiosk",
@@ -94,7 +94,7 @@ export const TENANT_SCOPED_MODELS = new Set([
 
 /** Models enfants sans restaurantId (isolation via parent). */
 export const TENANT_CHILD_MODELS = new Set([
-  "RecipeIngredient",
+  "ProductStock",
   "SaleItem",
   "SupplierCatalogItem",
   "PurchaseOrderLine",

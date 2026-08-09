@@ -2,7 +2,7 @@
  * Ingest POS — idempotent via PosWebhookEvent.
  */
 import { prisma } from "@/lib/db";
-import { recordSale } from "@/lib/stock-engine";
+import { recordSale, voidSaleByExternalOrderId } from "@/lib/stock-engine";
 import { getPosAdapter } from "@/lib/pos/adapters";
 import {
   normalizePosName,
@@ -11,6 +11,8 @@ import {
 import type { PosCanonicalLine, PosCanonicalSale } from "@/lib/pos/types";
 import { resolveExternalEventId } from "@/lib/pos/event-id";
 import {
+  POS_CANCEL_MAX_DEFER_ATTEMPTS,
+  POS_DEFER_RETRY_MS,
   POS_RETRY_MAX_ATTEMPTS,
   hashPayload,
   hashSaleFingerprint,
@@ -120,12 +122,12 @@ export async function ingestPosSale(opts: {
     return { recorded: 0, pending: 0, unmatchedNames: [] };
   }
 
-  const dishes = await prisma.dish.findMany({
+  const dishes = await prisma.product.findMany({
     where: { restaurantId, active: true },
     select: { id: true, name: true, externalSku: true },
   });
 
-  const saleLines: { dishId: string; quantity: number }[] = [];
+  const saleLines: { productId: string; quantity: number }[] = [];
   const unmatched: PosCanonicalLine[] = [];
   const unmatchedNames: string[] = [];
 
@@ -133,7 +135,7 @@ export async function ingestPosSale(opts: {
     const dish = matchDish(dishes, line);
     if (dish) {
       saleLines.push({
-        dishId: dish.id,
+        productId: dish.id,
         quantity: Math.max(1, Math.round(line.quantity) || 1),
       });
     } else {
@@ -238,19 +240,28 @@ async function applyEventFromPayload(opts: {
     soldAt: validated.data.soldAt,
     lines: validated.data.lines,
     samplePayload: validated.data.samplePayload ?? rawSale.samplePayload,
+    eventKind: validated.data.eventKind,
   };
-
-  // Order-gate soft réservé CANCEL / V2 — les ventes tardives s’appliquent toujours.
 
   await prisma.posWebhookEvent.updateMany({
     where: { id: opts.eventId, restaurantId: opts.restaurantId },
     data: {
       status: "PROCESSING",
+      eventKind: sale.eventKind ?? "SALE",
       attempts: { increment: 1 },
     },
   });
 
   try {
+    if (sale.eventKind === "CANCEL") {
+      return applyCancelFromSale({
+        eventId: opts.eventId,
+        restaurantId: opts.restaurantId,
+        connectionId: opts.connectionId,
+        sale,
+      });
+    }
+
     const result = await ingestPosSale({
       restaurantId: opts.restaurantId,
       connectionId: opts.connectionId,
@@ -312,6 +323,131 @@ async function applyEventFromPayload(opts: {
       eventId: opts.eventId,
     };
   }
+}
+
+async function applyCancelFromSale(opts: {
+  eventId: string;
+  restaurantId: string;
+  connectionId: string;
+  sale: PosCanonicalSale;
+}): Promise<IngestPosResult> {
+  const orderId = (opts.sale.externalOrderId || "").trim();
+  if (!orderId) {
+    await markEventFailed(
+      opts.eventId,
+      opts.restaurantId,
+      "SCHEMA: externalOrderId requis pour CANCEL",
+      true
+    );
+    return {
+      recorded: 0,
+      pending: 0,
+      unmatchedNames: [],
+      error: "missing_order_id",
+      status: "FAILED",
+      eventId: opts.eventId,
+    };
+  }
+
+  const voided = await voidSaleByExternalOrderId(
+    opts.restaurantId,
+    orderId
+  );
+
+  if (voided.alreadyVoided) {
+    await prisma.posWebhookEvent.updateMany({
+      where: { id: opts.eventId, restaurantId: opts.restaurantId },
+      data: {
+        status: "IGNORED_DUP",
+        appliedAt: new Date(),
+        saleId: voided.saleId ?? null,
+        lastError: null,
+        nextRetryAt: null,
+      },
+    });
+    return {
+      recorded: 0,
+      pending: 0,
+      unmatchedNames: [],
+      duplicate: true,
+      externalOrderId: orderId,
+      saleId: voided.saleId,
+      status: "IGNORED_DUP",
+      eventId: opts.eventId,
+    };
+  }
+
+  if (voided.found) {
+    await prisma.posWebhookEvent.updateMany({
+      where: { id: opts.eventId, restaurantId: opts.restaurantId },
+      data: {
+        status: "APPLIED",
+        appliedAt: new Date(),
+        saleId: voided.saleId ?? null,
+        recordedLines: 0,
+        pendingLines: 0,
+        lastError: null,
+        nextRetryAt: null,
+      },
+    });
+    await prisma.externalPosConnection.updateMany({
+      where: { id: opts.connectionId, restaurantId: opts.restaurantId },
+      data: { status: "CONNECTED", lastOrderAt: new Date() },
+    });
+    return {
+      recorded: 0,
+      pending: 0,
+      unmatchedNames: [],
+      externalOrderId: orderId,
+      saleId: voided.saleId,
+      status: "APPLIED",
+      eventId: opts.eventId,
+    };
+  }
+
+  // SALE pas encore connue — différer (race webhook)
+  const event = await prisma.posWebhookEvent.findFirst({
+    where: { id: opts.eventId, restaurantId: opts.restaurantId },
+    select: { attempts: true },
+  });
+  const attempts = event?.attempts ?? 1;
+  if (attempts >= POS_CANCEL_MAX_DEFER_ATTEMPTS) {
+    await markEventFailed(
+      opts.eventId,
+      opts.restaurantId,
+      `CANCEL: vente ${orderId} introuvable après ${attempts} essais`,
+      false
+    );
+    return {
+      recorded: 0,
+      pending: 0,
+      unmatchedNames: [],
+      externalOrderId: orderId,
+      deferred: true,
+      error: "sale_not_found",
+      status: "DEAD",
+      eventId: opts.eventId,
+    };
+  }
+
+  await prisma.posWebhookEvent.updateMany({
+    where: { id: opts.eventId, restaurantId: opts.restaurantId },
+    data: {
+      status: "DEFERRED",
+      lastError: `CANCEL en attente de SALE ${orderId}`,
+      nextRetryAt: new Date(Date.now() + POS_DEFER_RETRY_MS),
+    },
+  });
+
+  return {
+    recorded: 0,
+    pending: 0,
+    unmatchedNames: [],
+    externalOrderId: orderId,
+    deferred: true,
+    status: "DEFERRED",
+    eventId: opts.eventId,
+  };
 }
 
 async function markEventFailed(
@@ -380,7 +516,7 @@ export async function ingestPosWebhook(opts: {
         vendor: opts.vendor,
         externalEventId,
         payloadHash,
-        eventKind: "SALE",
+        eventKind: rawSale.eventKind === "CANCEL" ? "CANCEL" : "SALE",
         occurredAt: rawSale.soldAt ?? null,
         status: "RECEIVED",
         rawPayload,
@@ -412,23 +548,28 @@ export async function ingestPosWebhook(opts: {
     if (!existing) throw err;
 
     if (existing.status === "APPLIED" || existing.status === "IGNORED_DUP") {
+      const status =
+        existing.eventKind === "CANCEL" && existing.status === "APPLIED"
+          ? "IGNORED_DUP"
+          : existing.status;
       return {
         recorded: existing.recordedLines,
         pending: existing.pendingLines,
         unmatchedNames: [],
         externalOrderId: rawSale.externalOrderId,
         duplicate: true,
-        status: existing.status,
+        status,
         eventId: existing.id,
       };
     }
 
-    // Retry in-request for FAILED/RECEIVED/DEAD (manual) / PROCESSING stuck
+    // Retry in-request for FAILED/RECEIVED/DEAD (manual) / PROCESSING / DEFERRED
     if (
       existing.status === "FAILED" ||
       existing.status === "RECEIVED" ||
       existing.status === "DEAD" ||
-      existing.status === "PROCESSING"
+      existing.status === "PROCESSING" ||
+      existing.status === "DEFERRED"
     ) {
       let body: unknown = opts.body;
       if (existing.rawPayload) {
@@ -488,11 +629,14 @@ export async function processPendingPosWebhookEvents(limit = 40): Promise<{
       const due = await db.posWebhookEvent.findMany({
         where: {
           restaurantId: restaurant.id,
-          status: { in: ["FAILED", "RECEIVED"] },
+          status: { in: ["FAILED", "RECEIVED", "DEFERRED"] },
           OR: [{ nextRetryAt: null }, { nextRetryAt: { lte: now } }],
           attempts: { lt: POS_RETRY_MAX_ATTEMPTS },
         },
-        orderBy: { receivedAt: "asc" },
+        orderBy: [
+          { eventKind: "asc" }, // SALE avant CANCEL dans le même batch
+          { receivedAt: "asc" },
+        ],
         take,
       });
 

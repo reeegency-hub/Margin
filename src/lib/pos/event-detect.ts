@@ -61,7 +61,10 @@ export function isCancelPayload(
         src.status,
         src.state,
         src.order_state,
-        src.payment_status
+        src.payment_status,
+        src.eventKind,
+        src.event_kind,
+        src.kind
       ) || ""
     ).toLowerCase();
     if (

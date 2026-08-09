@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { LAUNCH_OFFER } from "@/lib/affiliate";
 import { SETUP_FEE_EUR } from "@/lib/plans";
 import { getCalendlyUrl } from "@/lib/calendly";
+import { supportMailto } from "@/lib/support";
 import {
   CalendlyCtaLink,
   CalendlyEmbed,
@@ -37,13 +37,13 @@ export function MobileLandingOffer() {
   const commerceAfter = Math.round(89 * (1 - LAUNCH_OFFER.discountPercent / 100));
 
   return (
-    <section className="mland-offer" id="offre" aria-label="Offre de lancement">
+    <section className="mland-offer" id="offre" aria-label="Programme pilote">
       <div className="mland-offer__card">
-        <p className="mland-offer__kicker">Offre de lancement</p>
+        <p className="mland-offer__kicker">Programme pilote · 5 commerces</p>
         <h2 className="mland-offer__title">Ce que vous gagnez</h2>
         <p className="mland-offer__line">
-          Réduction, config offerte — et jusqu’à ~{SETUP_FEE_EUR}&nbsp;€ de
-          setup économisés en Franchise.
+          Places limitées — config WhatsApp offerte, et jusqu’à ~
+          {SETUP_FEE_EUR}&nbsp;€ de setup économisés en Franchise.
         </p>
 
         <div className="mland-offer__visual" aria-hidden>
@@ -120,7 +120,7 @@ export function MobileLandingOffer() {
                 setup caisse (~{SETUP_FEE_EUR}&nbsp;€) est inclus.
               </p>
               <a
-                href="mailto:contact@marginshop.app?subject=Config%20WhatsApp%20offerte%20Margin"
+                href={supportMailto("Config WhatsApp offerte Margin")}
                 className="mland-btn mland-btn--primary"
               >
                 Réserver mes {LAUNCH_OFFER.setupMinutes} minutes
@@ -129,12 +129,12 @@ export function MobileLandingOffer() {
           )}
         </div>
 
-        <Link
-          href="/signup"
+        <a
+          href={supportMailto("Candidature pilote Margin")}
           className="mland-btn mland-btn--ghost mland-offer__signup"
         >
-          Ou démarrer l&apos;inscription
-        </Link>
+          Demander une place pilote
+        </a>
       </div>
     </section>
   );

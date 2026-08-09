@@ -60,16 +60,18 @@ export function posWebhookHttpResponse(result: IngestPosResult): NextResponse {
     });
   }
 
-  if (result.status === "APPLIED" && result.saleId && result.recorded === 0) {
+  if (result.status === "APPLIED" || result.status === "IGNORED_DUP") {
     return NextResponse.json({
       ok: true,
       recorded: result.recorded,
       pending: result.pending,
       unmatchedNames: result.unmatchedNames,
+      unmatchedSkus: result.unmatchedSkus,
       externalOrderId: result.externalOrderId,
       eventId: result.eventId,
       saleId: result.saleId,
       status: result.status,
+      duplicate: result.duplicate || undefined,
     });
   }
 

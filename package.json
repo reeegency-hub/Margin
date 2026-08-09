@@ -18,6 +18,7 @@
     "db:use-postgres": "bash scripts/switch-db-provider.sh postgresql",
     "infra:secrets": "bash scripts/gen-prod-secrets.sh",
     "client:create": "tsx scripts/create-client.ts",
+    "retail:import": "tsx scripts/import-retail-catalog.ts",
     "db:backup": "bash scripts/backup-db.sh",
     "cron:stock": "curl -s \"http://localhost:3020/api/cron/stock-alerts${CRON_SECRET:+?secret=$CRON_SECRET}\"",
     "cron:pos": "curl -s \"http://localhost:3020/api/cron/pos-process${CRON_SECRET:+?secret=$CRON_SECRET}\"",

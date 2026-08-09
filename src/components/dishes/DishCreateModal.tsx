@@ -26,7 +26,7 @@ type IngredientOption = { id: string; name: string; unit: string };
 
 type ProductRow = {
   mode: "existing" | "new";
-  ingredientId: string;
+  stockUnitId: string;
   newName: string;
   quantity: string;
   unit: string;
@@ -34,7 +34,7 @@ type ProductRow = {
 
 const emptyRow = (): ProductRow => ({
   mode: "existing",
-  ingredientId: "",
+  stockUnitId: "",
   newName: "",
   quantity: "",
   unit: "g",
@@ -113,7 +113,7 @@ export function DishCreateModal({
     const valid = rows.some(
       (r) =>
         Number(r.quantity) > 0 &&
-        (r.mode === "existing" ? r.ingredientId : r.newName.trim())
+        (r.mode === "existing" ? r.stockUnitId : r.newName.trim())
     );
     if (!valid) {
       setError("Ajoutez au moins un produit avec sa quantité.");
@@ -130,15 +130,15 @@ export function DishCreateModal({
 
     for (const row of rows) {
       fd.append(
-        "ingredientId",
-        row.mode === "existing" ? row.ingredientId : ""
+        "stockUnitId",
+        row.mode === "existing" ? row.stockUnitId : ""
       );
       fd.append("newIngredientName", row.mode === "new" ? row.newName : "");
       fd.append("quantity", row.quantity);
       fd.append(
         "unit",
-        row.mode === "existing" && row.ingredientId
-          ? ingredientById.get(row.ingredientId)?.unit || row.unit
+        row.mode === "existing" && row.stockUnitId
+          ? ingredientById.get(row.stockUnitId)?.unit || row.unit
           : row.unit
       );
     }
@@ -365,13 +365,13 @@ export function DishCreateModal({
                       {row.mode === "existing" ? (
                         <select
                           className={inputClass}
-                          value={row.ingredientId}
+                          value={row.stockUnitId}
                           onChange={(e) => {
                             const id = e.target.value;
                             const next = [...rows];
                             next[idx] = {
                               ...next[idx],
-                              ingredientId: id,
+                              stockUnitId: id,
                               unit: ingredientById.get(id)?.unit || "g",
                             };
                             setRows(next);
@@ -418,8 +418,8 @@ export function DishCreateModal({
                       <select
                         className={inputClass}
                         value={
-                          row.mode === "existing" && row.ingredientId
-                            ? ingredientById.get(row.ingredientId)?.unit ||
+                          row.mode === "existing" && row.stockUnitId
+                            ? ingredientById.get(row.stockUnitId)?.unit ||
                               row.unit
                             : row.unit
                         }
@@ -428,7 +428,7 @@ export function DishCreateModal({
                           next[idx] = { ...next[idx], unit: e.target.value };
                           setRows(next);
                         }}
-                        disabled={row.mode === "existing" && !!row.ingredientId}
+                        disabled={row.mode === "existing" && !!row.stockUnitId}
                       >
                         <option value="g">g</option>
                         <option value="ml">ml</option>

@@ -8,7 +8,7 @@ import { WaSendLabel } from "@/components/ui/WhatsAppIcon";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 
 export type ShoppingLine = {
-  ingredientId: string;
+  stockUnitId: string;
   name: string;
   quantityLabel: string;
   stockLabel: string;
@@ -134,7 +134,7 @@ function ShoppingListCard({
 
       <ul className="shop-list__rows">
         {lines.map((line) => (
-          <li key={line.ingredientId}>
+          <li key={line.stockUnitId}>
             <div className="shop-list__info">
               <strong>{line.name}</strong>
               <small>

@@ -10,7 +10,7 @@ import { CHANNEL_LABELS } from "@/lib/channel-labels";
 export async function simulateKioskSale(
   restaurantId: string,
   kioskId: string,
-  dishId?: string
+  productId?: string
 ) {
   const kiosk = await prisma.kiosk.findFirst({
     where: { id: kioskId, restaurantId },
@@ -21,12 +21,12 @@ export async function simulateKioskSale(
   }
 
   const dish =
-    (dishId
-      ? await prisma.dish.findFirst({
-          where: { id: dishId, restaurantId, active: true },
+    (productId
+      ? await prisma.product.findFirst({
+          where: { id: productId, restaurantId, active: true },
         })
       : null) ??
-    (await prisma.dish.findFirst({
+    (await prisma.product.findFirst({
       where: { restaurantId, active: true },
       orderBy: { name: "asc" },
     }));
@@ -40,7 +40,7 @@ export async function simulateKioskSale(
 
   return recordSale(
     restaurantId,
-    [{ dishId: dish.id, quantity: 1 }],
+    [{ productId: dish.id, quantity: 1 }],
     {
       channel: "kiosk",
       kioskId,
@@ -60,7 +60,7 @@ export async function simulateDeliverySale(
     throw new Error("Plateforme non connectée — simulation impossible");
   }
 
-  const dish = await prisma.dish.findFirst({
+  const dish = await prisma.product.findFirst({
     where: { restaurantId, active: true },
   });
   if (!dish) throw new Error("Aucun plat disponible");
@@ -72,7 +72,7 @@ export async function simulateDeliverySale(
 
   return recordSale(
     restaurantId,
-    [{ dishId: dish.id, quantity: 1 }],
+    [{ productId: dish.id, quantity: 1 }],
     {
       channel: platform,
       externalOrderId: `${platform}-sim-${Date.now()}`,

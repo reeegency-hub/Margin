@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { supportMailto } from "@/lib/support";
 
 /** Footer minimal. */
 export function MobileLandingFooter() {
@@ -7,7 +8,7 @@ export function MobileLandingFooter() {
       <nav className="mland-foot__links" aria-label="Liens">
         <Link href="/legal/mentions">Mentions</Link>
         <Link href="/legal/cgu">CGU</Link>
-        <a href="mailto:contact@marginshop.app">Contact</a>
+        <a href={supportMailto()}>Contact</a>
         <Link href="/login">Se connecter</Link>
       </nav>
       <p className="mland-foot__copy">

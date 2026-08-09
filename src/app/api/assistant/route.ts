@@ -172,7 +172,7 @@ async function createProducts(
   drafts: AssistantProductDraft[]
 ) {
   const capped = drafts.slice(0, ASSISTANT_MAX_PRODUCTS_PER_CALL);
-  const existing = await prisma.ingredient.findMany({
+  const existing = await prisma.stockUnit.findMany({
     where: { restaurantId },
     select: { name: true },
   });
@@ -204,7 +204,7 @@ async function createProducts(
     }
     const unit = normalizeUnit(item.unit);
     const thr = defaultThresholdForIngredient(name, unit);
-    await prisma.ingredient.create({
+    await prisma.stockUnit.create({
       data: {
         restaurantId,
         name,
@@ -229,7 +229,7 @@ async function createProducts(
 }
 
 async function stockSummary(restaurantId: string) {
-  const ingredients = await prisma.ingredient.findMany({
+  const ingredients = await prisma.stockUnit.findMany({
     where: { restaurantId },
     select: {
       name: true,
@@ -714,7 +714,8 @@ export async function POST(req: Request) {
         tools: TOOLS,
         maxTokens: 1200,
         temperature: 0.2,
-        allowPlatformFallback: false,
+        // Soft-launch / Option A+ : fallback plateforme si MARGIN_PLATFORM_LLM=1
+        allowPlatformFallback: true,
       });
 
       const msg = llmRes.message;
@@ -875,6 +876,28 @@ export async function POST(req: Request) {
           },
         ],
       });
+    }
+
+    if (/LLM_TIMEOUT|AbortError|timed?\s*out/i.test(errMsg)) {
+      return NextResponse.json(
+        {
+          reply:
+            "L’IA met trop de temps à répondre. Réessayez dans un instant.",
+          error: "timeout",
+        },
+        { status: 504 }
+      );
+    }
+
+    if (/OpenAI 429|Anthropic 429|rate.?limit/i.test(errMsg)) {
+      return NextResponse.json(
+        {
+          reply:
+            "Le Copilote est temporairement saturé (quota IA). Réessayez dans 1–2 minutes. Si ça bloque encore, écrivez à reeegency@gmail.com.",
+          error: "rate_limited",
+        },
+        { status: 429 }
+      );
     }
 
     console.error("[assistant] llm", errMsg);

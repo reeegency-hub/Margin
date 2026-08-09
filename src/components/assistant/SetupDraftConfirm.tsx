@@ -309,7 +309,17 @@ export function SetupDraftConfirm({
           }
           onClick={apply}
         >
-          {pending ? "Application…" : saving ? "Enregistrement…" : "Appliquer"}
+          {pending
+            ? "Application…"
+            : saving
+              ? "Enregistrement…"
+              : draft.kind === "import_inventory"
+                ? "Appliquer au stock"
+                : draft.kind === "upsert_team"
+                  ? "Appliquer l’équipe"
+                  : draft.kind === "set_whatsapp"
+                    ? "Enregistrer WhatsApp"
+                    : "Appliquer"}
         </button>
         {blocking ? (
           <span className="setup-draft__hint">
@@ -317,7 +327,7 @@ export function SetupDraftConfirm({
           </span>
         ) : (
           <span className="setup-draft__hint">
-            Corrigez une ligne si besoin — rien n’est écrit sans confirmation.
+            Rien n’est écrit tant que vous n’avez pas cliqué ce bouton.
           </span>
         )}
       </div>
