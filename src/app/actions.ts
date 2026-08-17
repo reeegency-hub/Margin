@@ -1608,8 +1608,10 @@ export async function signupAndCheckoutAction(input: {
   billingPeriod: string;
   /** Honeypot anti-bot — doit rester vide */
   website?: string;
-  /** Code affiliation (?ref=) */
+  /** Code affiliation magasin (?ref=) */
   referralCode?: string;
+  /** Code ambassadeur (?amb=) */
+  ambassadorCode?: string;
   /** Opt-in newsletter conseils Margin */
   newsletterOptIn?: boolean;
   /** Code OTP reçu par email/SMS */
@@ -1638,6 +1640,10 @@ export async function signupAndCheckoutAction(input: {
     "@/lib/affiliate"
   );
   const referralCode = normalizeReferralCode(String(input.referralCode || ""));
+  const { normalizeAmbassadorCode } = await import("@/lib/ambassador-referral");
+  const ambassadorCode = normalizeAmbassadorCode(
+    String(input.ambassadorCode || "")
+  );
 
   if (!name || !email || password.length < 8) {
     return {
@@ -1733,6 +1739,24 @@ export async function signupAndCheckoutAction(input: {
       restaurantId: restaurant.id,
     },
   });
+
+  if (ambassadorCode) {
+    const ambassador = await prisma.ambassador.findFirst({
+      where: { referralCode: ambassadorCode, active: true },
+      select: { id: true },
+    });
+    if (ambassador) {
+      await prisma.ambassadorReferral
+        .create({
+          data: {
+            ambassadorId: ambassador.id,
+            restaurantId: restaurant.id,
+            commissionPercent: 15,
+          },
+        })
+        .catch(() => null);
+    }
+  }
 
   if (input.newsletterOptIn !== false) {
     const { subscribeToNewsletter } = await import("@/lib/newsletter");

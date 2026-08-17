@@ -70,6 +70,14 @@ export default async function PartnerDashboardPage() {
       <PartnerReferralCard code={referralCode} signupUrl={signupUrl} />
 
       <div className="partner-shortcuts">
+        <Link href="/partner/stores/new" className="partner-shortcut">
+          <strong>+ Nouveau magasin</strong>
+          <span>Créer un compte client et l&apos;onboarder</span>
+        </Link>
+        <Link href="/partner/stores" className="partner-shortcut">
+          <strong>Magasins</strong>
+          <span>Configurer catalogue, caisse, accès client</span>
+        </Link>
         <Link href="/partner/prospects" className="partner-shortcut">
           <strong>Prospects</strong>
           <span>Ajouter les commerces contactés (cold call / mail)</span>
@@ -78,10 +86,6 @@ export default async function PartnerDashboardPage() {
           <strong>Agenda</strong>
           <span>Voir les relances du jour et celles en retard</span>
         </Link>
-        <div className="partner-shortcut partner-shortcut--static">
-          <strong>Tableau</strong>
-          <span>Magasins apportés et commission (ci-dessous)</span>
-        </div>
       </div>
 
       <div className="partner-stats">

@@ -27,6 +27,7 @@ export function SignupForm({
     "monthly") as BillingPeriod;
   const planFromUrl = Boolean(searchParams.get("plan"));
   const referralCode = (searchParams.get("ref") || "").trim();
+  const ambassadorCode = (searchParams.get("amb") || "").trim();
 
   const [step, setStep] = useState<"form" | "otp">("form");
   const [name, setName] = useState("");
@@ -105,6 +106,7 @@ export function SignupForm({
       billingPeriod,
       website,
       referralCode: referralCode || undefined,
+      ambassadorCode: ambassadorCode || undefined,
       newsletterOptIn,
       otpCode,
       otpChallengeId: challengeId || undefined,
