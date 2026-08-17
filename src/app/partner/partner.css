@@ -20,21 +20,32 @@
   letter-spacing: -0.02em;
 }
 
-.partner__nav nav {
+.partner__navlinks {
   display: flex;
-  gap: 16px;
+  gap: 8px;
   flex: 1;
+  flex-wrap: wrap;
 }
 
-.partner__nav a {
+.partner__navlink {
   color: #fff;
   text-decoration: none;
-  font-weight: 650;
+  font-weight: 700;
   font-size: 0.95rem;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
 }
 
-.partner__nav a:hover {
-  text-decoration: underline;
+.partner__navlink:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.partner__navlink--active {
+  background: #e6f8aa;
+  color: #0a0a0a;
+  border-color: #e6f8aa;
 }
 
 .partner__nav button {
@@ -151,4 +162,111 @@
 .partner-overdue {
   color: #dc2626;
   font-weight: 700;
+}
+
+.partner-hero h1 {
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+  letter-spacing: -0.03em;
+}
+
+.partner-shortcuts {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+@media (min-width: 640px) {
+  .partner-shortcuts {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.partner-shortcut {
+  display: block;
+  background: #fff;
+  border: 1px solid rgba(10, 10, 10, 0.12);
+  border-radius: 14px;
+  padding: 14px 16px;
+  text-decoration: none;
+  color: #0a0a0a;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.partner-shortcut:hover {
+  border-color: rgba(10, 10, 10, 0.28);
+  box-shadow: 0 4px 16px rgba(10, 10, 10, 0.06);
+}
+
+.partner-shortcut strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 1.05rem;
+}
+
+.partner-shortcut span {
+  display: block;
+  color: #4b5563;
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.partner-shortcut--static {
+  background: #f3f4f6;
+  cursor: default;
+}
+
+.partner-login-hint {
+  margin-top: 20px;
+  max-width: 420px;
+  width: 100%;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.92rem;
+}
+
+.partner-login-hint p {
+  margin: 0 0 8px;
+}
+
+.partner-login-hint ul {
+  margin: 0 0 10px;
+  padding-left: 18px;
+}
+
+.partner-login-hint li {
+  margin-bottom: 6px;
+}
+
+.partner-login-hint__note {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.partner-login-hint a {
+  color: #e6f8aa;
+}
+
+@media (max-width: 640px) {
+  .partner__nav {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+
+  .partner__brand {
+    width: 100%;
+  }
+
+  .partner__navlinks {
+    width: 100%;
+    order: 3;
+  }
+
+  .partner__nav form {
+    margin-left: auto;
+  }
 }

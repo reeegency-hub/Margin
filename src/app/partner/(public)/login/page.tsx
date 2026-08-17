@@ -50,6 +50,23 @@ export default async function PartnerLoginPage({
           Se connecter
         </button>
       </form>
+      <div className="partner-login-hint">
+        <p>Après connexion, vous accédez à :</p>
+        <ul>
+          <li>
+            <strong>Tableau</strong> — magasins apportés et commission
+          </li>
+          <li>
+            <strong>Prospects</strong> — CRM des commerces contactés
+          </li>
+          <li>
+            <strong>Agenda</strong> — relances à faire aujourd&apos;hui
+          </li>
+        </ul>
+        <p className="partner-login-hint__note">
+          Ce n&apos;est pas le login commerce (<a href="/login">/login</a>).
+        </p>
+      </div>
     </div>
   );
 }

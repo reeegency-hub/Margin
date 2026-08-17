@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireAmbassador } from "@/lib/partner-auth";
 import { prisma } from "@/lib/db";
@@ -52,7 +53,28 @@ export default async function PartnerDashboardPage() {
 
   return (
     <main className="partner__main">
-      <p className="partner-muted">Bonjour {me.name}</p>
+      <div className="partner-card partner-hero">
+        <h1>Bonjour {me.name}</h1>
+        <p className="partner-muted">
+          Espace ambassadeur — utilisez le menu en haut ou les raccourcis ci-dessous.
+        </p>
+      </div>
+
+      <div className="partner-shortcuts">
+        <Link href="/partner/prospects" className="partner-shortcut">
+          <strong>Prospects</strong>
+          <span>Ajouter les commerces contactés (cold call / mail)</span>
+        </Link>
+        <Link href="/partner/agenda" className="partner-shortcut">
+          <strong>Agenda</strong>
+          <span>Voir les relances du jour et celles en retard</span>
+        </Link>
+        <div className="partner-shortcut partner-shortcut--static">
+          <strong>Tableau</strong>
+          <span>Magasins apportés et commission (ci-dessous)</span>
+        </div>
+      </div>
+
       <div className="partner-stats">
         <div className="partner-stat">
           <span>Magasins actifs</span>
