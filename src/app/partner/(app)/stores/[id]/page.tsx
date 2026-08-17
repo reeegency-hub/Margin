@@ -23,7 +23,7 @@ export default async function PartnerStorePage({
   const { id } = await params;
   const q = await searchParams;
   const ref = await requirePartnerStore(me.id, id);
-  if (!ref) redirect("/partner/stores?error=access");
+  if (!ref?.restaurant) redirect("/partner/stores?error=access");
 
   const store = ref.restaurant;
   const user = store.users[0];

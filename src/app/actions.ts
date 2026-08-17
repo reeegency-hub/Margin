@@ -1742,19 +1742,17 @@ export async function signupAndCheckoutAction(input: {
 
   if (ambassadorCode) {
     const ambassador = await prisma.ambassador.findFirst({
-      where: { referralCode: ambassadorCode, active: true },
+      where: { referralCode: ambassadorCode, active: true, status: "actif" },
       select: { id: true },
     });
     if (ambassador) {
-      await prisma.ambassadorReferral
-        .create({
-          data: {
-            ambassadorId: ambassador.id,
-            restaurantId: restaurant.id,
-            commissionPercent: 15,
-          },
-        })
-        .catch(() => null);
+      const { createReferralForRestaurant } = await import("@/lib/crm/activity");
+      await createReferralForRestaurant({
+        ambassadorId: ambassador.id,
+        restaurantId: restaurant.id,
+        commissionPercent: 15,
+        status: "signed_up",
+      }).catch(() => null);
     }
   }
 
@@ -2198,6 +2196,9 @@ export async function completeOnboarding(): Promise<
     where: { id: restaurant.id },
     data,
   });
+
+  const { syncReferralStatusForRestaurant } = await import("@/lib/crm/activity");
+  await syncReferralStatusForRestaurant(restaurant.id);
 
   revalidatePath("/");
   revalidatePath("/onboarding");

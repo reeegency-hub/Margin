@@ -218,7 +218,20 @@ export async function handleInvoicePaymentSucceeded(
     },
   });
 
-  // Affiliation : 1er paiement abo → crédit mois au parrain (idempotent via billing_reason)
+  const { syncReferralStatusForRestaurant, logActivity } = await import(
+    "@/lib/crm/activity"
+  );
+  await syncReferralStatusForRestaurant(restaurantId);
+  if (opts?.amountPaidCents != null && opts.amountPaidCents > 0) {
+    await logActivity({
+      kind: "invoice.paid",
+      summary: `Facture payée (${(opts.amountPaidCents / 100).toFixed(2)} €)`,
+      restaurantId,
+      metadata: { amountPaidCents: opts.amountPaidCents },
+    });
+  }
+
+  // Affiliation magasin→magasin
   if (opts?.billingReason === "subscription_create") {
     const { AFFILIATE } = await import("@/lib/affiliate");
     const referee = await prisma.restaurant.findUnique({

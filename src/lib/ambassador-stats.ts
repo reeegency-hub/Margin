@@ -1,10 +1,13 @@
 import { prisma } from "@/lib/db";
 import { absoluteAmbassadorSignupUrl } from "@/lib/ambassador-referral";
+import type { ReferralStatus } from "@/lib/crm/activity";
 
 export type AmbassadorDashboardRow = {
   id: string;
   name: string;
   email: string;
+  type: string;
+  status: string;
   active: boolean;
   referralCode: string | null;
   signupUrl: string | null;
@@ -18,6 +21,7 @@ export type AmbassadorDashboardRow = {
     id: string;
     name: string;
     email: string | null;
+    referralStatus: ReferralStatus | string;
     stripeStatus: string | null;
     active: boolean;
     productCount: number;
@@ -64,26 +68,30 @@ export async function getFounderAmbassadorDashboard(): Promise<{
   const rows: AmbassadorDashboardRow[] = ambassadors.map((a) => {
     let commissionCents = 0;
     let activeStores = 0;
-    const stores = a.referrals.map((r) => {
-      const amt = r.restaurant.lastInvoiceAmountCents ?? 0;
-      const storeCommission =
-        amt > 0 ? Math.round((amt * r.commissionPercent) / 100) : 0;
-      commissionCents += storeCommission;
-      if (r.restaurant.active && r.restaurant.stripeStatus === "active") {
-        activeStores += 1;
-      }
-      return {
-        id: r.restaurant.id,
-        name: r.restaurant.name,
-        email: r.restaurant.users[0]?.email ?? null,
-        stripeStatus: r.restaurant.stripeStatus,
-        active: r.restaurant.active,
-        productCount: r.restaurant._count.products,
-        lastInvoiceAmountCents: r.restaurant.lastInvoiceAmountCents,
-        commissionPercent: r.commissionPercent,
-        commissionCents: storeCommission,
-      };
-    });
+    const stores = a.referrals
+      .filter((r) => r.restaurant)
+      .map((r) => {
+        const rest = r.restaurant!;
+        const amt = rest.lastInvoiceAmountCents ?? 0;
+        const storeCommission =
+          amt > 0 ? Math.round((amt * r.commissionPercent) / 100) : 0;
+        commissionCents += storeCommission;
+        if (rest.active && rest.stripeStatus === "active") {
+          activeStores += 1;
+        }
+        return {
+          id: rest.id,
+          name: rest.name,
+          email: rest.users[0]?.email ?? null,
+          referralStatus: r.status,
+          stripeStatus: rest.stripeStatus,
+          active: rest.active,
+          productCount: rest._count.products,
+          lastInvoiceAmountCents: rest.lastInvoiceAmountCents,
+          commissionPercent: r.commissionPercent,
+          commissionCents: storeCommission,
+        };
+      });
 
     const prospectsOpen = a.prospects.filter(
       (p) => !["won", "lost"].includes(p.status)
@@ -93,6 +101,8 @@ export async function getFounderAmbassadorDashboard(): Promise<{
       id: a.id,
       name: a.name,
       email: a.email,
+      type: a.type,
+      status: a.status,
       active: a.active,
       referralCode: a.referralCode,
       signupUrl: a.referralCode
@@ -112,7 +122,7 @@ export async function getFounderAmbassadorDashboard(): Promise<{
     ambassadors: rows,
     totals: {
       ambassadors: rows.length,
-      activeAmbassadors: rows.filter((a) => a.active).length,
+      activeAmbassadors: rows.filter((a) => a.status === "actif").length,
       stores: rows.reduce((n, a) => n + a.storeCount, 0),
       activeStores: rows.reduce((n, a) => n + a.activeStores, 0),
       prospects: rows.reduce((n, a) => n + a.prospectCount, 0),

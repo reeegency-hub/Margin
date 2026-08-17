@@ -141,7 +141,8 @@ model Restaurant {
   assistantDrafts             AssistantDraft[]
   assistantCommits            AssistantCommit[]
   llmCredentials              LlmProviderCredential[]
-  ambassadorReferrals         AmbassadorReferral[]
+  ambassadorReferrals         Referral[]
+  activityLogs                ActivityLog[]
 }
 
 /// BYOK — clé LLM chiffrée par tenant (jamais en clair côté client)
@@ -996,22 +997,27 @@ model MarketingInfluencer {
   @@index([niche])
 }
 
-/// Ambassadeur humain (plusieurs magasins) — identité séparée de User
+/// Ambassadeur humain — identité séparée de User (jamais de rôle AMBASSADOR sur User)
 model Ambassador {
   id           String   @id @default(cuid())
   email        String   @unique
   name         String
   passwordHash String
+  /// prestataire_caisse | comptable | apporteur_affaires | autre
+  type         String   @default("apporteur_affaires")
+  /// candidat | actif | inactif
+  status       String   @default("actif")
   /// Code perso partageable (préfixe AMB-, ≠ referralCode magasin MS-)
   referralCode String?  @unique
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   prospects    Prospect[]
-  referrals    AmbassadorReferral[]
+  referrals    Referral[]
+  activityLogs ActivityLog[]
 }
 
-/// CRM ambassadeur — un prospect n’est pas un magasin tant qu’il n’a pas signé
+/// CRM ambassadeur — pipeline avant conversion (≠ Referral lifecycle)
 model Prospect {
   id             String      @id @default(cuid())
   ambassadorId   String
@@ -1032,15 +1038,40 @@ model Prospect {
   @@index([ambassadorId, nextFollowUpAt])
 }
 
-/// Lien ambassadeur → magasin apporté (≠ referralCode magasin→magasin)
-model AmbassadorReferral {
-  id                String      @id @default(cuid())
-  ambassadorId      String
-  ambassador        Ambassador  @relation(fields: [ambassadorId], references: [id], onDelete: Cascade)
-  restaurantId      String      @unique
-  restaurant        Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  commissionPercent Int         @default(15)
-  createdAt         DateTime    @default(now())
+/// Filleul ambassadeur ↔ tenant (≠ parrainage magasin→magasin via referredByRestaurantId)
+model Referral {
+  id                   String      @id @default(cuid())
+  ambassadorId         String
+  ambassador           Ambassador  @relation(fields: [ambassadorId], references: [id], onDelete: Cascade)
+  referredRestaurantId String?     @unique @map("restaurantId")
+  restaurant           Restaurant? @relation(fields: [referredRestaurantId], references: [id], onDelete: Cascade)
+  commissionPercent    Int         @default(15)
+  /// clicked | signed_up | onboarding | converted | churned
+  status               String      @default("signed_up")
+  signedUpAt           DateTime?
+  convertedAt          DateTime?
+  churnedAt            DateTime?
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
 
-  @@index([ambassadorId])
+  @@index([ambassadorId, status])
+  @@map("AmbassadorReferral")
+}
+
+/// Timeline unifiée — fondateur, fiche compte, filleuls ambassadeur (source unique)
+model ActivityLog {
+  id             String      @id @default(cuid())
+  kind           String
+  summary        String
+  metadata       Json?
+  restaurantId   String?
+  restaurant     Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: SetNull)
+  ambassadorId   String?
+  ambassador     Ambassador? @relation(fields: [ambassadorId], references: [id], onDelete: SetNull)
+  referralId     String?
+  createdAt      DateTime    @default(now())
+
+  @@index([restaurantId, createdAt])
+  @@index([ambassadorId, createdAt])
+  @@index([kind, createdAt])
 }

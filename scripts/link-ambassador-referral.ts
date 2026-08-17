@@ -44,8 +44,8 @@ async function main() {
     process.exit(1);
   }
 
-  const existing = await prisma.ambassadorReferral.findUnique({
-    where: { restaurantId },
+  const existing = await prisma.referral.findUnique({
+    where: { referredRestaurantId: restaurantId },
     include: { ambassador: { select: { email: true } } },
   });
   if (existing && existing.ambassadorId !== ambassador.id) {
@@ -55,12 +55,14 @@ async function main() {
     process.exit(1);
   }
 
-  const referral = await prisma.ambassadorReferral.upsert({
-    where: { restaurantId },
+  const referral = await prisma.referral.upsert({
+    where: { referredRestaurantId: restaurantId },
     create: {
       ambassadorId: ambassador.id,
-      restaurantId,
+      referredRestaurantId: restaurantId,
       commissionPercent,
+      status: "signed_up",
+      signedUpAt: new Date(),
     },
     update: { commissionPercent },
   });
@@ -68,10 +70,8 @@ async function main() {
   console.log("Lien ambassadeur ↔ magasin enregistré.");
   console.log(`  Ambassadeur : ${ambassador.name} (${ambassador.email})`);
   console.log(`  Magasin     : ${restaurant.name} (${restaurant.id})`);
+  console.log(`  Statut      : ${referral.status}`);
   console.log(`  Commission  : ${referral.commissionPercent} %`);
-  console.log(
-    `  Note        : la commission estimée se met à jour après invoice.payment_succeeded Stripe.`
-  );
 }
 
 main()

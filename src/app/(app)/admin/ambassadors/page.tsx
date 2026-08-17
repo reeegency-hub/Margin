@@ -4,6 +4,7 @@ import { requireAdminSession } from "@/lib/admin";
 import { FounderSubnav } from "@/components/admin/FounderSubnav";
 import { CopyTextButton } from "@/components/admin/CopyTextButton";
 import { getFounderAmbassadorDashboard } from "@/lib/ambassador-stats";
+import { REFERRAL_STATUS_LABEL } from "@/lib/crm/activity";
 import { euro } from "@/lib/dashboard";
 
 export default async function AdminAmbassadorsPage() {
@@ -78,7 +79,7 @@ export default async function AdminAmbassadorsPage() {
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="brand-eyebrow">
-                  {a.active ? "Actif" : "Inactif"} · {a.storeCount} magasin(s)
+                  {a.status} · {a.type.replace(/_/g, " ")} · {a.storeCount} magasin(s)
                 </p>
                 <h2 className="text-xl font-bold tracking-tight">{a.name}</h2>
                 <p className="module-page-lead">{a.email}</p>
@@ -130,6 +131,7 @@ export default async function AdminAmbassadorsPage() {
                     <tr>
                       <th>Magasin</th>
                       <th>Login</th>
+                      <th>Statut filleul</th>
                       <th>Stripe</th>
                       <th>Produits</th>
                       <th>Facture</th>
@@ -143,6 +145,11 @@ export default async function AdminAmbassadorsPage() {
                       <tr key={s.id}>
                         <td>{s.name}</td>
                         <td className="text-sm opacity-80">{s.email ?? "—"}</td>
+                        <td>
+                          <span className="admin-badge">
+                            {REFERRAL_STATUS_LABEL[s.referralStatus as keyof typeof REFERRAL_STATUS_LABEL] ?? s.referralStatus}
+                          </span>
+                        </td>
                         <td>
                           <span
                             className={`admin-badge${

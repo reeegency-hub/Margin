@@ -96,8 +96,8 @@ export async function requireAmbassador() {
   if (!token) return null;
   const ambassador = await prisma.ambassador.findUnique({
     where: { id: token.sub },
-    select: { id: true, email: true, name: true, active: true },
+    select: { id: true, email: true, name: true, active: true, status: true },
   });
-  if (!ambassador?.active) return null;
+  if (!ambassador?.active || ambassador.status !== "actif") return null;
   return ambassador;
 }

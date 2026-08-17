@@ -56,7 +56,8 @@ export async function partnerUpdateStoreAction(formData: FormData) {
 
   const restaurantId = String(formData.get("restaurantId") || "");
   const ref = await requirePartnerStore(me.id, restaurantId);
-  if (!ref) redirect("/partner/stores?error=access");
+  if (!ref?.restaurant) redirect("/partner/stores?error=access");
+  const store = ref.restaurant;
 
   const name = String(formData.get("name") || "").trim();
   const whatsapp = String(formData.get("whatsapp") || "").trim() || null;
@@ -73,11 +74,16 @@ export async function partnerUpdateStoreAction(formData: FormData) {
       ...(completeOnboarding
         ? {
             onboardingCompletedAt: new Date(),
-            procurementMode: ref.restaurant.procurementMode ?? "mixed",
+            procurementMode: store.procurementMode ?? "mixed",
           }
         : {}),
     },
   });
+
+  if (completeOnboarding) {
+    const { syncReferralStatusForRestaurant } = await import("@/lib/crm/activity");
+    await syncReferralStatusForRestaurant(restaurantId);
+  }
 
   revalidatePath(storePath(restaurantId));
   revalidatePath("/partner/stores");
@@ -91,13 +97,14 @@ export async function partnerResetPasswordAction(formData: FormData) {
   const restaurantId = String(formData.get("restaurantId") || "");
   const password = String(formData.get("password") || "").trim();
   const ref = await requirePartnerStore(me.id, restaurantId);
-  if (!ref) redirect("/partner/stores?error=access");
+  if (!ref?.restaurant) redirect("/partner/stores?error=access");
+  const store = ref.restaurant;
 
   if (password.length < 8) {
     redirect(storePath(restaurantId, "error=password"));
   }
 
-  const user = ref.restaurant.users[0];
+  const user = store.users[0];
   if (!user) redirect(storePath(restaurantId, "error=nouser"));
 
   await prisma.user.update({
@@ -115,7 +122,7 @@ export async function partnerImportCatalogAction(formData: FormData) {
   const restaurantId = String(formData.get("restaurantId") || "");
   const csv = String(formData.get("csv") || "").trim();
   const ref = await requirePartnerStore(me.id, restaurantId);
-  if (!ref) redirect("/partner/stores?error=access");
+  if (!ref?.restaurant) redirect("/partner/stores?error=access");
 
   if (!csv) redirect(storePath(restaurantId, "error=csv"));
 
@@ -135,9 +142,10 @@ export async function partnerEnsurePosAction(formData: FormData) {
 
   const restaurantId = String(formData.get("restaurantId") || "");
   const ref = await requirePartnerStore(me.id, restaurantId);
-  if (!ref) redirect("/partner/stores?error=access");
+  if (!ref?.restaurant) redirect("/partner/stores?error=access");
+  const store = ref.restaurant;
 
-  const existing = ref.restaurant.externalPosConnections[0];
+  const existing = store.externalPosConnections[0];
   const secret = generateWebhookSecret();
   if (existing) {
     await prisma.externalPosConnection.update({
@@ -171,7 +179,7 @@ export async function partnerSeedTeamAction(formData: FormData) {
 
   const restaurantId = String(formData.get("restaurantId") || "");
   const ref = await requirePartnerStore(me.id, restaurantId);
-  if (!ref) redirect("/partner/stores?error=access");
+  if (!ref?.restaurant) redirect("/partner/stores?error=access");
 
   const count = await prisma.employee.count({ where: { restaurantId } });
   if (count === 0) {

@@ -5,7 +5,8 @@ import { prisma } from "@/lib/db";
 import { euro } from "@/lib/dashboard";
 import { absoluteAmbassadorSignupUrl } from "@/lib/ambassador-referral";
 import { ensureAmbassadorReferralCode } from "@/lib/ambassador-referral-code";
-import { PartnerReferralCard } from "../PartnerReferralCard";
+import { REFERRAL_STATUS_LABEL } from "@/lib/crm/activity";
+import { PartnerReferralCard } from "@/app/partner/PartnerReferralCard";
 
 export default async function PartnerDashboardPage() {
   const me = await requireAmbassador();
@@ -15,7 +16,7 @@ export default async function PartnerDashboardPage() {
   const signupUrl = absoluteAmbassadorSignupUrl(referralCode);
 
   const [referrals, prospects] = await Promise.all([
-    prisma.ambassadorReferral.findMany({
+    prisma.referral.findMany({
       where: { ambassadorId: me.id },
       include: {
         restaurant: {
@@ -46,12 +47,13 @@ export default async function PartnerDashboardPage() {
   );
 
   const activeShops = referrals.filter(
-    (r) => r.restaurant.active && r.restaurant.stripeStatus === "active"
+    (r) =>
+      r.restaurant?.active && r.restaurant.stripeStatus === "active"
   ).length;
 
   let commissionCents = 0;
   for (const r of referrals) {
-    const amt = r.restaurant.lastInvoiceAmountCents ?? 0;
+    const amt = r.restaurant?.lastInvoiceAmountCents ?? 0;
     if (amt > 0) {
       commissionCents += Math.round((amt * r.commissionPercent) / 100);
     }
@@ -127,13 +129,15 @@ export default async function PartnerDashboardPage() {
           referrals.map((r) => (
             <div key={r.id} className="partner-row">
               <div>
-                <strong>{r.restaurant.name}</strong>
+                <strong>{r.restaurant?.name ?? "—"}</strong>
                 <p className="partner-muted">
-                  {r.restaurant.stripeStatus ?? "none"} · {r.commissionPercent} %
+                  {REFERRAL_STATUS_LABEL[r.status as keyof typeof REFERRAL_STATUS_LABEL] ?? r.status}
+                  {" · "}
+                  {r.restaurant?.stripeStatus ?? "none"} · {r.commissionPercent} %
                 </p>
               </div>
               <div className="partner-muted">
-                {r.restaurant.lastInvoiceAmountCents
+                {r.restaurant?.lastInvoiceAmountCents
                   ? euro(r.restaurant.lastInvoiceAmountCents / 100)
                   : "—"}
               </div>

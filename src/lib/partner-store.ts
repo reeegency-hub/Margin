@@ -1,10 +1,11 @@
 import { prisma } from "@/lib/db";
+import { createReferralForRestaurant } from "@/lib/crm/activity";
 
 const DEFAULT_COMMISSION = 15;
 
 export async function requirePartnerStore(ambassadorId: string, restaurantId: string) {
-  const referral = await prisma.ambassadorReferral.findFirst({
-    where: { ambassadorId, restaurantId },
+  const referral = await prisma.referral.findFirst({
+    where: { ambassadorId, referredRestaurantId: restaurantId },
     include: {
       restaurant: {
         include: {
@@ -15,13 +16,13 @@ export async function requirePartnerStore(ambassadorId: string, restaurantId: st
       },
     },
   });
-  if (!referral) return null;
+  if (!referral?.restaurant) return null;
   return referral;
 }
 
 export async function listPartnerStores(ambassadorId: string) {
-  return prisma.ambassadorReferral.findMany({
-    where: { ambassadorId },
+  return prisma.referral.findMany({
+    where: { ambassadorId, referredRestaurantId: { not: null } },
     include: {
       restaurant: {
         select: {
@@ -86,12 +87,11 @@ export async function createPartnerStore(input: CreatePartnerStoreInput) {
     });
   }
 
-  await prisma.ambassadorReferral.create({
-    data: {
-      ambassadorId: input.ambassadorId,
-      restaurantId: restaurant.id,
-      commissionPercent: input.commissionPercent ?? DEFAULT_COMMISSION,
-    },
+  await createReferralForRestaurant({
+    ambassadorId: input.ambassadorId,
+    restaurantId: restaurant.id,
+    commissionPercent: input.commissionPercent ?? DEFAULT_COMMISSION,
+    status: input.skipOnboarding ? "onboarding" : "signed_up",
   });
 
   return restaurant;
