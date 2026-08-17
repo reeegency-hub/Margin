@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Field, inputClass } from "@/components/ui";
+import { inputClass } from "@/components/ui";
 import {
   analyzeMenuAction,
   confirmMenuRecipesAction,
@@ -12,7 +12,6 @@ import {
 import type { ProposedDish } from "@/lib/menu-ai";
 import {
   applyUnitDefaults,
-  displayUnitLabel,
   preferredDisplayUnit,
   toDisplayQty,
   toStorageQty,
@@ -34,8 +33,8 @@ function emptyRow(): Row {
   return {
     key: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     name: "",
-    unit: "g",
-    displayUnit: "g",
+    unit: "pcs",
+    displayUnit: "pcs",
     stockTheoretical: "0",
     criticalThreshold: "0",
     reorderQty: "0",
@@ -258,10 +257,8 @@ export function IngredientAddPanel({
     setError(null);
     setMessage(null);
     const text = paste.trim();
-    if (text.length < 10) {
-      setError(
-        "Collez vos fiches produit (nom du produit + prix + référence de stock)."
-      );
+    if (text.length < 2) {
+      setError("Collez au moins un nom de produit.");
       return;
     }
     startTransition(async () => {
@@ -549,115 +546,96 @@ export function IngredientAddPanel({
       </div>
 
       <div className="catalog-import__secondaries">
-        <details className="catalog-import__aside">
-          <summary>Coller une liste</summary>
-          <div className="catalog-import__aside-body">
-            <textarea
-              className={`${inputClass} phone-textarea`}
-              rows={5}
-              value={paste}
-              onChange={(e) => setPaste(e.target.value)}
-              placeholder={`Lait 1L 1,20€\nPain 1,00€\nŒufs x6 2,50€`}
-              aria-label="Coller une liste de produits"
-            />
+        <div className="cat-add">
+          <p className="cat-add__title">Coller une liste</p>
+          <textarea
+            className={`${inputClass} cat-add__paste`}
+            rows={4}
+            value={paste}
+            onChange={(e) => setPaste(e.target.value)}
+            placeholder={"Lait 12\nPain 8\nŒufs x6 2,50€"}
+            aria-label="Coller une liste de produits"
+          />
+          <button
+            type="button"
+            className="btn-lime"
+            disabled={pending || !paste.trim()}
+            onClick={runPaste}
+          >
+            {pending ? "Analyse…" : "Analyser"}
+          </button>
+        </div>
+
+        <div className="cat-add">
+          <p className="cat-add__title">Un produit</p>
+          {rows.map((row) => (
+            <div key={row.key} className="cat-add__row">
+              <input
+                className={inputClass}
+                value={row.name}
+                placeholder="Nom — ex. Lait"
+                aria-label="Nom du produit"
+                onChange={(e) => onNameChange(row.key, e.target.value)}
+              />
+              <input
+                type="number"
+                step="any"
+                className={inputClass}
+                value={row.stockTheoretical}
+                placeholder="Qté"
+                aria-label="Quantité en stock"
+                onChange={(e) =>
+                  updateRow(row.key, { stockTheoretical: e.target.value })
+                }
+              />
+              <div className="cat-add__units" role="group" aria-label="Unité">
+                {(["pcs", "g", "ml"] as DisplayUnit[]).map((u) => (
+                  <button
+                    key={u}
+                    type="button"
+                    className={row.displayUnit === u ? "is-on" : ""}
+                    onClick={() =>
+                      updateRow(row.key, {
+                        displayUnit: u,
+                        unit: u === "pcs" ? "pcs" : u,
+                      })
+                    }
+                  >
+                    {u === "pcs" ? "pièces" : u}
+                  </button>
+                ))}
+              </div>
+              {rows.length > 1 ? (
+                <button
+                  type="button"
+                  className="cat-add__remove"
+                  onClick={() =>
+                    setRows((prev) => prev.filter((r) => r.key !== row.key))
+                  }
+                >
+                  Retirer
+                </button>
+              ) : null}
+            </div>
+          ))}
+          <div className="catalog-import__preview-actions">
+            <button
+              type="button"
+              className="pill-btn pill-btn--ghost"
+              onClick={() => setRows((prev) => [...prev, emptyRow()])}
+            >
+              + Autre
+            </button>
             <button
               type="button"
               className="btn-lime"
-              disabled={pending || !paste.trim()}
-              onClick={runPaste}
+              disabled={pending}
+              onClick={saveManual}
             >
-              {pending ? "Analyse…" : "Analyser"}
+              {pending ? "…" : "Ajouter au stock"}
             </button>
           </div>
-        </details>
-
-        <details className="catalog-import__aside">
-          <summary>Un produit à la main</summary>
-          <div className="catalog-import__aside-body">
-            <div className="space-y-3 catalog-import__manual-form">
-              {rows.map((row, index) => (
-                <div
-                  key={row.key}
-                  className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 items-end"
-                >
-                  <Field label={index === 0 ? "Nom" : "\u00a0"}>
-                    <input
-                      className={inputClass}
-                      value={row.name}
-                      placeholder="Ex. Lait"
-                      onChange={(e) => onNameChange(row.key, e.target.value)}
-                    />
-                  </Field>
-                  <Field
-                    label={
-                      index === 0
-                        ? `Stock (${displayUnitLabel(row.displayUnit)})`
-                        : "\u00a0"
-                    }
-                  >
-                    <input
-                      type="number"
-                      step="any"
-                      className={inputClass}
-                      value={row.stockTheoretical}
-                      onChange={(e) =>
-                        updateRow(row.key, {
-                          stockTheoretical: e.target.value,
-                        })
-                      }
-                    />
-                  </Field>
-                  <Field
-                    label={
-                      index === 0
-                        ? `Seuil (${displayUnitLabel(row.displayUnit)})`
-                        : "\u00a0"
-                    }
-                  >
-                    <input
-                      type="number"
-                      step="any"
-                      className={inputClass}
-                      value={row.criticalThreshold}
-                      onChange={(e) =>
-                        updateRow(row.key, {
-                          criticalThreshold: e.target.value,
-                        })
-                      }
-                    />
-                  </Field>
-                  <button
-                    type="button"
-                    className="pill-btn pill-btn--ghost pill-btn--sm mb-1"
-                    disabled={rows.length === 1}
-                    onClick={() =>
-                      setRows((prev) => prev.filter((r) => r.key !== row.key))
-                    }
-                  >
-                    Retirer
-                  </button>
-                </div>
-              ))}
-            </div>
-            <div className="catalog-import__preview-actions">
-              <button
-                type="button"
-                className="pill-btn pill-btn--ghost"
-                onClick={() => setRows((prev) => [...prev, emptyRow()])}
-              >
-                + Autre
-              </button>
-              <button
-                type="button"
-                className="btn-lime"
-                disabled={pending}
-                onClick={saveManual}
-              >
-                {pending ? "Enregistrement…" : "Enregistrer"}
-              </button>
-            </div>
-          </div>
-        </details>
+        </div>
       </div>
 
       {error ? <p className="flash flash-warn">{error}</p> : null}

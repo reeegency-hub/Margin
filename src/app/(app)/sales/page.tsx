@@ -68,7 +68,7 @@ export default async function ManualSalesPage({
   return (
     <BrandPage
       question="Hors caisse"
-      guide="Appuyez sur le micro, dites ce que vous avez vendu, puis « C’est vendu »."
+      guide="Parlez, ou touchez un produit. Puis « C’est vendu »."
     >
       {params.sold ? (
         <p className="flash">Vente enregistrée — stock mis à jour.</p>

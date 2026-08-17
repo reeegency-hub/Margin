@@ -30,7 +30,10 @@ type SpeechRec = {
   start: () => void;
   stop: () => void;
   onresult: ((ev: {
-    results: { length: number; [i: number]: { [j: number]: { transcript: string } } };
+    results: {
+      length: number;
+      [i: number]: { [j: number]: { transcript: string } };
+    };
   }) => void) | null;
   onerror: (() => void) | null;
   onend: (() => void) | null;
@@ -80,16 +83,16 @@ export function ManualSalePanel({
     })
     .filter((l): l is Line & { product: ManualSaleProduct } => Boolean(l));
 
-  const filtered = useMemo(() => {
+  const picks = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return [];
-    return products
-      .filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          (p.sku && p.sku.toLowerCase().includes(q))
-      )
-      .slice(0, 8);
+    const list = q
+      ? products.filter(
+          (p) =>
+            p.name.toLowerCase().includes(q) ||
+            (p.sku && p.sku.toLowerCase().includes(q))
+        )
+      : products;
+    return list.slice(0, q ? 8 : 12);
   }, [products, query]);
 
   function bump(productId: string, delta: number) {
@@ -143,7 +146,7 @@ export function ManualSalePanel({
   function startMic() {
     const Ctor = getSpeechCtor();
     if (!Ctor) {
-      setError("Le micro n’est pas dispo ici. Tapez le nom du produit.");
+      setError("Le micro n’est pas dispo ici. Tapez ou touchez un produit.");
       return;
     }
     if (listening) return;
@@ -164,7 +167,7 @@ export function ManualSalePanel({
     rec.onerror = () => {
       setListening(false);
       recRef.current = null;
-      setError("Micro coupé. Réessayez ou tapez le nom.");
+      setError("Micro coupé. Réessayez ou touchez un produit.");
     };
     rec.onend = () => {
       setListening(false);
@@ -182,7 +185,7 @@ export function ManualSalePanel({
 
   function submit() {
     if (!basket.length) {
-      setError("Dites ou ajoutez au moins un produit.");
+      setError("Touchez un produit ou parlez.");
       return;
     }
     startTransition(async () => {
@@ -217,67 +220,48 @@ export function ManualSalePanel({
       {okMsg ? <p className="flash">{okMsg}</p> : null}
       {error ? <p className="flash flash-warn">{error}</p> : null}
 
-      <button
-        type="button"
-        className={`msale__mic${listening ? " is-on" : ""}`}
-        onPointerDown={(e) => {
-          e.preventDefault();
-          if (listening) {
+      <div className="msale__talk">
+        <button
+          type="button"
+          className={`msale__mic${listening ? " is-on" : ""}`}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            if (listening) {
+              stopMic();
+              return;
+            }
+            holdAtRef.current = Date.now();
+            startMic();
+          }}
+          onPointerUp={() => {
+            if (Date.now() - holdAtRef.current < 280) return;
             stopMic();
-            return;
-          }
-          holdAtRef.current = Date.now();
-          startMic();
-        }}
-        onPointerUp={() => {
-          if (Date.now() - holdAtRef.current < 280) return;
-          stopMic();
-        }}
-        onPointerCancel={stopMic}
-        onContextMenu={(e) => e.preventDefault()}
-        aria-pressed={listening}
-        aria-label="Parler"
-      >
-        <svg
-          className="msale__mic-icon"
-          viewBox="0 0 24 24"
-          width="28"
-          height="28"
-          aria-hidden
+          }}
+          onPointerCancel={stopMic}
+          onContextMenu={(e) => e.preventDefault()}
+          aria-pressed={listening}
+          aria-label="Parler"
         >
-          <path
-            fill="currentColor"
-            d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2Z"
-          />
-        </svg>
-        {listening ? "Parlez…" : micOk ? "Parler" : "Parler (Chrome / Safari)"}
-      </button>
-      <p className="msale__hint">
-        {heard ? `« ${heard} »` : "Ex. « deux lait et un pain »"}
-      </p>
-
-      <label className="msale__search">
-        <span className="sr-only">Chercher</span>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Ou tapez le nom…"
-          autoComplete="off"
-        />
-      </label>
-
-      {filtered.length > 0 ? (
-        <ul className="msale__hits">
-          {filtered.map((p) => (
-            <li key={p.id}>
-              <button type="button" onClick={() => bump(p.id, 1)}>
-                {p.name}
-                <span>+1</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
+          <svg viewBox="0 0 24 24" width="36" height="36" aria-hidden>
+            <path
+              fill="currentColor"
+              d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2Z"
+            />
+          </svg>
+        </button>
+        <div className="msale__talk-copy">
+          <p className="msale__talk-title">
+            {listening ? "Parlez maintenant" : "Dites ce que vous avez vendu"}
+          </p>
+          <p className="msale__hint">
+            {heard
+              ? `« ${heard} »`
+              : micOk
+                ? "Ex. « deux lait et un pain »"
+                : "Micro indispo — touchez un produit ci-dessous"}
+          </p>
+        </div>
+      </div>
 
       {basket.length > 0 ? (
         <ul className="msale__lines">
@@ -308,12 +292,36 @@ export function ManualSalePanel({
 
       <button
         type="button"
-        className="btn-lime msale__go"
+        className="msale__go"
         disabled={pending || !basket.length}
         onClick={submit}
       >
         {pending ? "…" : "C’est vendu"}
       </button>
+
+      <label className="msale__search">
+        <span>Ou touchez un produit</span>
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Rechercher…"
+          autoComplete="off"
+        />
+      </label>
+
+      <ul className="msale__hits">
+        {picks.map((p) => {
+          const qty = lines.find((l) => l.productId === p.id)?.quantity ?? 0;
+          return (
+            <li key={p.id}>
+              <button type="button" onClick={() => bump(p.id, 1)}>
+                <span className="msale__hit-name">{p.name}</span>
+                <span className="msale__hit-add">{qty ? qty : "+"}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
 
       {recent[0] ? (
         <p className="msale__last">

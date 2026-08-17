@@ -89,7 +89,7 @@ export default async function InventoryListPage({
       </div>
 
       {critical.length > 0 ? (
-        <div className="dash-card dash-card--light">
+        <div className="dash-card dash-card--light verify-first">
           <p className="hub-section-title">À vérifier d’abord</p>
           <ul className="count-hub__priority" aria-label="À vérifier d’abord">
             {critical.slice(0, 5).map((i) => (
