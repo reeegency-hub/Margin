@@ -16,10 +16,10 @@ export default async function PartnerStoresPage({
 
   return (
     <main className="partner__main">
-      <div className="partner-card partner-hero">
+      <div className="partner-page-head partner-card">
         <div className="partner-row" style={{ border: 0, padding: 0 }}>
           <div>
-            <p className="partner-referral__eyebrow">Espace ambassadeur</p>
+            <p className="brand-eyebrow">Espace ambassadeur</p>
             <h1>Magasins</h1>
             <p className="partner-muted">
               Créez et configurez les commerces que vous amenez.

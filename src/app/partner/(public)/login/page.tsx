@@ -54,7 +54,10 @@ export default async function PartnerLoginPage({
         <p>Après connexion, vous accédez à :</p>
         <ul>
           <li>
-            <strong>Tableau</strong> — magasins apportés et commission
+            <strong>Magasins</strong> — créer et onboarder des clients
+          </li>
+          <li>
+            <strong>Tableau</strong> — code parrainage, commission, stats
           </li>
           <li>
             <strong>Prospects</strong> — CRM des commerces contactés

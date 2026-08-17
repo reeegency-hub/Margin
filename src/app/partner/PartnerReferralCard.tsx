@@ -23,8 +23,8 @@ export function PartnerReferralCard({
 
   return (
     <div className="partner-card partner-referral">
-      <p className="partner-referral__eyebrow">Espace ambassadeur</p>
-      <h2>Votre code de parrainage</h2>
+      <p className="brand-eyebrow partner-referral__eyebrow">Parrainage</p>
+      <h2>Votre code personnel</h2>
       <p className="partner-muted">
         Partagez ce code ou le lien d’inscription aux commerces que vous amenez.
       </p>
