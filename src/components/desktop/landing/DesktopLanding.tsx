@@ -376,13 +376,12 @@ export default function DesktopLanding() {
             <a href="#produit">Produit</a>
             <a href="#tarifs">Tarifs</a>
             <a href="#demo">Offre</a>
-            <Link href="/signup">Créer un compte</Link>
-            <Link href="/login">Se connecter</Link>
+            <a href="#demo">Config offerte</a>
           </nav>
           <div className="land-nav__actions">
-            <a href="#demo" className="land-btn land-btn--white">
-              Config offerte
-            </a>
+            <Link href="/login" className="land-btn land-btn--white">
+              Connexion
+            </Link>
           </div>
         </header>
 
