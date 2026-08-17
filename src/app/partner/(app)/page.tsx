@@ -7,6 +7,7 @@ import { absoluteAmbassadorSignupUrl } from "@/lib/ambassador-referral";
 import { ensureAmbassadorReferralCode } from "@/lib/ambassador-referral-code";
 import { REFERRAL_STATUS_LABEL } from "@/lib/crm/activity";
 import { PartnerReferralCard } from "@/app/partner/PartnerReferralCard";
+import { getAmbassadorRewardSummary } from "@/lib/crm/rewards";
 
 export default async function PartnerDashboardPage() {
   const me = await requireAmbassador();
@@ -15,7 +16,7 @@ export default async function PartnerDashboardPage() {
   const referralCode = await ensureAmbassadorReferralCode(me.id, me.name);
   const signupUrl = absoluteAmbassadorSignupUrl(referralCode);
 
-  const [referrals, prospects] = await Promise.all([
+  const [referrals, prospects, rewards] = await Promise.all([
     prisma.referral.findMany({
       where: { ambassadorId: me.id },
       include: {
@@ -36,6 +37,7 @@ export default async function PartnerDashboardPage() {
       where: { ambassadorId: me.id },
       select: { status: true },
     }),
+    getAmbassadorRewardSummary(me.id),
   ]);
 
   const byStatus = prospects.reduce(
@@ -80,6 +82,12 @@ export default async function PartnerDashboardPage() {
           <strong>Magasins</strong>
           <span>Configurer catalogue, caisse, accès client</span>
         </Link>
+        <Link href="/partner/commissions" className="partner-shortcut">
+          <strong>Commissions</strong>
+          <span>
+            {euro(rewards.totals.earnedCents / 100)} gagnés · historique
+          </span>
+        </Link>
         <Link href="/partner/prospects" className="partner-shortcut">
           <strong>Prospects</strong>
           <span>Ajouter les commerces contactés (cold call / mail)</span>
@@ -104,7 +112,11 @@ export default async function PartnerDashboardPage() {
           <strong>{prospects.length}</strong>
         </div>
         <div className="partner-stat">
-          <span>Commission estimée</span>
+          <span>Commission cumulée</span>
+          <strong>{euro(rewards.totals.earnedCents / 100)}</strong>
+        </div>
+        <div className="partner-stat">
+          <span>Estim. dernière facture</span>
           <strong>{euro(commissionCents / 100)}</strong>
         </div>
       </div>

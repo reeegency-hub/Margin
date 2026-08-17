@@ -12,6 +12,9 @@ import {
   adminDeleteStoreAction,
 } from "@/app/actions";
 import { StripePortalButton } from "@/components/admin/StripePortalButton";
+import { FounderSubnav } from "@/components/admin/FounderSubnav";
+import { getStoreHealth, HEALTH_RISK_LABEL } from "@/lib/admin/store-health";
+import { euro } from "@/lib/dashboard";
 
 export default async function AdminStorePage({
   params,
@@ -44,6 +47,15 @@ export default async function AdminStorePage({
     redirect("/admin?error=missing");
   }
 
+  const [health, timeline] = await Promise.all([
+    getStoreHealth(id),
+    prisma.activityLog.findMany({
+      where: { restaurantId: id },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+    }),
+  ]);
+
   const pos = store.externalPosConnections[0];
   const baseUrl = (
     process.env.NEXTAUTH_URL ||
@@ -72,6 +84,8 @@ export default async function AdminStorePage({
         </Link>
       </header>
 
+      <FounderSubnav current="/admin" />
+
       {q.saved ? <p className="flash">Commerce enregistré.</p> : null}
       {q.password ? <p className="flash">Mot de passe mis à jour.</p> : null}
       {q.pos ? <p className="flash">Lien caisse mis à jour.</p> : null}
@@ -83,6 +97,100 @@ export default async function AdminStorePage({
         <p className="flash flash-warn">
           Pour supprimer, retapez exactement le nom du commerce.
         </p>
+      ) : null}
+
+      <div className="dash-card dash-card--dark space-y-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">Santé client</h2>
+            <p className="text-[13px] opacity-70">{health.headline}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-3xl font-extrabold">{health.score}</p>
+            <span
+              className={`admin-badge${health.risk === "healthy" ? "" : " is-warn"}`}
+            >
+              {HEALTH_RISK_LABEL[health.risk]} · {health.grade}
+            </span>
+          </div>
+        </div>
+        <div className="grid gap-2 text-[13px] opacity-80 md:grid-cols-3">
+          <p>
+            Dernière connexion :{" "}
+            {health.lastLoginAt
+              ? health.lastLoginAt.toLocaleDateString("fr-FR")
+              : "—"}
+          </p>
+          <p>
+            Dernière vente :{" "}
+            {health.lastSaleAt
+              ? health.lastSaleAt.toLocaleDateString("fr-FR")
+              : "—"}
+          </p>
+          <p>
+            Dernière caisse :{" "}
+            {health.lastPosOrderAt
+              ? health.lastPosOrderAt.toLocaleDateString("fr-FR")
+              : "—"}
+          </p>
+          {health.mrrCents != null ? (
+            <p>MRR estimé : {euro(health.mrrCents / 100)}</p>
+          ) : null}
+          {store.churnType ? (
+            <p className="text-[#ffb4b4]">
+              Churn {store.churnType}
+              {store.churnedAt
+                ? ` · ${store.churnedAt.toLocaleDateString("fr-FR")}`
+                : ""}
+            </p>
+          ) : null}
+          {store.paymentFailedAt ? (
+            <p className="text-[#ffb4b4]">
+              Échec paiement ·{" "}
+              {store.paymentFailedAt.toLocaleDateString("fr-FR")}
+            </p>
+          ) : null}
+        </div>
+        {health.signals.length ? (
+          <ul className="text-[13px] space-y-1 border-t border-white/10 pt-3">
+            {health.signals.map((sig) => (
+              <li key={sig.id}>
+                <span
+                  className={
+                    sig.severity === "critical"
+                      ? "text-[#ffb4b4]"
+                      : sig.severity === "warn"
+                        ? "text-[#ffe0a3]"
+                        : "opacity-70"
+                  }
+                >
+                  {sig.label}
+                  {sig.detail ? ` — ${sig.detail}` : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
+
+      {timeline.length ? (
+        <div className="dash-card dash-card--dark space-y-3">
+          <h2 className="text-lg font-semibold">Timeline</h2>
+          {timeline.map((ev) => (
+            <div
+              key={ev.id}
+              className="flex flex-wrap justify-between gap-2 border-t border-white/10 pt-2 first:border-0 first:pt-0 text-[13px]"
+            >
+              <div>
+                <strong>{ev.summary}</strong>
+                <p className="opacity-60">{ev.kind}</p>
+              </div>
+              <span className="opacity-50">
+                {ev.createdAt.toLocaleString("fr-FR")}
+              </span>
+            </div>
+          ))}
+        </div>
       ) : null}
 
       <form

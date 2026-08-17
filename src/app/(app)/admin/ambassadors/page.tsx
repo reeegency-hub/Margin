@@ -50,7 +50,15 @@ export default async function AdminAmbassadorsPage() {
           <p className="founder-kpi__value">{totals.activeStores}</p>
         </div>
         <div className="founder-kpi">
-          <p className="founder-kpi__label">Commission est.</p>
+          <p className="founder-kpi__label">Commission cumulée</p>
+          <p className="founder-kpi__value">{euro(totals.earnedCents / 100)}</p>
+        </div>
+        <div className="founder-kpi">
+          <p className="founder-kpi__label">Versée</p>
+          <p className="founder-kpi__value">{euro(totals.paidCents / 100)}</p>
+        </div>
+        <div className="founder-kpi">
+          <p className="founder-kpi__label">Estim. dernière facture</p>
           <p className="founder-kpi__value">{euro(totals.commissionCents / 100)}</p>
         </div>
       </div>
@@ -85,9 +93,12 @@ export default async function AdminAmbassadorsPage() {
                 <p className="module-page-lead">{a.email}</p>
               </div>
               <div className="text-right">
-                <p className="founder-kpi__label">Commission est.</p>
+                <p className="founder-kpi__label">Cumul gagné</p>
                 <p className="text-2xl font-extrabold tracking-tight">
-                  {euro(a.commissionCents / 100)}
+                  {euro(a.earnedCents / 100)}
+                </p>
+                <p className="text-[12px] opacity-60">
+                  Estim. dernière facture {euro(a.commissionCents / 100)}
                 </p>
               </div>
             </div>
@@ -136,6 +147,7 @@ export default async function AdminAmbassadorsPage() {
                       <th>Produits</th>
                       <th>Facture</th>
                       <th>Comm. %</th>
+                      <th>Comm. cumulée</th>
                       <th>Comm. est.</th>
                       <th />
                     </tr>
@@ -166,6 +178,7 @@ export default async function AdminAmbassadorsPage() {
                             : "—"}
                         </td>
                         <td>{s.commissionPercent} %</td>
+                        <td>{euro(s.earnedCents / 100)}</td>
                         <td>{euro(s.commissionCents / 100)}</td>
                         <td>
                           <Link

@@ -11,6 +11,11 @@ import { STRIPE_GRACE_DAYS } from "@/lib/stripe/access";
 import { getWhatsAppDeliveryStats } from "@/lib/whatsapp/metrics";
 import { WHATSAPP_BATCH_MINUTES } from "@/lib/whatsapp/config";
 import { getCatalogHealthForStores } from "@/lib/catalog/health";
+import {
+  getChurnAlerts,
+  getStoreHealthBatch,
+  HEALTH_RISK_LABEL,
+} from "@/lib/admin/store-health";
 import { FounderSubnav } from "@/components/admin/FounderSubnav";
 import { FounderAcquisitionPanel } from "@/components/admin/FounderAcquisitionPanel";
 import { MarketingHub } from "@/components/admin/MarketingHub";
@@ -60,6 +65,13 @@ export default async function FounderAdminPage({
 
   /** Commerce interne Ops — hors suivi clients */
   const clients = stores.filter((s) => s.name !== "Margin Ops");
+  const clientHealth = await getStoreHealthBatch(clients);
+  const churnAlerts = await getChurnAlerts(clients);
+  const clientsSorted = [...clients].sort((a, b) => {
+    const ha = clientHealth.get(a.id)?.score ?? 100;
+    const hb = clientHealth.get(b.id)?.score ?? 100;
+    return ha - hb;
+  });
   const activeClients = clients.filter((s) => s.active);
   const byPlan = {
     commerce: activeClients.filter((s) => s.plan === "commerce" || s.plan === "boutique")
@@ -296,7 +308,51 @@ export default async function FounderAdminPage({
           <p className="founder-kpi__label">Paiement en retard</p>
           <p className="founder-kpi__value">{pastDueCount}</p>
         </div>
+        <div className="founder-kpi">
+          <p className="founder-kpi__label">À risque / critique</p>
+          <p className="founder-kpi__value">{churnAlerts.length}</p>
+        </div>
       </div>
+
+      {churnAlerts.length > 0 ? (
+        <div className="dash-card dash-card--dark mb-6 space-y-3">
+          <h2 className="text-lg font-semibold">Alertes churn</h2>
+          <p className="text-[13px] opacity-70">
+            Comptes à recontacter en priorité — triés par score santé croissant.
+          </p>
+          {churnAlerts.map((alert) => (
+            <div
+              key={alert.restaurantId}
+              className="flex flex-wrap items-start justify-between gap-3 border-t border-white/10 pt-3 first:border-0 first:pt-0"
+            >
+              <div>
+                <strong>{alert.storeName}</strong>
+                <span
+                  className={`admin-badge ml-2${alert.risk === "critical" ? " is-warn" : ""}`}
+                >
+                  {HEALTH_RISK_LABEL[alert.risk]} · {alert.score}/100
+                </span>
+                <p className="text-[13px] opacity-70 mt-1">{alert.headline}</p>
+                <ul className="text-[12px] opacity-60 mt-1 space-y-0.5">
+                  {alert.signals.slice(0, 3).map((sig) => (
+                    <li key={sig.id}>
+                      {sig.label}
+                      {sig.detail ? ` — ${sig.detail}` : ""}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <Link
+                href={`/admin/stores/${alert.restaurantId}`}
+                className="btn-ghost"
+                style={{ padding: "6px 12px", fontSize: 12 }}
+              >
+                Fiche client
+              </Link>
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       {/* Créer un client — premier */}
       <div className="dash-card dash-card--dark space-y-4 mb-6" id="nouveau">
@@ -401,6 +457,7 @@ export default async function FounderAdminPage({
           <table className="admin-table">
             <thead>
               <tr>
+                <th>Santé</th>
                 <th>Client</th>
                 <th>Plan</th>
                 <th>Statut</th>
@@ -411,15 +468,35 @@ export default async function FounderAdminPage({
               </tr>
             </thead>
             <tbody>
-              {clients.map((s) => {
+              {clientsSorted.map((s) => {
                 const pos = s.externalPosConnections[0];
                 const caisseOk =
                   Boolean(pos?.lastOrderAt) || pos?.status === "CONNECTED";
                 const price = planPrice(s.plan, s.billingPeriod);
                 const stripe = (s.stripeStatus || "none").toLowerCase();
                 const h = catalogHealth.get(s.id);
+                const health = clientHealth.get(s.id);
                 return (
                   <tr key={s.id}>
+                    <td>
+                      {health ? (
+                        <>
+                          <strong>{health.score}</strong>
+                          <span className="text-[11px] opacity-60 ml-1">
+                            {health.grade}
+                          </span>
+                          {health.risk !== "healthy" && health.risk !== "churned" ? (
+                            <div className="mt-1">
+                              <span className="admin-badge is-warn">
+                                {HEALTH_RISK_LABEL[health.risk]}
+                              </span>
+                            </div>
+                          ) : null}
+                        </>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
                     <td>
                       <strong>{s.name}</strong>
                       <div className="text-[11px] opacity-50">

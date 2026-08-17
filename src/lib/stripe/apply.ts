@@ -197,7 +197,11 @@ export async function handleInvoicePaymentFailed(
 
 export async function handleInvoicePaymentSucceeded(
   restaurantId: string,
-  opts?: { billingReason?: string | null; amountPaidCents?: number | null }
+  opts?: {
+    billingReason?: string | null;
+    amountPaidCents?: number | null;
+    stripeInvoiceId?: string | null;
+  }
 ) {
   await prisma.restaurant.update({
     where: { id: restaurantId },
@@ -223,12 +227,27 @@ export async function handleInvoicePaymentSucceeded(
   );
   await syncReferralStatusForRestaurant(restaurantId);
   if (opts?.amountPaidCents != null && opts.amountPaidCents > 0) {
+    const referral = await prisma.referral.findUnique({
+      where: { referredRestaurantId: restaurantId },
+      select: { ambassadorId: true, id: true },
+    });
     await logActivity({
       kind: "invoice.paid",
       summary: `Facture payée (${(opts.amountPaidCents / 100).toFixed(2)} €)`,
       restaurantId,
+      ambassadorId: referral?.ambassadorId ?? null,
+      referralId: referral?.id ?? null,
       metadata: { amountPaidCents: opts.amountPaidCents },
     });
+
+    if (opts.stripeInvoiceId) {
+      const { createRewardEventForInvoice } = await import("@/lib/crm/rewards");
+      await createRewardEventForInvoice({
+        restaurantId,
+        stripeInvoiceId: opts.stripeInvoiceId,
+        invoiceAmountCents: opts.amountPaidCents,
+      });
+    }
   }
 
   // Affiliation magasin→magasin

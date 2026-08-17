@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { absoluteAmbassadorSignupUrl } from "@/lib/ambassador-referral";
 import type { ReferralStatus } from "@/lib/crm/activity";
+import { getAmbassadorRewardTotalsByAmbassador } from "@/lib/crm/rewards";
 
 export type AmbassadorDashboardRow = {
   id: string;
@@ -17,6 +18,9 @@ export type AmbassadorDashboardRow = {
   storeCount: number;
   activeStores: number;
   commissionCents: number;
+  earnedCents: number;
+  paidCents: number;
+  rewardCount: number;
   stores: {
     id: string;
     name: string;
@@ -28,6 +32,7 @@ export type AmbassadorDashboardRow = {
     lastInvoiceAmountCents: number | null;
     commissionPercent: number;
     commissionCents: number;
+    earnedCents: number;
   }[];
 };
 
@@ -40,6 +45,8 @@ export async function getFounderAmbassadorDashboard(): Promise<{
     activeStores: number;
     prospects: number;
     commissionCents: number;
+    earnedCents: number;
+    paidCents: number;
   };
 }> {
   const ambassadors = await prisma.ambassador.findMany({
@@ -59,15 +66,28 @@ export async function getFounderAmbassadorDashboard(): Promise<{
               _count: { select: { products: true } },
             },
           },
+          rewardEvents: {
+            select: { commissionCents: true, status: true },
+          },
         },
         orderBy: { createdAt: "desc" },
       },
     },
   });
 
+  const rewardTotals = await getAmbassadorRewardTotalsByAmbassador(
+    ambassadors.map((a) => a.id)
+  );
+
   const rows: AmbassadorDashboardRow[] = ambassadors.map((a) => {
     let commissionCents = 0;
     let activeStores = 0;
+    const rewardMeta = rewardTotals.get(a.id) ?? {
+      earnedCents: 0,
+      paidCents: 0,
+      count: 0,
+    };
+
     const stores = a.referrals
       .filter((r) => r.restaurant)
       .map((r) => {
@@ -76,6 +96,9 @@ export async function getFounderAmbassadorDashboard(): Promise<{
         const storeCommission =
           amt > 0 ? Math.round((amt * r.commissionPercent) / 100) : 0;
         commissionCents += storeCommission;
+        const earnedCents = r.rewardEvents
+          .filter((e) => e.status !== "reversed")
+          .reduce((n, e) => n + e.commissionCents, 0);
         if (rest.active && rest.stripeStatus === "active") {
           activeStores += 1;
         }
@@ -90,6 +113,7 @@ export async function getFounderAmbassadorDashboard(): Promise<{
           lastInvoiceAmountCents: rest.lastInvoiceAmountCents,
           commissionPercent: r.commissionPercent,
           commissionCents: storeCommission,
+          earnedCents,
         };
       });
 
@@ -114,6 +138,9 @@ export async function getFounderAmbassadorDashboard(): Promise<{
       storeCount: stores.length,
       activeStores,
       commissionCents,
+      earnedCents: rewardMeta.earnedCents,
+      paidCents: rewardMeta.paidCents,
+      rewardCount: rewardMeta.count,
       stores,
     };
   });
@@ -127,6 +154,8 @@ export async function getFounderAmbassadorDashboard(): Promise<{
       activeStores: rows.reduce((n, a) => n + a.activeStores, 0),
       prospects: rows.reduce((n, a) => n + a.prospectCount, 0),
       commissionCents: rows.reduce((n, a) => n + a.commissionCents, 0),
+      earnedCents: rows.reduce((n, a) => n + a.earnedCents, 0),
+      paidCents: rows.reduce((n, a) => n + a.paidCents, 0),
     },
   };
 }

@@ -142,6 +142,7 @@ export async function processStripeEvent(
       await handleInvoicePaymentSucceeded(restaurantId, {
         billingReason: invoice.billing_reason,
         amountPaidCents: invoice.amount_paid ?? null,
+        stripeInvoiceId: invoice.id,
       });
       if (subId) {
         const subscription = await stripe.subscriptions.retrieve(subId);

@@ -23,6 +23,7 @@ model User {
   role         UserRole   @default(MEMBER)
   restaurantId String
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  lastLoginAt  DateTime?
   createdAt    DateTime   @default(now())
   adminAuditLogs AdminAuditLog[]
 }
@@ -143,6 +144,7 @@ model Restaurant {
   llmCredentials              LlmProviderCredential[]
   ambassadorReferrals         Referral[]
   activityLogs                ActivityLog[]
+  rewardEvents                RewardEvent[]
 }
 
 /// BYOK — clé LLM chiffrée par tenant (jamais en clair côté client)
@@ -1015,6 +1017,7 @@ model Ambassador {
   prospects    Prospect[]
   referrals    Referral[]
   activityLogs ActivityLog[]
+  rewardEvents RewardEvent[]
 }
 
 /// CRM ambassadeur — pipeline avant conversion (≠ Referral lifecycle)
@@ -1053,9 +1056,34 @@ model Referral {
   churnedAt            DateTime?
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
+  rewardEvents         RewardEvent[]
 
   @@index([ambassadorId, status])
   @@map("AmbassadorReferral")
+}
+
+/// Commission ambassadeur par facture filleul (ledger idempotent Stripe)
+model RewardEvent {
+  id                   String      @id @default(cuid())
+  ambassadorId         String
+  ambassador           Ambassador  @relation(fields: [ambassadorId], references: [id], onDelete: Cascade)
+  referralId           String
+  referral             Referral    @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  referredRestaurantId String
+  restaurant           Restaurant  @relation(fields: [referredRestaurantId], references: [id], onDelete: Cascade)
+  stripeInvoiceId      String?     @unique
+  invoiceAmountCents   Int
+  commissionPercent    Int
+  commissionCents      Int
+  /// pending | validated | paid | reversed
+  status               String      @default("validated")
+  earnedAt             DateTime    @default(now())
+  paidAt               DateTime?
+  createdAt            DateTime    @default(now())
+
+  @@index([ambassadorId, earnedAt])
+  @@index([referralId, earnedAt])
+  @@index([status, earnedAt])
 }
 
 /// Timeline unifiée — fondateur, fiche compte, filleuls ambassadeur (source unique)
