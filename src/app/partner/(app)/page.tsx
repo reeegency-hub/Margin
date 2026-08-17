@@ -3,10 +3,16 @@ import { redirect } from "next/navigation";
 import { requireAmbassador } from "@/lib/partner-auth";
 import { prisma } from "@/lib/db";
 import { euro } from "@/lib/dashboard";
+import { absoluteAmbassadorSignupUrl } from "@/lib/ambassador-referral";
+import { ensureAmbassadorReferralCode } from "@/lib/ambassador-referral-code";
+import { PartnerReferralCard } from "../PartnerReferralCard";
 
 export default async function PartnerDashboardPage() {
   const me = await requireAmbassador();
   if (!me) redirect("/partner/login");
+
+  const referralCode = await ensureAmbassadorReferralCode(me.id, me.name);
+  const signupUrl = absoluteAmbassadorSignupUrl(referralCode);
 
   const [referrals, prospects] = await Promise.all([
     prisma.ambassadorReferral.findMany({
@@ -54,11 +60,14 @@ export default async function PartnerDashboardPage() {
   return (
     <main className="partner__main">
       <div className="partner-card partner-hero">
+        <p className="partner-referral__eyebrow">Espace ambassadeur</p>
         <h1>Bonjour {me.name}</h1>
         <p className="partner-muted">
-          Espace ambassadeur — utilisez le menu en haut ou les raccourcis ci-dessous.
+          Suivez vos prospects, vos relances et les magasins que vous amenez.
         </p>
       </div>
+
+      <PartnerReferralCard code={referralCode} signupUrl={signupUrl} />
 
       <div className="partner-shortcuts">
         <Link href="/partner/prospects" className="partner-shortcut">

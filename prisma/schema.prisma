@@ -1002,6 +1002,8 @@ model Ambassador {
   email        String   @unique
   name         String
   passwordHash String
+  /// Code perso partageable (préfixe AMB-, ≠ referralCode magasin MS-)
+  referralCode String?  @unique
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

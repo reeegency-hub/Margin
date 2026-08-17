@@ -6,8 +6,7 @@
  */
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
-
-const prisma = new PrismaClient();
+import { codeFromAmbassador } from "../src/lib/ambassador-referral";
 
 function arg(flag: string): string | undefined {
   const i = process.argv.indexOf(flag);
@@ -38,9 +37,25 @@ async function main() {
     data: { name, email, passwordHash },
   });
 
+  let referralCode = codeFromAmbassador(name, ambassador.id);
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const candidate = attempt === 0 ? referralCode : `${referralCode}${attempt}`;
+    try {
+      const updated = await prisma.ambassador.update({
+        where: { id: ambassador.id },
+        data: { referralCode: candidate },
+      });
+      referralCode = updated.referralCode!;
+      break;
+    } catch {
+      // collision unique
+    }
+  }
+
   console.log("Ambassadeur créé.");
   console.log(`  ID    : ${ambassador.id}`);
   console.log(`  Nom   : ${ambassador.name}`);
+  console.log(`  Code  : ${referralCode}`);
   console.log(`  Email : ${email}`);
   console.log(`  Login : https://margin-shop.vercel.app/partner/login`);
 }
