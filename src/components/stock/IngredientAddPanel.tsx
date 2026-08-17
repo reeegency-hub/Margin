@@ -589,7 +589,7 @@ export function IngredientAddPanel({
                 }
               />
               <div className="cat-add__units" role="group" aria-label="Unité">
-                {(["pcs", "g", "ml"] as DisplayUnit[]).map((u) => (
+                {(["pcs", "g", "ml"] as const).map((u) => (
                   <button
                     key={u}
                     type="button"
@@ -597,7 +597,7 @@ export function IngredientAddPanel({
                     onClick={() =>
                       updateRow(row.key, {
                         displayUnit: u,
-                        unit: u === "pcs" ? "pcs" : u,
+                        unit: u,
                       })
                     }
                   >
