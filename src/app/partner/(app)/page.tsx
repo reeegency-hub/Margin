@@ -1,0 +1,111 @@
+import { redirect } from "next/navigation";
+import { requireAmbassador } from "@/lib/partner-auth";
+import { prisma } from "@/lib/db";
+import { euro } from "@/lib/dashboard";
+
+export default async function PartnerDashboardPage() {
+  const me = await requireAmbassador();
+  if (!me) redirect("/partner/login");
+
+  const [referrals, prospects] = await Promise.all([
+    prisma.ambassadorReferral.findMany({
+      where: { ambassadorId: me.id },
+      include: {
+        restaurant: {
+          select: {
+            id: true,
+            name: true,
+            stripeStatus: true,
+            active: true,
+            lastInvoiceAmountCents: true,
+            lastInvoiceAt: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.prospect.findMany({
+      where: { ambassadorId: me.id },
+      select: { status: true },
+    }),
+  ]);
+
+  const byStatus = prospects.reduce(
+    (acc, p) => {
+      acc[p.status] = (acc[p.status] ?? 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
+  const activeShops = referrals.filter(
+    (r) => r.restaurant.active && r.restaurant.stripeStatus === "active"
+  ).length;
+
+  let commissionCents = 0;
+  for (const r of referrals) {
+    const amt = r.restaurant.lastInvoiceAmountCents ?? 0;
+    if (amt > 0) {
+      commissionCents += Math.round((amt * r.commissionPercent) / 100);
+    }
+  }
+
+  return (
+    <main className="partner__main">
+      <p className="partner-muted">Bonjour {me.name}</p>
+      <div className="partner-stats">
+        <div className="partner-stat">
+          <span>Magasins actifs</span>
+          <strong>{activeShops}</strong>
+        </div>
+        <div className="partner-stat">
+          <span>Apportés</span>
+          <strong>{referrals.length}</strong>
+        </div>
+        <div className="partner-stat">
+          <span>Prospects</span>
+          <strong>{prospects.length}</strong>
+        </div>
+        <div className="partner-stat">
+          <span>Commission estimée</span>
+          <strong>{euro(commissionCents / 100)}</strong>
+        </div>
+      </div>
+
+      <div className="partner-card">
+        <h2>Prospects par statut</h2>
+        <p className="partner-muted">
+          Nouveau {byStatus.new ?? 0} · Contacté {byStatus.contacted ?? 0} · Relance{" "}
+          {byStatus.follow_up ?? 0} · Gagné {byStatus.won ?? 0} · Perdu{" "}
+          {byStatus.lost ?? 0}
+        </p>
+      </div>
+
+      <div className="partner-card">
+        <h2>Magasins apportés</h2>
+        {!referrals.length ? (
+          <p className="partner-muted">
+            Aucun magasin lié. Le fondateur lie un pilote avec{" "}
+            <code>link-ambassador-referral.ts</code>.
+          </p>
+        ) : (
+          referrals.map((r) => (
+            <div key={r.id} className="partner-row">
+              <div>
+                <strong>{r.restaurant.name}</strong>
+                <p className="partner-muted">
+                  {r.restaurant.stripeStatus ?? "none"} · {r.commissionPercent} %
+                </p>
+              </div>
+              <div className="partner-muted">
+                {r.restaurant.lastInvoiceAmountCents
+                  ? euro(r.restaurant.lastInvoiceAmountCents / 100)
+                  : "—"}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </main>
+  );
+}

@@ -105,6 +105,9 @@ model Restaurant {
   referrals               Restaurant[] @relation("RestaurantReferrals")
   /// Mois de crédit gagnés via affiliation (à appliquer côté Stripe plus tard)
   affiliateCreditMonths   Int       @default(0)
+  /// Dernière facture Stripe payée (centimes) — commission ambassadeur
+  lastInvoiceAmountCents  Int?
+  lastInvoiceAt           DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
@@ -138,6 +141,7 @@ model Restaurant {
   assistantDrafts             AssistantDraft[]
   assistantCommits            AssistantCommit[]
   llmCredentials              LlmProviderCredential[]
+  ambassadorReferrals         AmbassadorReferral[]
 }
 
 /// BYOK — clé LLM chiffrée par tenant (jamais en clair côté client)
@@ -990,4 +994,51 @@ model MarketingInfluencer {
   @@unique([platform, handle])
   @@index([status, fitScore])
   @@index([niche])
+}
+
+/// Ambassadeur humain (plusieurs magasins) — identité séparée de User
+model Ambassador {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  prospects    Prospect[]
+  referrals    AmbassadorReferral[]
+}
+
+/// CRM ambassadeur — un prospect n’est pas un magasin tant qu’il n’a pas signé
+model Prospect {
+  id             String      @id @default(cuid())
+  ambassadorId   String
+  ambassador     Ambassador  @relation(fields: [ambassadorId], references: [id], onDelete: Cascade)
+  contactName    String
+  businessName   String
+  city           String?
+  phone          String?
+  email          String?
+  /// new | contacted | follow_up | won | lost
+  status         String      @default("new")
+  nextFollowUpAt DateTime?
+  notes          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([ambassadorId, status])
+  @@index([ambassadorId, nextFollowUpAt])
+}
+
+/// Lien ambassadeur → magasin apporté (≠ referralCode magasin→magasin)
+model AmbassadorReferral {
+  id                String      @id @default(cuid())
+  ambassadorId      String
+  ambassador        Ambassador  @relation(fields: [ambassadorId], references: [id], onDelete: Cascade)
+  restaurantId      String      @unique
+  restaurant        Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  commissionPercent Int         @default(15)
+  createdAt         DateTime    @default(now())
+
+  @@index([ambassadorId])
 }

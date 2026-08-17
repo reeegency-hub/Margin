@@ -197,7 +197,7 @@ export async function handleInvoicePaymentFailed(
 
 export async function handleInvoicePaymentSucceeded(
   restaurantId: string,
-  opts?: { billingReason?: string | null }
+  opts?: { billingReason?: string | null; amountPaidCents?: number | null }
 ) {
   await prisma.restaurant.update({
     where: { id: restaurantId },
@@ -207,9 +207,14 @@ export async function handleInvoicePaymentSucceeded(
       paymentFailedAt: null,
       accessGraceUntil: null,
       dunningLastNotifiedAt: null,
-      // Si churn involontaire en cours de récupération
       churnType: null,
       churnedAt: null,
+      ...(opts?.amountPaidCents != null && opts.amountPaidCents > 0
+        ? {
+            lastInvoiceAmountCents: opts.amountPaidCents,
+            lastInvoiceAt: new Date(),
+          }
+        : {}),
     },
   });
 

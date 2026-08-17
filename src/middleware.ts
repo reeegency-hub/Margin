@@ -6,6 +6,13 @@ import {
   isMobileUserAgent,
   resolveDeviceType,
 } from "@/lib/device";
+import { PARTNER_COOKIE } from "@/lib/partner-auth-constants";
+
+function partnerAuthed(req: {
+  cookies: { get: (n: string) => { value: string } | undefined };
+}) {
+  return Boolean(req.cookies.get(PARTNER_COOKIE)?.value);
+}
 
 function attachDeviceCookie(
   res: NextResponse,
@@ -30,6 +37,22 @@ function attachDeviceCookie(
 
 export default withAuth(
   function middleware(req) {
+    const pathname = req.nextUrl.pathname;
+
+    if (pathname.startsWith("/partner")) {
+      const isLogin = pathname === "/partner/login";
+      const authed = partnerAuthed(req);
+      if (!authed && !isLogin) {
+        return NextResponse.redirect(
+          new URL("/partner/login", req.nextUrl.origin)
+        );
+      }
+      if (authed && isLogin) {
+        return NextResponse.redirect(new URL("/partner", req.nextUrl.origin));
+      }
+      return NextResponse.next();
+    }
+
     const token = req.nextauth.token;
 
     // Racine publique : amis / téléphone → landing, pas l’écran login
@@ -126,6 +149,7 @@ export default withAuth(
     pages: { signIn: "/login" },
     callbacks: {
       authorized: ({ token, req }) => {
+        if (req.nextUrl.pathname.startsWith("/partner")) return true;
         if (req.nextUrl.pathname === "/") return true;
         return Boolean(token);
       },
@@ -136,6 +160,8 @@ export default withAuth(
 export const config = {
   matcher: [
     "/",
+    "/partner",
+    "/partner/:path*",
     "/onboarding",
     "/ingredients/:path*",
     "/dishes/:path*",

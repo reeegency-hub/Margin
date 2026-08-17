@@ -1,0 +1,154 @@
+.partner {
+  min-height: 100dvh;
+  background: #fafbfa;
+  color: #0a0a0a;
+}
+
+.partner__nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  padding: 14px 20px;
+  background: #0a0a0a;
+  color: #fff;
+}
+
+.partner__brand {
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.partner__nav nav {
+  display: flex;
+  gap: 16px;
+  flex: 1;
+}
+
+.partner__nav a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 650;
+  font-size: 0.95rem;
+}
+
+.partner__nav a:hover {
+  text-decoration: underline;
+}
+
+.partner__nav button {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: transparent;
+  color: #fff;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.partner__main {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.partner-card {
+  background: #fff;
+  border: 1px solid rgba(10, 10, 10, 0.12);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 14px;
+  color: #0a0a0a;
+}
+
+.partner-card h1,
+.partner-card h2 {
+  margin: 0 0 10px;
+  letter-spacing: -0.03em;
+}
+
+.partner-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.partner-stat {
+  background: #fff;
+  border: 1px solid rgba(10, 10, 10, 0.12);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.partner-stat span {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #4b5563;
+}
+
+.partner-stat strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 1.45rem;
+  letter-spacing: -0.03em;
+}
+
+.partner-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(10, 10, 10, 0.08);
+}
+
+.partner-row:last-child {
+  border-bottom: 0;
+}
+
+.partner-form {
+  display: grid;
+  gap: 10px;
+}
+
+.partner-form input,
+.partner-form select,
+.partner-form textarea {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(10, 10, 10, 0.18);
+  padding: 0 12px;
+  font-size: 1rem;
+  color: #0a0a0a;
+  background: #fff;
+}
+
+.partner-form textarea {
+  min-height: 80px;
+  padding: 10px 12px;
+}
+
+.partner-form button,
+.partner-btn {
+  min-height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: #e6f8aa;
+  color: #0a0a0a;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.partner-muted {
+  color: #4b5563;
+  font-size: 0.92rem;
+}
+
+.partner-overdue {
+  color: #dc2626;
+  font-weight: 700;
+}
