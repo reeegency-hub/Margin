@@ -255,7 +255,7 @@ export function buildFocusIssue(input: {
     costLabel: euro(input.caToday),
     costDetail: "argent encaissé aujourd’hui — rien à corriger",
     ctaLabel: "Enregistrer une vente",
-    ctaHref: "/sales/new",
+      ctaHref: "/sales",
     details: [
       ...detailsBase,
       {

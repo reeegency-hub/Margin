@@ -97,16 +97,57 @@ export async function createSale(formData: FormData) {
   const productIds = formData.getAll("productId").map(String);
   const quantities = formData.getAll("quantity").map(Number);
   const lines = productIds
-    .map((productId, i) => ({ productId, quantity: quantities[i] || 0 }))
+    .map((productId, i) => ({
+      productId,
+      quantity: Math.max(0, Math.floor(quantities[i] || 0)),
+    }))
     .filter((l) => l.productId && l.quantity > 0);
 
-  await requireTenantDb(async (db, ctx) => {
-    await recordSale(ctx.tenantId, lines, { db });
-  });
-  revalidatePath("/");
-  revalidatePath("/ingredients");
-  revalidatePath("/sales/new");
-  redirect("/?sold=1");
+  const res = await createManualSaleAction(lines);
+  if (!res.ok) {
+    redirect(`/sales?error=${encodeURIComponent(res.error)}`);
+  }
+  redirect("/sales?sold=1");
+}
+
+/** Ventes hors caisse (comptoir, rond, oubli POS). Décrémente le stock. */
+export async function createManualSaleAction(
+  lines: { productId: string; quantity: number }[]
+): Promise<
+  | { ok: true; itemCount: number; totalAmount: number }
+  | { ok: false; error: string }
+> {
+  const cleaned = lines
+    .map((l) => ({
+      productId: String(l.productId || "").trim(),
+      quantity: Math.max(0, Math.floor(Number(l.quantity) || 0)),
+    }))
+    .filter((l) => l.productId && l.quantity > 0);
+
+  if (!cleaned.length) {
+    return { ok: false, error: "Ajoutez au moins un produit et une quantité." };
+  }
+
+  try {
+    const sale = await requireTenantDb(async (db, ctx) => {
+      return recordSale(ctx.tenantId, cleaned, { db, channel: "manual" });
+    });
+    revalidatePath("/");
+    revalidatePath("/ingredients");
+    revalidatePath("/sales");
+    revalidatePath("/kiosks");
+    revalidatePath("/orders");
+    return {
+      ok: true,
+      itemCount: cleaned.reduce((n, l) => n + l.quantity, 0),
+      totalAmount: sale.totalAmount,
+    };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "Enregistrement impossible.",
+    };
+  }
 }
 
 export async function createReceipt(formData: FormData) {
@@ -1605,14 +1646,18 @@ export async function signupAndCheckoutAction(input: {
     };
   }
 
-  const { consumeSignupOtp } = await import("@/lib/signup-otp");
-  const otp = await consumeSignupOtp({
-    email,
-    code: String(input.otpCode || ""),
-    challengeId: input.otpChallengeId,
-  });
-  if (!otp.ok) {
-    return otp;
+  const { consumeSignupOtp, isSignupOtpEmailConfigured, isSignupOtpSmsConfigured } =
+    await import("@/lib/signup-otp");
+  const otpLive = isSignupOtpEmailConfigured() || isSignupOtpSmsConfigured();
+  if (otpLive) {
+    const otp = await consumeSignupOtp({
+      email,
+      code: String(input.otpCode || ""),
+      challengeId: input.otpChallengeId,
+    });
+    if (!otp.ok) {
+      return otp;
+    }
   }
 
   const {

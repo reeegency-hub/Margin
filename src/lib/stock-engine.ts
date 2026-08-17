@@ -235,12 +235,37 @@ export async function recordSale(
   }
 
   const dishMap = new Map(dishes.map((d) => [d.id, d]));
+  const missingComposition = dishes.filter((d) => d.productStocks.length === 0);
+  const stockByName = new Map<string, string>();
+  if (missingComposition.length) {
+    const units = await db.stockUnit.findMany({
+      where: { restaurantId },
+      select: { id: true, name: true },
+    });
+    for (const u of units) {
+      stockByName.set(u.name.trim().toLowerCase(), u.id);
+    }
+  }
+
   let totalAmount = 0;
   const consumption = new Map<string, number>();
 
   for (const line of lines) {
     const dish = dishMap.get(line.productId)!;
     totalAmount += dish.salePrice * line.quantity;
+    if (dish.productStocks.length === 0) {
+      const stockUnitId = stockByName.get(dish.name.trim().toLowerCase());
+      if (!stockUnitId) {
+        throw new Error(
+          `Pas de stock lié pour « ${dish.name} ». Liez une référence ou importez le catalogue.`
+        );
+      }
+      consumption.set(
+        stockUnitId,
+        (consumption.get(stockUnitId) ?? 0) + line.quantity
+      );
+      continue;
+    }
     for (const ri of dish.productStocks) {
       const delta = ri.quantity * line.quantity;
       consumption.set(ri.stockUnitId, (consumption.get(ri.stockUnitId) ?? 0) + delta);

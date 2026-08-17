@@ -130,10 +130,10 @@ export function MobileLandingOffer() {
         </div>
 
         <a
-          href={supportMailto("Candidature pilote Margin")}
+          href="/signup"
           className="mland-btn mland-btn--ghost mland-offer__signup"
         >
-          Demander une place pilote
+          Créer un compte
         </a>
       </div>
     </section>

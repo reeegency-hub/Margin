@@ -161,9 +161,9 @@ export default async function DeliveryPage({
 
       <div className="phone-hide">
         <div className="dash-card dash-card--light">
-          <p className="hub-section-title">Intégrations & livreurs</p>
+          <p className="hub-section-title">Livraison</p>
           <p className="hub-section-lead mb-4">
-            Clés API et équipe livraison.
+            Uber, Deliveroo, livreurs — seulement si vous en avez.
           </p>
           <DeliveryIntegrationsPanel
             connections={panelConnections}

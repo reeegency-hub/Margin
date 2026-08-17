@@ -101,8 +101,8 @@ export function MobileLandingHero() {
             <p className="mland-hero__lead">
               Relié à votre caisse. Zéro ressaisie.
             </p>
-            <Link href="#demo" className="mland-btn mland-btn--primary">
-              Rejoindre les 5 commerces pilotes
+            <Link href="/signup" className="mland-btn mland-btn--primary">
+              Créer un compte
             </Link>
             <p className="mland-hero__trust">
               <span>Programme pilote · places limitées</span>

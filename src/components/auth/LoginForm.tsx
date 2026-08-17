@@ -122,10 +122,7 @@ export function LoginForm({ allowDemo }: { allowDemo: boolean }) {
           </p>
         ) : null}
         <p className="auth-foot">
-          Programme pilote ?{" "}
-          <a href="mailto:reeegency@gmail.com?subject=Candidature%20pilote%20Margin">
-            Demander une place
-          </a>
+          Pas encore de compte ? <Link href="/signup">Créer un compte</Link>
           {" · "}
           <Link href="/welcome">Accueil</Link>
         </p>

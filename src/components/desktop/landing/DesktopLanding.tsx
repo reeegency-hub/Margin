@@ -376,6 +376,7 @@ export default function DesktopLanding() {
             <a href="#produit">Produit</a>
             <a href="#tarifs">Tarifs</a>
             <a href="#demo">Offre</a>
+            <Link href="/signup">Créer un compte</Link>
             <Link href="/login">Se connecter</Link>
           </nav>
           <div className="land-nav__actions">
@@ -398,8 +399,8 @@ export default function DesktopLanding() {
               Connecté à la caisse que vous avez déjà. Zéro ressaisie le soir.
             </p>
             <div className="land-hero__cta">
-              <a href="#demo" className="land-btn land-btn--lime land-btn--lg">
-                Rejoindre les 5 commerces pilotes
+              <a href="/signup" className="land-btn land-btn--lime land-btn--lg">
+                Créer un compte
                 <span aria-hidden>→</span>
               </a>
               <a href="#tarifs" className="land-btn land-btn--ghost-light">
@@ -595,8 +596,8 @@ export default function DesktopLanding() {
                 {LAUNCH_OFFER.setupMinutes} minutes.
               </p>
             </div>
-            <a href="#demo" className="land-btn land-btn--dark land-btn--lg">
-              Demander une place pilote
+            <a href="/signup" className="land-btn land-btn--dark land-btn--lg">
+              Créer un compte
               <span aria-hidden>→</span>
             </a>
           </div>
@@ -691,8 +692,8 @@ export default function DesktopLanding() {
               Places limitées · configuration WhatsApp offerte (
               {LAUNCH_OFFER.setupMinutes} min)
             </p>
-            <a href="#demo" className="land-btn land-btn--lime">
-              Demander une place pilote
+            <a href="/signup" className="land-btn land-btn--lime">
+              Créer un compte
               <span aria-hidden>→</span>
             </a>
           </div>
@@ -744,8 +745,8 @@ export default function DesktopLanding() {
           </ul>
 
           <div className="land-affiliate__cta">
-            <a href="#demo" className="land-btn land-btn--dark land-btn--lg">
-              Demander une place pilote
+            <a href="/signup" className="land-btn land-btn--dark land-btn--lg">
+              Créer un compte
               <span aria-hidden>→</span>
             </a>
             <Link href="/login" className="land-btn land-btn--ghost-dark">
@@ -771,8 +772,8 @@ export default function DesktopLanding() {
           ))}
         </div>
         <div className="land-mid-cta land-mid-cta--faq">
-          <a href="#demo" className="land-btn land-btn--dark land-btn--lg">
-            Demander une place pilote
+          <a href="/signup" className="land-btn land-btn--dark land-btn--lg">
+            Créer un compte
             <span aria-hidden>→</span>
           </a>
           <a href="#tarifs" className="land-btn land-btn--ghost-dark">
@@ -798,6 +799,7 @@ export default function DesktopLanding() {
             <a href="#tarifs">Tarifs</a>
             <a href="#affiliation">Affiliation</a>
             <a href="#demo">Offre</a>
+            <Link href="/signup">Créer un compte</Link>
             <Link href="/login">Se connecter</Link>
             <Link href="/legal/mentions">Mentions légales</Link>
             <Link href="/legal/confidentialite">Confidentialité</Link>

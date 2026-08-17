@@ -83,10 +83,15 @@ export const NAV_SECTIONS: NavSection[] = [
     id: "magasin",
     href: "/kiosks",
     label: "Commerce",
-    match: ["/delivery", "/kiosks", "/settings", "/admin"],
+    match: ["/delivery", "/kiosks", "/sales", "/settings", "/admin"],
     hint: "Caisse & livraison",
     children: [
       { href: "/kiosks", label: "Caisse", hint: "Brancher la caisse" },
+      {
+        href: "/sales",
+        label: "Hors caisse",
+        hint: "Parler ou taper",
+      },
       { href: "/delivery", label: "Livraison", hint: "Plateformes (optionnel)" },
     ],
   },
@@ -123,6 +128,7 @@ export function activeNavSection(
   if (
     pathname.startsWith("/delivery") ||
     pathname.startsWith("/kiosks") ||
+    pathname.startsWith("/sales") ||
     pathname.startsWith("/settings") ||
     pathname.startsWith("/admin")
   ) {

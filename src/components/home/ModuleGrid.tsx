@@ -14,6 +14,7 @@ const modules = [
   { href: "/orders", label: "Courses", icon: <IconBag className="h-6 w-6" /> },
   { href: "/inventory", label: "Inventaire", icon: <IconShield className="h-6 w-6" /> },
   { href: "/kiosks", label: "Caisse", icon: <IconBolt className="h-6 w-6" /> },
+  { href: "/sales", label: "Hors caisse", icon: <IconUtensils className="h-6 w-6" /> },
   { href: "/ingredients?tab=catalogue", label: "Produits", icon: <IconUtensils className="h-6 w-6" /> },
   { href: "/ingredients/menu", label: "Import", icon: <IconBolt className="h-6 w-6" /> },
   { href: "/settings", label: "Finance", icon: <IconFinance className="h-6 w-6" /> },

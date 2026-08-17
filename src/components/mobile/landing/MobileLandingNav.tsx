@@ -84,11 +84,11 @@ export function MobileLandingNav() {
           ))}
         </ul>
         <a
-          href="#offre"
+          href="/signup"
           className="mland-btn mland-btn--primary mland-nav__cta"
           onClick={go}
         >
-          Rejoindre les 5 pilotes
+          Créer un compte
         </a>
       </nav>
     </div>

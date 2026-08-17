@@ -10,7 +10,6 @@ import {
   planPeriodSuffix,
   planPrice,
 } from "@/lib/plans";
-import { supportMailto } from "@/lib/support";
 
 function PlanDescription({
   text,
@@ -116,10 +115,10 @@ export function PricingPlans({
                   </button>
                 ) : (
                   <a
-                    href={supportMailto(`Place pilote — plan ${plan.name}`)}
+                    href={`/signup?plan=${plan.id}&billing=${period}`}
                     className={`pricing-card__cta${featured ? " is-lime" : ""}`}
                   >
-                    Demander une place pilote
+                    {plan.cta}
                   </a>
                 )}
               </div>

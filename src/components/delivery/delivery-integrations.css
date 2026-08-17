@@ -1,0 +1,125 @@
+.deliv {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.deliv__lead,
+.deliv__hint {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--text-secondary-dark, #6b7280);
+}
+
+.deliv__block {
+  border: 1px solid var(--border-dark, #e5e7eb);
+  border-radius: 14px;
+  background: var(--pill-neutral, #f3f4f3);
+  overflow: hidden;
+}
+
+.deliv__toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  padding: 0 16px;
+  border: 0;
+  background: transparent;
+  font-size: 1.02rem;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+
+.deliv__toggle em {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--text-secondary-dark, #6b7280);
+}
+
+.deliv__form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 16px 16px;
+}
+
+.deliv__actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.deliv__ghost {
+  border: 0;
+  background: transparent;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.deliv__drivers {
+  margin-top: 8px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid var(--border-dark, #e5e7eb);
+  background: var(--pill-neutral, #f3f4f3);
+}
+
+.deliv__drivers-title {
+  margin: 0 0 10px;
+  font-weight: 650;
+}
+
+.deliv__driver {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--bg-card-dark, #fff);
+}
+
+.deliv__driver p {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.deliv__driver span {
+  font-size: 0.8rem;
+  color: var(--text-secondary-dark, #6b7280);
+}
+
+.deliv__driver-acts {
+  display: flex;
+  gap: 10px;
+}
+
+.deliv__driver-acts button {
+  border: 0;
+  background: transparent;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.deliv__add {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+@media (max-width: 640px) {
+  .deliv__add {
+    grid-template-columns: 1fr;
+  }
+}

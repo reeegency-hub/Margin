@@ -133,7 +133,13 @@ export default async function KiosksPage({
         <p className="hub-now__detail">{inkDetail}</p>
         {pendingCount > 0 ? (
           <p className="hub-now__hint">Liste à valider juste en dessous.</p>
-        ) : null}
+        ) : (
+          <div className="hub-now__actions mt-3">
+            <a href="/sales" className="btn-lime">
+              Hors caisse
+            </a>
+          </div>
+        )}
       </div>
 
       <Suspense

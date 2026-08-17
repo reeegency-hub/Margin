@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-/** Orphelin MVP — la vente passe par la caisse / webhook. */
+/** Ancienne URL — la saisie manuelle est sur /sales. */
 export default function NewSalePage() {
-  redirect("/kiosks");
+  redirect("/sales");
 }

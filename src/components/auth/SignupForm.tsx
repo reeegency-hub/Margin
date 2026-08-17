@@ -16,8 +16,10 @@ import "@/components/auth/auth-shell.css";
 
 export function SignupForm({
   smsAvailable = false,
+  otpRequired = true,
 }: {
   smsAvailable?: boolean;
+  otpRequired?: boolean;
 }) {
   const searchParams = useSearchParams();
   const initialPlan = (searchParams.get("plan") || "commerce") as PlanId;
@@ -83,12 +85,14 @@ export function SignupForm({
         setError("Nom, email et mot de passe (8+ caractères) requis.");
         return;
       }
-      if (useSms && !phone.trim()) {
-        setError("Indiquez votre numéro pour recevoir le SMS.");
+      if (otpRequired) {
+        if (useSms && !phone.trim()) {
+          setError("Indiquez votre numéro pour recevoir le SMS.");
+          return;
+        }
+        await sendOtp();
         return;
       }
-      await sendOtp();
-      return;
     }
 
     setLoading(true);
@@ -206,6 +210,7 @@ export function SignupForm({
               />
             </Field>
 
+            {otpRequired ? (
             <div className="auth-channel">
               <p className="auth-channel__label">Code de confirmation</p>
               <div className="auth-channel__row" role="group">
@@ -257,6 +262,7 @@ export function SignupForm({
                 </p>
               )}
             </div>
+            ) : null}
 
             {!showPlan ? (
               <p className="auth-plan-line">
@@ -365,11 +371,13 @@ export function SignupForm({
 
         <button type="submit" className="auth-cta" disabled={loading}>
           {loading
-            ? step === "form"
+            ? step === "form" && otpRequired
               ? "Envoi…"
               : "Création…"
             : step === "form"
-              ? "Recevoir mon code"
+              ? otpRequired
+                ? "Recevoir mon code"
+                : "Créer mon compte"
               : "Créer mon compte"}
         </button>
 

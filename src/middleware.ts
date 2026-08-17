@@ -110,7 +110,6 @@ export default withAuth(
         p.startsWith("/costs") ||
         p.startsWith("/delivery") ||
         p.startsWith("/cuisine") ||
-        p.startsWith("/sales") ||
         p.startsWith("/receipts") ||
         p.startsWith("/assistant");
       if (redirectHome) {
@@ -140,6 +139,7 @@ export const config = {
     "/onboarding",
     "/ingredients/:path*",
     "/dishes/:path*",
+    "/sales",
     "/sales/:path*",
     "/receipts/:path*",
     "/settings/:path*",

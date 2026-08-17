@@ -1,0 +1,144 @@
+.msale {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 420px;
+  margin: 0 auto;
+  padding-bottom: 24px;
+}
+
+.msale__mic {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 72px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--eerie-black, #0a0a0a);
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 650;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.msale__mic-icon {
+  flex-shrink: 0;
+}
+
+.msale__mic.is-on {
+  background: #111;
+  outline: 3px solid #e6f8aa;
+}
+
+.msale__mic.is-on .msale__mic-icon {
+  color: #e6f8aa;
+  animation: msale-pulse 1s ease-in-out infinite;
+}
+
+@keyframes msale-pulse {
+  50% {
+    transform: scale(1.35);
+    opacity: 0.7;
+  }
+}
+
+.msale__hint {
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--text-soft, #4b5563);
+  margin: 0;
+}
+
+.msale__search input {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 0 14px;
+  font-size: 1rem;
+}
+
+.msale__hits,
+.msale__lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.msale__hits button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  font-size: 1rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.msale__hits button span {
+  font-weight: 650;
+}
+
+.msale__lines li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  padding: 0 8px 0 14px;
+  border-radius: 12px;
+  background: #f3f4f3;
+}
+
+.msale__name {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.msale__step {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.msale__step button {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.msale__step b {
+  min-width: 28px;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+.msale__go {
+  width: 100%;
+  min-height: 52px;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.msale__last {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted, #6b7280);
+  margin: 0;
+}

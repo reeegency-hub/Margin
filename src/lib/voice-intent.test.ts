@@ -1,4 +1,9 @@
-import { parseVoiceIntent, formatVoiceIntentSummary } from "./voice-intent";
+import {
+  parseVoiceIntent,
+  formatVoiceIntentSummary,
+  parseSpokenSale,
+  matchSpokenToCatalog,
+} from "./voice-intent";
 
 let passed = 0;
 let failed = 0;
@@ -29,6 +34,16 @@ assert(
 // Summary
 const summary = formatVoiceIntentSummary(rec);
 assert("summary non-empty", summary.length > 5);
+
+const spoken = parseSpokenSale("deux lait et un pain");
+assert("spoken 2 items", spoken.length === 2);
+assert("spoken qty", spoken[0]?.quantity === 2 && spoken[1]?.quantity === 1);
+
+const hit = matchSpokenToCatalog(spoken, [
+  { id: "1", name: "Lait entier", sku: "LAIT" },
+  { id: "2", name: "Pain baguette", sku: null },
+]);
+assert("spoken match", hit.matched.length === 2 && hit.unknown.length === 0);
 
 console.log(`\nvoice-intent: ${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

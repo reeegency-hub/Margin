@@ -87,6 +87,115 @@ function parseItemList(segment: string): VoiceItem[] {
   return items;
 }
 
+const FR_NUM: Record<string, number> = {
+  un: 1,
+  une: 1,
+  uns: 1,
+  deux: 2,
+  trois: 3,
+  quatre: 4,
+  cinq: 5,
+  six: 6,
+  sept: 7,
+  huit: 8,
+  neuf: 9,
+  dix: 10,
+  onze: 11,
+  douze: 12,
+};
+
+function foldFr(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/['’]/g, " ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+/**
+ * « deux lait et un pain », « 3 baguettes », « j’ai vendu un café »
+ */
+export function parseSpokenSale(
+  text: string
+): { name: string; quantity: number }[] {
+  const cleaned = text
+    .replace(
+      /^(j[’']ai\s+)?(vendu|vente|ajouter?|ajoute|encore)\s+/i,
+      ""
+    )
+    .trim();
+  const parts = cleaned
+    .split(/[,;]|\bet\s+|\spuis\s+/gi)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  const out: { name: string; quantity: number }[] = [];
+  for (const part of parts) {
+    const folded = foldFr(part);
+    const mNum =
+      folded.match(/^(\d+)\s+(.+)$/) ||
+      folded.match(
+        /^(un|une|deux|trois|quatre|cinq|six|sept|huit|neuf|dix|onze|douze)\s+(.+)$/
+      );
+    if (mNum) {
+      const qty = /^\d+$/.test(mNum[1])
+        ? Number(mNum[1])
+        : FR_NUM[mNum[1]] || 1;
+      const name = mNum[2].replace(/\b(pieces?|unites?|pcs)\b/g, "").trim();
+      if (name && qty > 0) out.push({ name, quantity: Math.floor(qty) });
+      continue;
+    }
+    if (folded.length >= 2) out.push({ name: folded, quantity: 1 });
+  }
+  return out;
+}
+
+export function matchSpokenToCatalog<T extends { id: string; name: string; sku?: string | null }>(
+  spoken: { name: string; quantity: number }[],
+  catalog: T[]
+): { matched: { product: T; quantity: number }[]; unknown: string[] } {
+  const matched: { product: T; quantity: number }[] = [];
+  const unknown: string[] = [];
+
+  for (const item of spoken) {
+    const q = foldFr(item.name);
+    if (!q) continue;
+    let best: T | null = null;
+    let bestScore = 0;
+    for (const p of catalog) {
+      const n = foldFr(p.name);
+      const sku = foldFr(p.sku || "");
+      let score = 0;
+      if (n === q || sku === q) score = 100;
+      else if (n.includes(q) || q.includes(n) || (sku && sku.includes(q)))
+        score = 80;
+      else {
+        const qt = q.split(" ").filter((t) => t.length > 1);
+        const nt = n.split(" ");
+        const hits = qt.filter((t) =>
+          nt.some((w) => w.startsWith(t) || t.startsWith(w))
+        );
+        if (qt.length && hits.length === qt.length) score = 70;
+        else if (hits.length) score = 40 + hits.length * 10;
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        best = p;
+      }
+    }
+    if (best && bestScore >= 40) {
+      const existing = matched.find((m) => m.product.id === best!.id);
+      if (existing) existing.quantity += item.quantity;
+      else matched.push({ product: best, quantity: item.quantity });
+    } else {
+      unknown.push(item.name);
+    }
+  }
+  return { matched, unknown };
+}
+
 export function formatVoiceIntentSummary(intent: VoiceIntent): string {
   if (intent.type === "unknown") return intent.raw;
   if (intent.type === "recipe") {

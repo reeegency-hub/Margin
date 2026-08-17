@@ -9,6 +9,7 @@ export function MobileLandingFooter() {
         <Link href="/legal/mentions">Mentions</Link>
         <Link href="/legal/cgu">CGU</Link>
         <a href={supportMailto()}>Contact</a>
+        <Link href="/signup">Créer un compte</Link>
         <Link href="/login">Se connecter</Link>
       </nav>
       <p className="mland-foot__copy">

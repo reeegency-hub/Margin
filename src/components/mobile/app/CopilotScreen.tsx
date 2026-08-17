@@ -42,6 +42,10 @@ const ACTIONS = [
     message: "Prépare une liste de courses à partir des manques stock.",
   },
   {
+    label: "Hors caisse",
+    href: "/sales",
+  },
+  {
     label: "Brancher caisse",
     href: "/kiosks",
   },
