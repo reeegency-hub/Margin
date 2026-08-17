@@ -43,7 +43,7 @@ const ACTIONS = [
   },
   {
     label: "Brancher caisse",
-    message: "Je veux brancher ma caisse.",
+    href: "/kiosks",
   },
 ] as const;
 
@@ -359,12 +359,18 @@ export function CopilotScreen({
   }
 
   function onAction(action: (typeof ACTIONS)[number]) {
+    if ("href" in action && action.href) {
+      router.push(action.href);
+      return;
+    }
     if ("needsPhoto" in action && action.needsPhoto) {
       setInput(action.message);
       window.setTimeout(() => photoRef.current?.click(), 80);
       return;
     }
-    send(action.message);
+    if ("message" in action) {
+      send(action.message);
+    }
   }
 
   const canSend = Boolean(input.trim() || fileText || fileBase64) && !pending;

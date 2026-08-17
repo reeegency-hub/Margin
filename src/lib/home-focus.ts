@@ -31,7 +31,7 @@ export function buildDayWeekFocuses(input: {
       cadence: "day",
       urgency: "high",
       title: "Hausse fournisseur",
-      message: `${h.name} +${h.deltaPct} % — coût matière recalculé aujourd’hui${
+      message: `${h.name} +${h.deltaPct} % — coût d’achat recalculé aujourd’hui${
         costPilot.hikesToday.length > 1
           ? ` · +${costPilot.hikesToday.length - 1} autre(s)`
           : ""
@@ -120,7 +120,7 @@ export function buildDayWeekFocuses(input: {
       id: "hikes-week",
       cadence: "week",
       title: "Hausses cette semaine",
-      message: `${costPilot.hikesWeek.length} produit${costPilot.hikesWeek.length > 1 ? "s" : ""} ont monté ≥ 5 % — surveillez le coût matière.`,
+      message: `${costPilot.hikesWeek.length} produit${costPilot.hikesWeek.length > 1 ? "s" : ""} ont monté ≥ 5 % — surveillez le coût d’achat.`,
       ctaLabel: "Voir les hausses",
       ctaHref: "/costs#hausses",
     });
@@ -132,7 +132,7 @@ export function buildDayWeekFocuses(input: {
       cadence: "week",
       title: "Importer une facture",
       message:
-        "Sans prix d’achat, pas de hausses ni de coût matière. Importez le CSV ou la photo fournisseur.",
+        "Sans prix d’achat, pas de hausses ni de coût produit. Importez le CSV ou la photo fournisseur.",
       ctaLabel: "Importer",
       ctaHref: "/costs#facture",
     });
@@ -145,9 +145,9 @@ export function buildDayWeekFocuses(input: {
     items.push({
       id: "foodcost-gaps",
       cadence: "week",
-      title: "Coût matière incomplet",
-      message: `${dishesMissingCost} best-seller${dishesMissingCost > 1 ? "s" : ""} sans coût matière — il faut factures + ventes + fiches produit.`,
-      ctaLabel: "Voir la matière",
+      title: "Coût d’achat incomplet",
+      message: `${dishesMissingCost} best-seller${dishesMissingCost > 1 ? "s" : ""} sans coût d’achat — il faut factures + ventes + fiches produit.`,
+      ctaLabel: "Voir les coûts",
       ctaHref: "/costs#matiere",
     });
   }

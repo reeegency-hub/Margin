@@ -51,7 +51,10 @@ export default async function AdminStorePage({
     "http://localhost:3020"
   ).replace(/\/$/, "");
   const webhookUrl = pos
-    ? `${baseUrl}/api/pos/webhook/${pos.id}`
+    ? `${baseUrl}/api/webhooks/pos/${pos.id}`
+    : null;
+  const webhookUrlV1 = pos
+    ? `${baseUrl}/api/v1/webhooks/pos/${pos.vendor === "tiller" ? "sumup" : pos.vendor}?connectionId=${pos.id}`
     : null;
 
   return (
@@ -209,6 +212,14 @@ export default async function AdminStorePage({
             </p>
             <p className="break-all opacity-80">
               URL : <code>{webhookUrl}</code>
+            </p>
+            {webhookUrlV1 ? (
+              <p className="break-all opacity-80">
+                URL v1 : <code>{webhookUrlV1}</code>
+              </p>
+            ) : null}
+            <p className="break-all opacity-80">
+              Header : <code>x-webhook-secret</code>
             </p>
             <p className="break-all opacity-80">
               Secret : <code>{pos.webhookSecret}</code>

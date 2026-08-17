@@ -44,7 +44,7 @@ export async function createIngredientsBulkAction(
   | { ok: false; error: string }
 > {
   if (!items?.length) {
-    return { ok: false, error: "Aucun ingrédient à enregistrer." };
+    return { ok: false, error: "Aucune référence stock à enregistrer." };
   }
 
   const result = await requireTenantDb(async (db, ctx) => {

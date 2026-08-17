@@ -4,9 +4,13 @@
 
 ## Les 3 actions (exemples)
 
-1. Consulter le stock  
-2. Poser une question au Copilote (ou importer un petit CSV)  
-3. Voir / comprendre une alerte WhatsApp (ou ouvrir Réglages WA)
+Alignées sur le [parcours](./PARCOURS-CLIENT.md) — après onboard :
+
+1. Retrouver son stock (après l’import)
+2. Poser une question au Copilote **ou** comprendre l’abo / l’accès
+3. Voir une alerte WhatsApp **ou** dire où est la caisse / le manuel
+
+**Rappel :** toi = accompagnateur. Pendant ce call, tu notes, tu n’opères pas à sa place.
 
 ---
 

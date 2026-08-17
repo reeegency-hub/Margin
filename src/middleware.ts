@@ -100,16 +100,14 @@ export default withAuth(
       userAgent: req.headers.get("user-agent"),
     });
 
+    // Mobile soft-launch : Stock / Courses / Inventaire / Caisse accessibles.
+    // On garde hors mobile les écrans legacy / lourds peu utilisés en pilote.
     if (device === "mobile") {
       const p = req.nextUrl.pathname;
       const redirectHome =
-        p.startsWith("/ingredients") ||
         p.startsWith("/dishes") ||
-        p.startsWith("/orders") ||
         p.startsWith("/employees") ||
         p.startsWith("/costs") ||
-        p.startsWith("/inventory") ||
-        p.startsWith("/kiosks") ||
         p.startsWith("/delivery") ||
         p.startsWith("/cuisine") ||
         p.startsWith("/sales") ||

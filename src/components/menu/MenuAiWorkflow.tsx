@@ -259,12 +259,12 @@ export function MenuAiWorkflow({
       ) : null}
 
       {step === "overview" || step === "done" ? (
-        <div className="phone-hide catalog-import">
+        <div className="catalog-import">
           <header className="catalog-import__hero">
             <p className="catalog-import__eyebrow">Catalogue</p>
             <h3 className="catalog-import__title">
               Importez votre liste de prix
-              <span>Texte, PDF ou photo — l’IA propose, vous validez.</span>
+              <span>CSV, texte, PDF ou photo — l’IA propose, vous validez.</span>
             </h3>
             <p className="catalog-import__lead">
               {step === "done" && message
@@ -573,7 +573,7 @@ export function MenuAiWorkflow({
                 <input
                   ref={fileRef}
                   type="file"
-                  accept=".pdf,image/*,.txt,text/plain"
+                  accept=".csv,.tsv,.txt,.pdf,.md,image/*,text/csv,text/plain,application/pdf"
                   className="sr-only"
                   onChange={onFile}
                 />

@@ -1,100 +1,83 @@
-# Checklist Soft Launch — Demain matin
+# Soft Launch — Semaine fondations → pilote
 
-Ordre chronologique. Le domaine/DNS part en premier car c’est le seul délai incompressible (propagation).
+App : https://margin-shop.vercel.app · Support : `reeegency@gmail.com`  
+**Ton job :** accompagner le client — [PARCOURS-CLIENT.md](./PARCOURS-CLIENT.md)  
+Compte test : `reeegency+pilote1@gmail.com` · [COMPTE-PILOTE-1.md](./COMPTE-PILOTE-1.md)
 
----
-
-## 0. Lancer en tout premier (délai de propagation)
-
-- [ ] Acheter `marginshop.app` (Vercel Domains ou registrar)
-- [ ] Resend → Add Domain → coller SPF / DKIM / DMARC chez le registrar
-- [ ] Laisser propager en arrière-plan pendant les étapes suivantes
-
-**Lien utile :** [vercel.com/dashboard/domains](https://vercel.com/dashboard/domains) · [resend.com/domains](https://resend.com/domains)
+**Règle :** pas d’invite client tant que Sam–Dim (prod) n’est pas vert.  
+**Domaine :** optionnel (pilote = comptes à la main).
 
 ---
 
-## 1. Pendant que le DNS propage (en parallèle)
+## Ton rôle vs la technique
 
-### Stripe live E2E — priorité #1
+| Toi (accompagnement) | Prod (fondations Sam–Dim) |
+|----------------------|---------------------------|
+| Création du compte client | Démo auto-login off |
+| Import CSV / PDF / TXT (stock ou menu) | Stripe live + 1 paiement test |
+| Abonnement Margin (checkout + coupon) | Clé LLM + Copilote qui répond |
+| Intégration caisse (ou manuel) | App stable |
+| Mise en place WhatsApp | |
 
-- [ ] Payer 1 abo live avec une vraie carte (compte fondateur ou test)
-- [ ] Vérifier : accès app + `stripeStatus=active` en base
-- [ ] Si ça casse : webhook live `https://margin-shop.vercel.app/api/stripe/webhook` + logs Vercel
-
-### OpenAI billing
-
-- [ ] [platform.openai.com](https://platform.openai.com) : crédit + spending limit (10–20 €)
-- [ ] Sans ça le Copilote reste en 429
-
-### Neon PITR (backup)
-
-- [ ] Créer une `NEON_API_KEY` (ou tester via dashboard Neon)
-- [ ] Une fois : branche de restore à T−5 min pour prouver que ça marche
-
-### Admin
-
-- [ ] Vérifier `/admin` : magasin actif + rôle FOUNDER OK sur ton compte
+Sans la colonne de droite, l’accompagnement plante. Sans la colonne de gauche, pas de vrai pilote.
 
 ---
 
-## 2. Revenir sur Resend une fois le DNS propagé
+## Sam–Dim — Fondations (avant le 1er client)
 
-- [ ] Verify **vert** sur Resend
-- [ ] Vercel Production : `NEWSLETTER_FROM_EMAIL=Margin <contact@marginshop.app>`
-- [ ] Redéployer
-- [ ] Tester OTP vers une adresse **hors compte Resend** (vraie boîte externe)
+- [ ] `DEMO_AUTO_LOGIN=0` en prod
+- [ ] Stripe **live** branché (clés + webhook)
+- [ ] Clé ChatGPT + spending limit (10–20 €)
+- [ ] 1 message Copilote OK + 1 petit import CSV (smoke)
+- [ ] Toi login 10 min sans page cassée
 
----
-
-## 3. Magasin #1 (déjà créé — à finir)
-
-Compte : `reeegency+pilote1@gmail.com` (MDP déjà communiqué)  
-Détail : [COMPTE-PILOTE-1.md](./COMPTE-PILOTE-1.md)
-
-- [ ] WhatsApp commerçant dans Réglages → preuve d’une alerte réelle reçue
-- [ ] Import stock réel (pas le CSV test) → doit tenir face aux données sales
-- [ ] Documenter caisse (POS ou parcours manuel 5 lignes) → pas de flou ops — voir [POS-CAISSE.md](./POS-CAISSE.md)
-- [ ] Coupon Stripe −20 % premier mois créé (à réutiliser pour #2 et #3)
-- [ ] Call 30 min : le commerçant fait 3 actions seul — grille [FRICTION-CALL.md](./FRICTION-CALL.md)
-- [ ] Noter 2–3 frictions → à corriger avant magasins #2–#3
+**Ok :** le parcours client peut commencer sans surprise technique.
 
 ---
 
-## 4. Une fois Stripe + OTP verts → soft announce (réseau fermé)
+## Lundi — 1er accompagnement (magasin #1)
 
-**Message type :** voir [MESSAGE-ANNONCE.md](./MESSAGE-ANNONCE.md)
+Enchaîne le [parcours](./PARCOURS-CLIENT.md) avec #1 (ou self-run si le commerçant n’est pas dispo) :
 
-> On ouvre un programme pilote : 5 commerces max. Pas un lancement grand public. Intéressé → réponds ici, on te recontacte à la main.
+1. [ ] Compte
+2. [ ] Import stock / menu (fichier réel)
+3. [ ] Abonnement live + coupon −20 %
+4. [ ] Caisse — guide détaillé [POS-CAISSE.md](./POS-CAISSE.md) (branchée **ou** manuel)
+5. [ ] WhatsApp (1 alerte reçue)
 
-- [ ] Liste file d’attente (Sheets) : Date | Nom | Commerce | Canal | Statut | Notes — modèle [FILE-ATTENTE.md](./FILE-ATTENTE.md)
-- [ ] Réponses 1:1 uniquement
-- [ ] 0 ads Meta/Google cette semaine
-- [ ] Support unique déjà posé : `reeegency@gmail.com`
-- [ ] Agenda par pilote dès l’onboard : **J+3** (15 min, ça démarre ?) / **J+7** (15 min, usage régulier ou abandon ?)
+Aussi : `/admin` FOUNDER OK · coupon créé une fois pour tous.
+
+**Ok Lundi :** les 5 étapes cochées (ou blocker noté avec plan B).
+
+---
+
+## Mardi — Il se débrouille un peu + pipeline
+
+- [ ] Call 30 min — lui aux commandes · grille [FRICTION-CALL.md](./FRICTION-CALL.md)
+- [ ] 2–3 frictions notées · hotfix P0 le jour même
+- [ ] File d’attente [FILE-ATTENTE.md](./FILE-ATTENTE.md)
+- [ ] Créneaux J+3 / J+7 bloqués
+- [ ] Soft announce réseau **si** abo live vert — [MESSAGE-ANNONCE.md](./MESSAGE-ANNONCE.md)
+
+**Ok Mardi :** tu sais onboarder #2 sans improvisation.
+
+---
+
+## Mer–Ven
+
+| Jour | Focus |
+|------|--------|
+| Mer | Onboard #2 avec le même parcours 5 étapes |
+| Jeu | J+3 magasin #1 |
+| Ven | #3 ou pause · [GO-NOGO.md](./GO-NOGO.md) |
 
 ---
 
 ## Ne pas ouvrir tant que…
 
-| Interdit | Condition de déblocage |
-|----------|------------------------|
-| Annonce « ready » | Stripe E2E + OTP verts |
-| Self-serve `/signup` grand public | 3 pilotes stables + 0 friction critique après J+7 |
+| Interdit | Déblocage |
+|----------|-----------|
+| Annonce grand public | Stripe E2E vert |
+| Signup self-serve | 3 pilotes stables après J+7 |
 | Ads | Avant 3 pilotes stables |
-| Promesses Grok/Gemini | Déjà retiré — ne pas remettre |
-
----
-
-## Récap — checklist « je coche »
-
-- [ ] Domaine acheté + DNS Resend verts + OTP reçu ailleurs
-- [ ] 1 paiement Stripe live → accès OK
-- [ ] Spending limit OpenAI
-- [ ] PITR Neon testé une fois
-- [ ] `/admin` : magasin actif + rôle FOUNDER OK
-- [ ] WA + stock réel magasin #1
-- [ ] Coupon −20 % créé
-- [ ] Call 30 min + notes friction
-- [ ] File d’attente Sheets créée
-- [ ] 2 RDV J+3 / J+7 bloqués pour le prochain onboard
+| “Toutes les caisses en 2 clics” | Non promis — facilité + plan B manuel |

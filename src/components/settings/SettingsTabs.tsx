@@ -266,7 +266,7 @@ export function SettingsTabs({
 
           <FeatureSection
             title="Modèle OpenAI (optionnel)"
-            subtitle="Si vous utilisez OpenAI pour catalogues / menus."
+            subtitle="Si vous utilisez OpenAI pour catalogues / stock."
           />
           <OpenAISettingsForm
             configured={openai.configured}

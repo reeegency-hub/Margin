@@ -15,8 +15,8 @@ export const FEATURES = {
   copilotFullscreen: { mobile: true, desktop: false },
   /** Layout multi-panel (sidebar + main + assistant) */
   multiPanel: { mobile: false, desktop: true },
-  /** Import catalogue / fiches produit lourdes */
-  catalogImport: { mobile: false, desktop: true },
+  /** Import catalogue / fiches produit (CSV inclus — besoin pilote mobile) */
+  catalogImport: { mobile: true, desktop: true },
   /** CTA upgrade Franchise dans la marque */
   upgradeCta: { mobile: false, desktop: true },
   /** Accueil desktop DashboardView vs MobileHome */
@@ -28,10 +28,10 @@ export const FEATURES = {
   /** Landing mobile minimale (brief) */
   mobileLanding: { mobile: true, desktop: false },
   /**
-   * App mobile post-login à 3 onglets (Dashboard / Copilote / Réglages).
-   * Pas de BottomNav multi-modules, pas de copilote docké — page /assistant.
+   * Ancien mode 2 onglets (Copilote / Réglages) — désactivé pour le soft launch :
+   * BottomNav Stock / Courses + pages caisse / inventaire débloquées.
    */
-  mobileThreeTabApp: { mobile: true, desktop: false },
+  mobileThreeTabApp: { mobile: false, desktop: false },
 } as const;
 
 export type FeatureKey = keyof typeof FEATURES;

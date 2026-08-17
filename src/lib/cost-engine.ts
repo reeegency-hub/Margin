@@ -61,7 +61,7 @@ function round2(n: number) {
   return Math.round(n * 100) / 100;
 }
 
-/** Coût matière d’un plat = Σ qty recette × dernier prix d’achat. */
+/** Coût d’achat d’un produit = Σ qty composition × dernier prix d’achat. */
 export async function computeDishFoodCost(
   restaurantId: string,
   productId: string
@@ -99,7 +99,7 @@ export async function computeDishFoodCost(
   return round2(total);
 }
 
-/** Recalcule et stocke le coût matière des plats touchés (jour même). */
+/** Recalcule et stocke le coût d’achat des produits touchés (jour même). */
 export async function refreshDishFoodCosts(
   restaurantId: string,
   stockUnitIds?: string[]
@@ -185,7 +185,7 @@ export async function applyPurchasePrice(opts: {
         title: `Hausse fournisseur — ${ing.name}`,
         constat: `${ing.name} : ${previous.toFixed(2)} € → ${unitPrice.toFixed(2)} € (+${deltaPct} %).`,
         cause: "Prix d’achat relevé sur une facture fournisseur.",
-        impact: "Coût matière des plats concernés recalculé aujourd’hui.",
+        impact: "Coût d’achat des produits concernés recalculé aujourd’hui.",
         action: "Vérifier la marge des best-sellers et négocier si besoin.",
         stockUnitId,
       },

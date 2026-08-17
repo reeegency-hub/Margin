@@ -1,7 +1,7 @@
 /**
  * Navigation commerçant — Accueil · Stock · Courses · Équipe · Commerce.
- * Bottom bar = 4 onglets. Commerce (caisse, livraison) = menu / sidebar.
- * Réglages & déconnexion = menu compte (topbar uniquement).
+ * Bottom bar = Accueil · Stock · Courses · Caisse · Réglages.
+ * Coûts / Équipe / Livraison = sidebar desktop (ou menu).
  */
 
 export type NavChild = {
@@ -85,7 +85,6 @@ export const NAV_SECTIONS: NavSection[] = [
     label: "Commerce",
     match: ["/delivery", "/kiosks", "/settings", "/admin"],
     hint: "Caisse & livraison",
-    menuOnly: true,
     children: [
       { href: "/kiosks", label: "Caisse", hint: "Brancher la caisse" },
       { href: "/delivery", label: "Livraison", hint: "Plateformes (optionnel)" },
@@ -93,12 +92,14 @@ export const NAV_SECTIONS: NavSection[] = [
   },
 ];
 
-/** Onglets barre du bas (sans Menu ni Commerce) */
-export const BOTTOM_TABS = NAV_SECTIONS.filter((s) => !s.menuOnly).map((s) => ({
-  href: s.href,
-  label: s.label,
-  id: s.id,
-}));
+/** Onglets barre du bas — Accueil · Stock · Courses · Caisse · Réglages */
+export const BOTTOM_TABS = [
+  { href: "/", label: "Accueil", id: "home" as const },
+  { href: "/ingredients", label: "Stock", id: "stock" as const },
+  { href: "/orders", label: "Courses", id: "courses" as const },
+  { href: "/kiosks", label: "Caisse", id: "magasin" as const },
+  { href: "/settings", label: "Réglages", id: "settings" as const },
+];
 
 function pathMatches(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";

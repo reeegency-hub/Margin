@@ -56,10 +56,31 @@ function IconMenu() {
   );
 }
 
+function IconStore() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M4 10h16v10H4z" />
+      <path d="M3 10l2-5h14l2 5" />
+      <path d="M9 20v-6h6v6" />
+    </svg>
+  );
+}
+
+function IconGear() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 3.5v2.2M12 18.3V20.5M4.8 7.2l1.7 1.2M17.5 15.6l1.7 1.2M4.8 16.8l1.7-1.2M17.5 8.4l1.7-1.2" />
+    </svg>
+  );
+}
+
 function iconFor(href: string) {
   if (href === "/") return <IconHome />;
   if (href === "/employees") return <IconPeople />;
   if (href === "/orders") return <IconCart />;
+  if (href === "/kiosks") return <IconStore />;
+  if (href === "/settings") return <IconGear />;
   return <IconBox />;
 }
 

@@ -3,7 +3,6 @@ import {
   IconBox,
   IconFinance,
   IconUtensils,
-  IconScooter,
   IconTeam,
   IconBag,
   IconShield,
@@ -12,13 +11,13 @@ import {
 
 const modules = [
   { href: "/ingredients", label: "Stock", icon: <IconBox className="h-6 w-6" /> },
-  { href: "/settings", label: "Finance", icon: <IconFinance className="h-6 w-6" /> },
-  { href: "/ingredients?tab=catalogue", label: "Produits", icon: <IconUtensils className="h-6 w-6" /> },
-  { href: "/delivery", label: "Livraison", icon: <IconScooter className="h-6 w-6" /> },
-  { href: "/employees", label: "Équipe", icon: <IconTeam className="h-6 w-6" /> },
   { href: "/orders", label: "Courses", icon: <IconBag className="h-6 w-6" /> },
   { href: "/inventory", label: "Inventaire", icon: <IconShield className="h-6 w-6" /> },
-  { href: "/ingredients/menu", label: "Copilote", icon: <IconBolt className="h-6 w-6" /> },
+  { href: "/kiosks", label: "Caisse", icon: <IconBolt className="h-6 w-6" /> },
+  { href: "/ingredients?tab=catalogue", label: "Produits", icon: <IconUtensils className="h-6 w-6" /> },
+  { href: "/ingredients/menu", label: "Import", icon: <IconBolt className="h-6 w-6" /> },
+  { href: "/settings", label: "Finance", icon: <IconFinance className="h-6 w-6" /> },
+  { href: "/employees", label: "Équipe", icon: <IconTeam className="h-6 w-6" /> },
 ];
 
 export function ModuleGrid() {

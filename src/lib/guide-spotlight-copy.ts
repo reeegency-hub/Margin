@@ -252,15 +252,15 @@ const BY_ID: Record<string, GuideSpotCopy> = {
     footHint: FOOT_CLICK,
   },
   "cost-food": {
-    title: "Voir le coût matière",
+    title: "Voir le coût d’achat",
     steps: [
-      "Le coût matière demande factures + ventes + fiches produit.",
+      "Le coût d’achat demande factures + ventes + fiches produit.",
       "Repérez ce qui a monté aujourd’hui.",
     ],
     footHint: FOOT_CLICK,
   },
   "home-foodcost": {
-    title: "Coût matière des best-sellers",
+    title: "Coût d’achat des best-sellers",
     steps: [
       "Il faut ventes caisse + fiches produit + factures.",
       "Les marges se recalculent si un prix fournisseur monte.",

@@ -147,10 +147,10 @@ export default async function SettingsPage({
       {params.tested === "1" ? (
         <p className="flash">Message de test envoyé sur WhatsApp.</p>
       ) : null}
-      {params.tested === "simulated" ? (
+      {params.error === "whatsapp_not_live" ? (
         <p className="flash flash-warn">
-          Test enregistré — l’envoi technique n’est pas encore actif. Le numéro
-          est bien sauvé.
+          Aucun message envoyé : WhatsApp technique non actif (Twilio). Le
+          numéro reste enregistré — contactez le support pilote.
         </p>
       ) : null}
       {params.connected ? (

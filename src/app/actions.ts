@@ -322,6 +322,9 @@ export async function testWhatsApp() {
     redirect("/settings?error=nonumber");
   }
   const channel = getNotifierChannel();
+  if (channel !== "twilio") {
+    redirect("/settings?error=whatsapp_not_live");
+  }
   const notifier = getNotifier();
   const testBody = `Margin — Bot actif pour ${restaurant.name}.\nRépondez avec un numéro ou tapez « inventaire ».`;
   if (notifier.sendInteractive) {
@@ -348,11 +351,7 @@ export async function testWhatsApp() {
       templateVars: { "1": testBody },
     });
   }
-  redirect(
-    channel === "twilio"
-      ? "/settings?tested=1"
-      : "/settings?tested=simulated"
-  );
+  redirect("/settings?tested=1");
 }
 
 export async function dismissStockRecapAction() {
@@ -531,7 +530,7 @@ export async function startInventory() {
   redirect(`/inventory/${inv.id}`);
 }
 
-/** Vérification filtrée sur une liste d'ingrédients (ex. produits découverts caisse) */
+/** Vérification filtrée sur une liste de références stock (ex. produits découverts caisse) */
 export async function startInventoryForIngredientsAction(formData: FormData) {
   const raw = String(formData.get("stockUnitIds") || "");
   const stockUnitIds = raw
@@ -779,7 +778,7 @@ export async function analyzeMenuAction(menuText: string): Promise<
   if (!result.dishes.length) {
     return {
       ok: false,
-      error: "Aucun plat détecté. Vérifiez le format (nom + prix éventuel).",
+      error: "Aucun produit détecté. Vérifiez le format (nom + prix éventuel).",
     };
   }
 
@@ -950,7 +949,7 @@ export async function confirmMenuRecipesAction(
   } catch (e) {
     return {
       ok: false,
-      error: e instanceof Error ? e.message : "Import menu impossible.",
+      error: e instanceof Error ? e.message : "Import catalogue impossible.",
     };
   }
 }
@@ -1132,7 +1131,7 @@ export async function applyVoiceInventoryAction(
   }
 
   if (!batch.length) {
-    return { ok: false, error: "Aucun ingrédient reconnu." };
+    return { ok: false, error: "Aucune référence stock reconnue." };
   }
 
   await updateInventoryLines(session.user.restaurantId, inventoryId, batch);
@@ -1153,7 +1152,7 @@ export async function applyVoiceRecipeAction(text: string): Promise<
   if (intent.type !== "recipe") {
     return {
       ok: false,
-      error: "Format : « Nom du plat : 150 g ingrédient, 1 pain »",
+      error: "Format : « Nom du produit : 150 g référence, 1 pain »",
     };
   }
 
@@ -1177,7 +1176,7 @@ export async function applyVoiceRecipeAction(text: string): Promise<
   revalidatePath("/dishes");
   return {
     ok: true,
-    message: `Recette « ${intent.dishName} » créée (${res.createdIngredients} ingrédients).`,
+    message: `Fiche « ${intent.dishName} » créée (${res.createdIngredients} références stock).`,
   };
 }
 
@@ -1712,7 +1711,14 @@ export async function signupAndCheckoutAction(input: {
       plan as "commerce" | "reseau" | "boutique",
       billingPeriod as "monthly" | "yearly"
     );
-    if (stripe && priceId) {
+    if (!stripe || !priceId) {
+      return {
+        ok: false,
+        error:
+          "Paiement indisponible (tarif manquant). Contactez le support pilote.",
+      };
+    }
+    try {
       const base =
         process.env.NEXTAUTH_URL?.replace(/\/$/, "") ||
         process.env.WEBHOOK_BASE_URL?.replace(/\/$/, "") ||
@@ -1752,10 +1758,22 @@ export async function signupAndCheckoutAction(input: {
       if (checkout.url) {
         return { ok: true, checkoutUrl: checkout.url };
       }
+      return {
+        ok: false,
+        error:
+          "Impossible d’ouvrir le paiement Stripe. Réessayez ou contactez le support.",
+      };
+    } catch (e) {
+      console.error("[signup] checkout failed", e);
+      return {
+        ok: false,
+        error:
+          "Paiement indisponible pour le moment. Réessayez ou contactez le support.",
+      };
     }
   }
 
-  // Sans Stripe (pilote local) : activer tout de suite pour l’onboarding
+  // Sans Stripe (dev local uniquement) : activer pour l’onboarding
   await prisma.restaurant.update({
     where: { id: restaurant.id },
     data: { active: true, stripeStatus: "none" },
@@ -2055,6 +2073,13 @@ export async function testOnboardingWhatsApp(): Promise<
     return { ok: false, error: "Ajoutez un numéro WhatsApp d’abord." };
   }
   const channel = getNotifierChannel();
+  if (channel !== "twilio") {
+    return {
+      ok: false,
+      error:
+        "WhatsApp technique non actif (Twilio manquant). Le numéro est sauvé, mais aucun message n’a été envoyé. Contactez le support pilote.",
+    };
+  }
   const notifier = getNotifier();
   if (notifier.sendInteractive) {
     await notifier.sendInteractive({
@@ -2072,14 +2097,7 @@ export async function testOnboardingWhatsApp(): Promise<
       body: `Margin — Connexion WhatsApp OK pour ${restaurant.name}.`,
     });
   }
-  if (channel === "twilio") {
-    return { ok: true, message: "Message de test envoyé sur WhatsApp." };
-  }
-  return {
-    ok: true,
-    message:
-      "Test enregistré — l’envoi technique n’est pas encore actif. Le numéro est bien sauvé ; les boutons ouvrent aussi WhatsApp sur votre téléphone.",
-  };
+  return { ok: true, message: "Message de test envoyé sur WhatsApp." };
 }
 
 export async function completeOnboarding(): Promise<

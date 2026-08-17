@@ -435,7 +435,7 @@ function buildHome(p: Progress): SectionGuide {
     },
     {
       id: "home-foodcost",
-      label: "Coût matière des best-sellers",
+      label: "Coût d’achat des best-sellers",
       done: p.dishWithFoodCost > 0,
       href: "/costs#matiere",
       cta: "Voir les marges",

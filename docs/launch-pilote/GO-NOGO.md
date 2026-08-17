@@ -1,13 +1,15 @@
-# Go / No-Go — état au 8 août 2026
+# Go / No-Go — état au 9 août 2026
 
-Critères soft announce : **les 3 doivent être verts**.
+Critères soft announce **réseau fermé** (5 pilotes max).
 
 | Critère | Statut | Preuve / manque |
 |---------|--------|-----------------|
-| Stripe live (paiement → accès) | **NO-GO** | Clés live OK, sessions unpaid. 0 magasin `stripeStatus=active` |
-| OTP email | **NO-GO** | 0 domaine Resend, From = `onboarding@resend.dev` |
-| 1 magasin actif + usage | **GO** | Magasin Pilote #1 · 4 produits · 1 import CSV |
+| Fondations Sam–Dim (toi = commerçant) | **À valider** | Démo off + Stripe live branché + LLM + Copilote + CSV — à cocher à la main |
+| Stripe live (paiement → accès) | **NO-GO** (ops) | Clés live + garde `sk_test` en check-prod-env. Il reste **1 paiement réel** à faire pour passer `stripeStatus=active`. |
+| OTP email / domaine | **REPORTÉ** | Pas de domaine acheté ; OK pour pilote **comptes manuels**. Bloquant seulement pour signup public |
+| 1 magasin actif + usage | **GO** | Magasin Pilote #1 · import CSV fait |
 
-**Verdict actuel : NO-GO annonce.**
+**Verdict annonce :** **NO-GO** tant que Stripe E2E n’est pas vert.  
+OTP n’est plus sur le chemin critique du soft launch fermé.
 
-Après paiement live + OTP domaine verts → re-check puis section 4 de la checklist.
+Plan jour par jour : [CHECKLIST-DEMAIN.md](./CHECKLIST-DEMAIN.md).

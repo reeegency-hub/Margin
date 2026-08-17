@@ -11,7 +11,7 @@ import { InvoiceImportPanel } from "@/components/costs/InvoiceImportPanel";
 export const metadata: Metadata = {
   title: "Coûts",
   description:
-    "Factures fournisseurs, hausses de prix, coût matière, pertes et négociation.",
+    "Factures fournisseurs, hausses de prix, coût d’achat, pertes et négociation.",
 };
 
 function StatusPill({
@@ -85,7 +85,7 @@ export default async function CostsPage({
 
   const inkDetail =
     snapshot.pricedLineCount === 0
-      ? "Sans prix d’achat : pas de hausses ni de coût matière."
+      ? "Sans prix d’achat : pas de hausses ni de coût produit."
       : hikeCount > 0
         ? "Regardez les hausses, puis négociez si un écart apparaît."
         : snapshot.weeklyLoss.needsInventory
@@ -264,7 +264,7 @@ export default async function CostsPage({
         ) : (
           <div className="costs-empty">
             <p>
-              Le coût matière apparaît après ventes caisse + fiches produit +
+              Le coût d’achat apparaît après ventes caisse + fiches produit +
               factures importées.
             </p>
             <a href="#facture" className="costs-empty__cta">

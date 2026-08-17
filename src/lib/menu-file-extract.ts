@@ -165,7 +165,7 @@ export async function analyzeMenuFromFile(
   if (!result.dishes.length) {
     return {
       ok: false as const,
-      error: "Aucun plat détecté dans le fichier. Vérifiez la qualité du scan.",
+      error: "Aucun produit détecté dans le fichier. Vérifiez la qualité du scan.",
     };
   }
 

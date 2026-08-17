@@ -473,7 +473,7 @@ async function analyzeWithOpenAI(
     "gpt-4o-mini";
 
   const prompt = `Tu es un expert en fiches techniques de commerce (France).
-À partir du menu ci-dessous, propose pour chaque plat une composition d'ingrédients avec quantités réalistes pour 1 portion.
+À partir du catalogue ci-dessous, propose pour chaque produit une composition de références stock avec quantités réalistes (1 unité vendue).
 Ingrédients déjà en stock (réutilise ces noms si possible): ${existingIngredients.join(", ") || "aucun"}.
 
 Réponds UNIQUEMENT en JSON valide:
@@ -496,7 +496,7 @@ ${text}`;
         messages: [
           {
             role: "system",
-            content: "Tu génères des fiches recettes JSON précises.",
+            content: "Tu génères des fiches produit JSON précises.",
           },
           { role: "user", content: prompt },
         ],
@@ -529,7 +529,7 @@ ${text}`;
     }
     const parsed = JSON.parse(content) as { dishes?: ProposedDish[] };
     if (!parsed.dishes?.length) {
-      return { dishes: null, error: "OpenAI n’a détecté aucun plat." };
+      return { dishes: null, error: "OpenAI n’a détecté aucun produit." };
     }
     return {
       dishes: parsed.dishes.map((d) => ({

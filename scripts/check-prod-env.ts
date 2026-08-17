@@ -82,6 +82,15 @@ if (pretendProd) {
       "STRIPE_SECRET_KEY obligatoire en production (self-serve / checkout)."
     );
   } else {
+    if (stripeSecret.startsWith("sk_test")) {
+      errors.push(
+        "STRIPE_SECRET_KEY en sk_test_* interdit en production — utilisez sk_live_*."
+      );
+    } else if (!stripeSecret.startsWith("sk_live")) {
+      warns.push(
+        "STRIPE_SECRET_KEY ne commence pas par sk_live_ — vérifiez les clés Production."
+      );
+    }
     if (!stripeWebhook) {
       errors.push(
         "STRIPE_WEBHOOK_SECRET obligatoire — sans lui les paiements n’activent pas le magasin."

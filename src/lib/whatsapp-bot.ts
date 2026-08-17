@@ -382,7 +382,7 @@ async function startInventoryFlow(
 
   const lines = inv.lines ?? [];
   if (!lines.length) {
-    return "Aucun ingrédient à compter.";
+    return "Aucune référence stock à compter.";
   }
 
   await upsertSession(restaurantId, phone, {
@@ -518,7 +518,7 @@ async function applyVoiceIntent(
     }
 
     if (!updates.length) {
-      return "Aucun ingrédient reconnu. Vérifiez les noms.";
+      return "Aucune référence stock reconnue. Vérifiez les noms.";
     }
 
     await updateInventoryLines(restaurantId, draft.id, updates);
@@ -531,7 +531,7 @@ async function applyVoiceIntent(
       product: intent.dishName,
       items: intent.items.length,
     });
-    return `Recette « ${intent.dishName} » reçue (${intent.items.length} ingrédients). Finalisez depuis Recettes dans l'app.`;
+    return `Fiche « ${intent.dishName} » reçue (${intent.items.length} références). Finalisez depuis Stock dans l'app.`;
   }
 
   return "Je n'ai pas compris. Réessayez ou tapez « aide ».";

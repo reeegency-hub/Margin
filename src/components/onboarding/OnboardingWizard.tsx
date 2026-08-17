@@ -35,7 +35,7 @@ const STEPS: {
     id: "produits",
     label: "Votre stock",
     short: "Stock",
-    blurb: "Photo, PDF, ou passez — la caisse peut suffire.",
+    blurb: "CSV, photo, PDF — ou passez si la caisse suffit.",
     minutes: "1 min",
   },
   {
@@ -354,7 +354,7 @@ export function OnboardingWizard({ initial }: { initial: OnboardingInitial }) {
             <p className="ob-step-kicker">Étape 2 sur 3 · {current.minutes}</p>
             <h1>Vos produits (optionnel)</h1>
             <p className="ob-lead">
-              Photo ou PDF de votre liste de prix, ou quelques lignes à coller.
+              CSV, photo ou PDF de votre stock / liste de prix, ou quelques lignes à coller.
               Sinon passez — les produits arriveront aussi via la caisse.
             </p>
 
@@ -372,12 +372,12 @@ export function OnboardingWizard({ initial }: { initial: OnboardingInitial }) {
                 if (file) onDropFile(file);
               }}
             >
-              <p>Déposez une photo ou un PDF</p>
+              <p>Déposez un CSV, une photo ou un PDF</p>
               <label className="ob-btn ob-btn--ghost ob-btn--sm">
                 Choisir un fichier
                 <input
                   type="file"
-                  accept=".pdf,image/*,.txt"
+                  accept=".csv,.tsv,.txt,.pdf,image/*,text/csv,text/plain,application/pdf"
                   className="sr-only"
                   onChange={(e) => {
                     const file = e.target.files?.[0];

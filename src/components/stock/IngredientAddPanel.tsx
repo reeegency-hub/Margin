@@ -537,7 +537,7 @@ export function IngredientAddPanel({
           Choisir un fichier
           <input
             type="file"
-            accept="text/*,image/*,.pdf,.md"
+            accept=".csv,.tsv,.txt,.pdf,.md,image/*,text/*,text/csv,text/plain,application/pdf"
             className="sr-only"
             onChange={(e) => {
               const file = e.target.files?.[0];

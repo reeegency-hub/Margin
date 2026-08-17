@@ -31,7 +31,7 @@ export async function simulateKioskSale(
       orderBy: { name: "asc" },
     }));
 
-  if (!dish) throw new Error("Aucun plat disponible");
+  if (!dish) throw new Error("Aucun produit disponible");
 
   await prisma.kiosk.update({
     where: { id: kioskId },
@@ -63,7 +63,7 @@ export async function simulateDeliverySale(
   const dish = await prisma.product.findFirst({
     where: { restaurantId, active: true },
   });
-  if (!dish) throw new Error("Aucun plat disponible");
+  if (!dish) throw new Error("Aucun produit disponible");
 
   await prisma.deliveryPlatformConnection.update({
     where: { id: conn.id },

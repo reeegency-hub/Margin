@@ -149,9 +149,9 @@ export async function validateInventory(
         constat: `Écart inventaire : ${formatQty(line.varianceQty, line.stockUnit.unit)} sur ${line.stockUnit.name}${
           lossEur != null ? ` ≈ ${lossEur.toFixed(2)} €` : ""
         }.`,
-        cause: "Stock réel inférieur au théorique (casse, démarrage, erreur recette).",
-        impact: "Coût matière non facturé — marge réelle en baisse.",
-        action: "Vérifier la fiche recette et former l’équipe sur les portions.",
+        cause: "Stock réel inférieur au théorique (casse, démarrage, erreur de fiche).",
+        impact: "Coût d’achat non couvert — marge réelle en baisse.",
+        action: "Vérifier la fiche produit et former l’équipe sur les quantités.",
         stockUnitId: line.stockUnitId,
       },
     });

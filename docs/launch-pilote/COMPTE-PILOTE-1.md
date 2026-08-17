@@ -19,9 +19,11 @@ Fondateur `/admin` : `reeegency@gmail.com` · rôle **FOUNDER**.
 - [x] Import CSV test (4 lignes) + commit
 - [x] Connexions smoke POS (custom + zelty) — tests techniques
 
-## À finir demain
+## À finir (accompagnement — voir PARCOURS-CLIENT.md)
 
-- [ ] WhatsApp commerçant + 1 alerte reçue
-- [ ] Import **stock réel**
-- [ ] Caisse documentée (voir POS-CAISSE.md)
-- [ ] Call 30 min + frictions
+1. [ ] Compte OK (déjà fait pour #1)
+2. [ ] Import stock / menu **réel**
+3. [ ] Abonnement Stripe live
+4. [ ] Caisse branchée ou manuel documenté
+5. [ ] WhatsApp + 1 alerte reçue
+6. [ ] Call 30 min + frictions

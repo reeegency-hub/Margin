@@ -150,7 +150,7 @@ function incentivesFor(
       "Une fois par mois suffit.",
     ],
     "cost-food": [
-      "Le coût matière demande factures + ventes + fiches produit.",
+      "Le coût d’achat demande factures + ventes + fiches produit.",
       "Repérez ce qui a monté aujourd’hui.",
     ],
     "team-members": [

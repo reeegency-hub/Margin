@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { PLANS, SETUP_FEE_EUR, planPeriodSuffix } from "@/lib/plans";
 import { LAUNCH_OFFER } from "@/lib/affiliate";
 import { MarginLogo } from "@/components/brand/MarginLogo";
+import { supportMailto } from "@/lib/support";
 import "@/components/mobile/landing/mobile-landing.css";
 
 export const metadata: Metadata = {
@@ -35,17 +36,24 @@ export default function WelcomeDetailsPage() {
         </h1>
         <p className="mland-offer__line" style={{ textAlign: "left" }}>
           Offre de lancement : −{LAUNCH_OFFER.discountPercent}&nbsp;% le premier
-          mois + WhatsApp en {LAUNCH_OFFER.setupMinutes}&nbsp;min.
+          mois + WhatsApp en {LAUNCH_OFFER.setupMinutes}&nbsp;min. Inscription
+          libre fermée — places pilotes sur demande.
         </p>
 
         <ul className="mland-benefits__list" style={{ marginTop: 20 }}>
           {PLANS.map((plan) => (
             <li key={plan.id} style={{ paddingLeft: 14, display: "block" }}>
               <strong style={{ display: "block", marginBottom: 4 }}>
-                {plan.name} — {plan.priceMonthly}&nbsp;€{planPeriodSuffix("monthly")}{" "}
-                HT
+                {plan.name} — {plan.priceMonthly}&nbsp;€
+                {planPeriodSuffix("monthly")} HT
               </strong>
-              <span style={{ fontWeight: 500, color: "#4b5563", fontSize: "0.88rem" }}>
+              <span
+                style={{
+                  fontWeight: 500,
+                  color: "#4b5563",
+                  fontSize: "0.88rem",
+                }}
+              >
                 {plan.bestFor}
               </span>
               <ul
@@ -63,18 +71,21 @@ export default function WelcomeDetailsPage() {
                   </li>
                 ))}
               </ul>
-              <Link
-                href={`/signup?plan=${plan.id}`}
+              <a
+                href={supportMailto(`Place pilote — ${plan.name}`)}
                 className="mland-btn mland-btn--primary"
                 style={{ marginTop: 12, maxWidth: "100%" }}
               >
-                {plan.cta}
-              </Link>
+                Demander une place
+              </a>
             </li>
           ))}
         </ul>
 
-        <p className="mland-offer__line" style={{ textAlign: "left", marginTop: 20 }}>
+        <p
+          className="mland-offer__line"
+          style={{ textAlign: "left", marginTop: 20 }}
+        >
           Setup caisse : ~{SETUP_FEE_EUR}&nbsp;€ si accompagnement — inclus en
           Franchise.
         </p>
