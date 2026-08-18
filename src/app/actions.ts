@@ -150,6 +150,93 @@ export async function createManualSaleAction(
   }
 }
 
+/** Dictaphone hors caisse — audio → texte → produits du catalogue. */
+export async function transcribeManualSaleAction(input: {
+  audioBase64: string;
+  mimeType: string;
+}): Promise<
+  | {
+      ok: true;
+      text: string;
+      matched: { productId: string; quantity: number; name: string }[];
+      unknown: string[];
+    }
+  | { ok: false; error: string }
+> {
+  const session = await requireSession();
+  const tenantId = session.user.restaurantId;
+
+  const { checkRateLimit } = await import("@/lib/rate-limit");
+  const limit = checkRateLimit(`sale-stt:${tenantId}`, 30, 60 * 60 * 1000);
+  if (!limit.ok) {
+    return {
+      ok: false,
+      error: `Trop de dictées. Réessayez dans ${limit.retryAfterSec}s.`,
+    };
+  }
+
+  const mime = String(input.mimeType || "audio/webm").slice(0, 80);
+  const raw = String(input.audioBase64 || "").replace(/^data:[^;]+;base64,/, "");
+  if (!raw) {
+    return { ok: false, error: "Enregistrement vide. Réessayez." };
+  }
+
+  const { SALE_AUDIO_MAX_BYTES, transcribeAudio } = await import(
+    "@/lib/voice-stt"
+  );
+  let buf: Buffer;
+  try {
+    buf = Buffer.from(raw, "base64");
+  } catch {
+    return { ok: false, error: "Audio illisible." };
+  }
+  if (!buf.length || buf.length > SALE_AUDIO_MAX_BYTES) {
+    return {
+      ok: false,
+      error: "Enregistrement trop long. 20 secondes max, dites juste les produits.",
+    };
+  }
+
+  const { text, engine } = await transcribeAudio(buf, mime, tenantId);
+  if (engine === "none") {
+    return {
+      ok: false,
+      error: "Dictée indisponible. Notez la vente à la main ci-dessous.",
+    };
+  }
+  if (!text) {
+    return {
+      ok: false,
+      error: "Rien entendu. Rapprochez-vous et dites « deux lait, un pain ».",
+    };
+  }
+
+  const products = await prisma.product.findMany({
+    where: { restaurantId: tenantId, active: true },
+    select: { id: true, name: true, externalSku: true },
+    take: 400,
+  });
+  const { parseSpokenSale, matchSpokenToCatalog } = await import(
+    "@/lib/voice-intent"
+  );
+  const spoken = parseSpokenSale(text);
+  const { matched, unknown } = matchSpokenToCatalog(
+    spoken,
+    products.map((p) => ({ id: p.id, name: p.name, sku: p.externalSku }))
+  );
+
+  return {
+    ok: true,
+    text,
+    matched: matched.map((m) => ({
+      productId: m.product.id,
+      quantity: m.quantity,
+      name: m.product.name,
+    })),
+    unknown,
+  };
+}
+
 export async function createReceipt(formData: FormData) {
   const supplierId = String(formData.get("supplierId"));
   const note = String(formData.get("note") || "");

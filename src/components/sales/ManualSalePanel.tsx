@@ -3,7 +3,10 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createManualSaleAction } from "@/app/actions";
+import {
+  createManualSaleAction,
+  transcribeManualSaleAction,
+} from "@/app/actions";
 import { matchSpokenToCatalog, parseSpokenSale } from "@/lib/voice-intent";
 import "./manual-sale.css";
 
@@ -23,29 +26,17 @@ export type RecentManualSale = {
 
 type Line = { productId: string; quantity: number };
 
-type SpeechRec = {
-  lang: string;
-  interimResults: boolean;
-  continuous: boolean;
-  start: () => void;
-  stop: () => void;
-  onresult: ((ev: {
-    results: {
-      length: number;
-      [i: number]: { [j: number]: { transcript: string } };
-    };
-  }) => void) | null;
-  onerror: (() => void) | null;
-  onend: (() => void) | null;
-};
+const MAX_REC_MS = 20_000;
 
-function getSpeechCtor(): (new () => SpeechRec) | null {
-  if (typeof window === "undefined") return null;
-  const w = window as unknown as {
-    SpeechRecognition?: new () => SpeechRec;
-    webkitSpeechRecognition?: new () => SpeechRec;
-  };
-  return w.SpeechRecognition || w.webkitSpeechRecognition || null;
+function pickRecorderMime(): string {
+  if (typeof MediaRecorder === "undefined") return "";
+  const candidates = [
+    "audio/webm;codecs=opus",
+    "audio/webm",
+    "audio/mp4",
+    "audio/ogg;codecs=opus",
+  ];
+  return candidates.find((m) => MediaRecorder.isTypeSupported(m)) || "";
 }
 
 export function ManualSalePanel({
@@ -56,19 +47,37 @@ export function ManualSalePanel({
   recent: RecentManualSale[];
 }) {
   const router = useRouter();
-  const recRef = useRef<SpeechRec | null>(null);
-  const holdAtRef = useRef(0);
-  const [listening, setListening] = useState(false);
+  const recRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+  const timerRef = useRef<number | null>(null);
+  const startedAtRef = useRef(0);
+
+  const [recording, setRecording] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  const [transcribing, setTranscribing] = useState(false);
   const [heard, setHeard] = useState("");
+  const [note, setNote] = useState("");
   const [query, setQuery] = useState("");
   const [lines, setLines] = useState<Line[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [okMsg, setOkMsg] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const [micOk, setMicOk] = useState(false);
+  const [canRecord, setCanRecord] = useState(false);
 
   useEffect(() => {
-    setMicOk(Boolean(getSpeechCtor()));
+    setCanRecord(
+      typeof navigator !== "undefined" &&
+        Boolean(navigator.mediaDevices?.getUserMedia) &&
+        typeof MediaRecorder !== "undefined"
+    );
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      stopTracks();
+      if (timerRef.current) window.clearInterval(timerRef.current);
+    };
   }, []);
 
   const byId = useMemo(
@@ -107,13 +116,10 @@ export function ManualSalePanel({
     });
   }
 
-  function applySpeech(text: string) {
-    const spoken = parseSpokenSale(text);
-    if (!spoken.length) {
-      setError("Je n’ai pas compris. Dites par ex. « deux lait et un pain ».");
-      return;
-    }
-    const { matched, unknown } = matchSpokenToCatalog(spoken, products);
+  function addMatched(
+    matched: { productId: string; quantity: number }[],
+    unknown: string[]
+  ) {
     if (!matched.length) {
       setError(
         unknown.length
@@ -125,7 +131,7 @@ export function ManualSalePanel({
     setLines((prev) => {
       const map = new Map(prev.map((l) => [l.productId, l.quantity]));
       for (const m of matched) {
-        map.set(m.product.id, (map.get(m.product.id) ?? 0) + m.quantity);
+        map.set(m.productId, (map.get(m.productId) ?? 0) + m.quantity);
       }
       return [...map.entries()].map(([productId, quantity]) => ({
         productId,
@@ -134,58 +140,124 @@ export function ManualSalePanel({
     });
     if (unknown.length) {
       setError(`Ajouté. Pas trouvé : ${unknown.join(", ")}.`);
+    } else {
+      setError(null);
     }
   }
 
-  function stopMic() {
-    recRef.current?.stop();
-    recRef.current = null;
-    setListening(false);
-  }
-
-  function startMic() {
-    const Ctor = getSpeechCtor();
-    if (!Ctor) {
-      setError("Le micro n’est pas dispo ici. Tapez ou touchez un produit.");
+  function applyText(text: string) {
+    const spoken = parseSpokenSale(text);
+    if (!spoken.length) {
+      setError("Exemple : « 2 lait, 1 pain ».");
       return;
     }
-    if (listening) return;
+    const { matched, unknown } = matchSpokenToCatalog(spoken, products);
+    addMatched(
+      matched.map((m) => ({ productId: m.product.id, quantity: m.quantity })),
+      unknown
+    );
+  }
+
+  function stopTracks() {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+  }
+
+  function stopTimer() {
+    if (timerRef.current) {
+      window.clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }
+
+  async function startRec() {
+    if (recording || transcribing || !canRecord) return;
     setError(null);
     setOkMsg(null);
-    const rec = new Ctor();
-    rec.lang = "fr-FR";
-    rec.interimResults = false;
-    rec.continuous = false;
-    rec.onresult = (ev) => {
-      const last = ev.results[ev.results.length - 1];
-      const text = last?.[0]?.transcript?.trim() || "";
-      if (text) {
-        setHeard(text);
-        applySpeech(text);
-      }
-    };
-    rec.onerror = () => {
-      setListening(false);
-      recRef.current = null;
-      setError("Micro coupé. Réessayez ou touchez un produit.");
-    };
-    rec.onend = () => {
-      setListening(false);
-      recRef.current = null;
-    };
-    recRef.current = rec;
     try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      const mime = pickRecorderMime();
+      const rec = mime
+        ? new MediaRecorder(stream, { mimeType: mime })
+        : new MediaRecorder(stream);
+      chunksRef.current = [];
+      rec.ondataavailable = (ev) => {
+        if (ev.data.size) chunksRef.current.push(ev.data);
+      };
+      rec.onstop = () => {
+        void finishRec(rec.mimeType || mime || "audio/webm");
+      };
+      recRef.current = rec;
       rec.start();
-      setListening(true);
+      startedAtRef.current = Date.now();
+      setElapsed(0);
+      setRecording(true);
+      timerRef.current = window.setInterval(() => {
+        const ms = Date.now() - startedAtRef.current;
+        setElapsed(ms);
+        if (ms >= MAX_REC_MS) stopRec();
+      }, 200);
     } catch {
-      recRef.current = null;
-      setError("Impossible d’ouvrir le micro.");
+      stopTracks();
+      setError("Micro refusé. Autorisez-le, ou notez la vente à la main.");
     }
+  }
+
+  function stopRec() {
+    stopTimer();
+    const rec = recRef.current;
+    recRef.current = null;
+    if (rec && rec.state !== "inactive") {
+      try {
+        rec.requestData();
+      } catch {
+        /* Safari */
+      }
+      rec.stop();
+    } else {
+      stopTracks();
+      setRecording(false);
+    }
+  }
+
+  async function finishRec(mimeType: string) {
+    setRecording(false);
+    stopTracks();
+    const blob = new Blob(chunksRef.current, { type: mimeType });
+    chunksRef.current = [];
+    if (blob.size < 800) {
+      setError("Trop court. Appuyez, parlez, puis arrêtez.");
+      return;
+    }
+    setTranscribing(true);
+    try {
+      const audioBase64 = await blobToBase64(blob);
+      const res = await transcribeManualSaleAction({ audioBase64, mimeType });
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
+      setHeard(res.text);
+      addMatched(res.matched, res.unknown);
+    } catch {
+      setError("Dictée impossible. Notez à la main.");
+    } finally {
+      setTranscribing(false);
+    }
+  }
+
+  function addNote() {
+    const text = note.trim();
+    if (!text) return;
+    setHeard(text);
+    applyText(text);
+    setNote("");
   }
 
   function submit() {
     if (!basket.length) {
-      setError("Touchez un produit ou parlez.");
+      setError("Dictez, notez, ou touchez un produit.");
       return;
     }
     startTransition(async () => {
@@ -199,17 +271,27 @@ export function ManualSalePanel({
       setLines([]);
       setHeard("");
       setQuery("");
+      setNote("");
       setOkMsg("C’est noté — le stock a baissé.");
       router.refresh();
     });
   }
 
+  const recLabel = recording
+    ? `Stop · ${Math.max(1, Math.ceil((MAX_REC_MS - elapsed) / 1000))}s`
+    : transcribing
+      ? "Écoute…"
+      : "Dictez";
+
   if (!products.length) {
     return (
       <div className="msale">
-        <p className="msale__hint">Ajoutez d’abord vos produits.</p>
-        <Link href="/ingredients/menu" className="btn-lime">
-          Importer le catalogue
+        <p className="msale__hint">
+          Une fois vos produits en stock, vous noterez ici les ventes sans
+          caisse — à la voix ou à la main.
+        </p>
+        <Link href="/ingredients" className="btn-ghost">
+          Voir le stock
         </Link>
       </div>
     );
@@ -220,48 +302,64 @@ export function ManualSalePanel({
       {okMsg ? <p className="flash">{okMsg}</p> : null}
       {error ? <p className="flash flash-warn">{error}</p> : null}
 
-      <div className="msale__talk">
+      <div className="msale__tape">
         <button
           type="button"
-          className={`msale__mic${listening ? " is-on" : ""}`}
-          onPointerDown={(e) => {
-            e.preventDefault();
-            if (listening) {
-              stopMic();
-              return;
-            }
-            holdAtRef.current = Date.now();
-            startMic();
-          }}
-          onPointerUp={() => {
-            if (Date.now() - holdAtRef.current < 280) return;
-            stopMic();
-          }}
-          onPointerCancel={stopMic}
-          onContextMenu={(e) => e.preventDefault()}
-          aria-pressed={listening}
-          aria-label="Parler"
+          className={`msale__mic${recording ? " is-on" : ""}${transcribing ? " is-busy" : ""}`}
+          onClick={() => (recording ? stopRec() : void startRec())}
+          disabled={!canRecord || transcribing}
+          aria-pressed={recording}
+          aria-label={recording ? "Arrêter le dictaphone" : "Dicter la vente"}
         >
-          <svg viewBox="0 0 24 24" width="36" height="36" aria-hidden>
-            <path
-              fill="currentColor"
-              d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2Z"
-            />
-          </svg>
+          {recording ? (
+            <span className="msale__bars" aria-hidden>
+              <i />
+              <i />
+              <i />
+              <i />
+            </span>
+          ) : (
+            <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden>
+              <path
+                fill="currentColor"
+                d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2Z"
+              />
+            </svg>
+          )}
         </button>
         <div className="msale__talk-copy">
-          <p className="msale__talk-title">
-            {listening ? "Parlez maintenant" : "Dites ce que vous avez vendu"}
-          </p>
+          <p className="msale__talk-title">{recLabel}</p>
           <p className="msale__hint">
             {heard
               ? `« ${heard} »`
-              : micOk
-                ? "Ex. « deux lait et un pain »"
-                : "Micro indispo — touchez un produit ci-dessous"}
+              : canRecord
+                ? "Appuyez, dites la vente, appuyez pour arrêter."
+                : "Micro indispo — notez à la main."}
           </p>
         </div>
       </div>
+
+      <form
+        className="msale__note"
+        onSubmit={(e) => {
+          e.preventDefault();
+          addNote();
+        }}
+      >
+        <label>
+          <span>Ou notez à la main</span>
+          <input
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="2 lait, 1 pain"
+            autoComplete="off"
+            enterKeyHint="done"
+          />
+        </label>
+        <button type="submit" className="msale__note-go" disabled={!note.trim()}>
+          Ajouter
+        </button>
+      </form>
 
       {basket.length > 0 ? (
         <ul className="msale__lines">
@@ -331,4 +429,17 @@ export function ManualSalePanel({
       ) : null}
     </div>
   );
+}
+
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const s = String(reader.result || "");
+      const i = s.indexOf(",");
+      resolve(i >= 0 ? s.slice(i + 1) : s);
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
 }

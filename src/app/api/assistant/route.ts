@@ -662,7 +662,7 @@ export async function POST(req: Request) {
   ) {
     return NextResponse.json({
       reply:
-        "Ouvrez Hors caisse, appuyez sur le micro et dites ce que vous avez vendu (ex. « deux lait et un pain »), puis « C’est vendu ». Le stock baisse tout de suite.",
+        "Ouvrez Hors caisse. Appuyez sur le dictaphone, dites la vente (ex. « deux lait et un pain »), ou notez-la à la main. Puis « C’est vendu » — le stock baisse tout de suite.",
       links: [{ label: "Hors caisse", href: "/sales" }],
     });
   }
