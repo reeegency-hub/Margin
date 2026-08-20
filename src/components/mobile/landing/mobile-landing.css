@@ -1421,7 +1421,7 @@
   border-color: rgba(255, 255, 255, 0.12);
 }
 
-/* ——— Offre + Calendly ——— */
+/* ——— Offre ——— */
 .mland-offer {
   padding: 0;
 }
@@ -1674,31 +1674,6 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: rgba(244, 244, 245, 0.5);
-}
-
-.mland-offer__calendly {
-  border-radius: 18px;
-  overflow: hidden;
-  background: #fff;
-  min-height: 420px;
-}
-
-.mland-offer__calendly .land-calendly__shell,
-.mland-offer__calendly .calendly-inline-widget,
-.mland-offer__calendly .land-calendly__frame {
-  min-width: 0 !important;
-  width: 100% !important;
-  height: 620px !important;
-}
-
-.mland-offer__calendly .land-calendly__placeholder {
-  padding: 48px 16px;
-  color: #6b7280;
-  font-size: 0.9rem;
-}
-
-.mland-offer__alt {
-  margin-top: 12px;
 }
 
 .mland-offer__fallback {

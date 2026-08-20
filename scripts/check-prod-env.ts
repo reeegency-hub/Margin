@@ -115,15 +115,27 @@ if (pretendProd) {
   }
 
   if (!resendKey) {
+    errors.push(
+      "RESEND_API_KEY obligatoire en production (OTP signup fail-closed)."
+    );
+  }
+  if (!process.env.PARTNER_AUTH_SECRET?.trim() && !nextAuthSecret) {
+    errors.push(
+      "PARTNER_AUTH_SECRET (ou NEXTAUTH_SECRET) obligatoire — pas de fallback *-dev en prod."
+    );
+  } else if (!process.env.PARTNER_AUTH_SECRET?.trim()) {
     warns.push(
-      "RESEND_API_KEY vide — OTP email signup + dunning email + newsletter indisponibles."
+      "PARTNER_AUTH_SECRET vide — cookie partenaire signe avec NEXTAUTH_SECRET (OK si distinct souhaité)."
     );
   }
   if (!calendly) {
     warns.push(
-      "NEXT_PUBLIC_CALENDLY_URL vide — widget démo landing (#demo) vide."
+      "NEXT_PUBLIC_CALENDLY_URL vide — widget démo landing (#demo) vide (desktop)."
     );
   }
+  warns.push(
+    "RLS : confirmer que DATABASE_URL utilise un rôle sans BYPASSRLS (voir prisma/rls.sql)."
+  );
 } else {
   if (isSqlite) {
     warns.push(

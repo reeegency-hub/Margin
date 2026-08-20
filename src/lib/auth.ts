@@ -21,6 +21,34 @@ export const authOptions: NextAuthOptions = {
         const email = credentials.email.trim().toLowerCase();
         const password = String(credentials.password);
 
+        const {
+          checkRateLimit,
+          clientIpFromHeaders,
+          LOGIN_EMAIL_LIMIT,
+          LOGIN_IP_LIMIT,
+          LOGIN_WINDOW_MS,
+        } = await import("@/lib/rate-limit");
+        const ip = await clientIpFromHeaders();
+        const ipLimit = checkRateLimit(
+          `login:ip:${ip}`,
+          LOGIN_IP_LIMIT,
+          LOGIN_WINDOW_MS
+        );
+        const emailLimit = checkRateLimit(
+          `login:email:${email}`,
+          LOGIN_EMAIL_LIMIT,
+          LOGIN_WINDOW_MS
+        );
+        if (!ipLimit.ok || !emailLimit.ok) {
+          const retry = Math.max(
+            !ipLimit.ok ? ipLimit.retryAfterSec : 0,
+            !emailLimit.ok ? emailLimit.retryAfterSec : 0
+          );
+          throw new Error(
+            `RATE_LIMITED: Trop de tentatives. Réessayez dans ${retry}s.`
+          );
+        }
+
         let user;
         try {
           user = await prisma.user.findUnique({

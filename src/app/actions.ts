@@ -1739,10 +1739,16 @@ export async function signupAndCheckoutAction(input: {
     };
   }
 
-  const { consumeSignupOtp, isSignupOtpEmailConfigured, isSignupOtpSmsConfigured } =
+  const { consumeSignupOtp, mustVerifySignupOtp, isSignupOtpLive } =
     await import("@/lib/signup-otp");
-  const otpLive = isSignupOtpEmailConfigured() || isSignupOtpSmsConfigured();
-  if (otpLive) {
+  if (mustVerifySignupOtp()) {
+    if (process.env.NODE_ENV === "production" && !isSignupOtpLive()) {
+      return {
+        ok: false,
+        error:
+          "Inscription temporairement indisponible (vérification OTP non configurée).",
+      };
+    }
     const otp = await consumeSignupOtp({
       email,
       code: String(input.otpCode || ""),

@@ -55,3 +55,13 @@ export const SIGNUP_WINDOW_MS = 60 * 60 * 1000;
 export const OTP_SEND_IP_LIMIT = 10;
 export const OTP_SEND_EMAIL_LIMIT = 5;
 export const OTP_SEND_WINDOW_MS = 60 * 60 * 1000;
+
+/** Login credentials : anti-bruteforce */
+export const LOGIN_IP_LIMIT = 30;
+export const LOGIN_EMAIL_LIMIT = 15;
+export const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+
+/** Partner login */
+export const PARTNER_LOGIN_IP_LIMIT = 20;
+export const PARTNER_LOGIN_EMAIL_LIMIT = 10;
+export const PARTNER_LOGIN_WINDOW_MS = 15 * 60 * 1000;

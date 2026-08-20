@@ -1,11 +1,6 @@
 import { LAUNCH_OFFER } from "@/lib/affiliate";
 import { SETUP_FEE_EUR } from "@/lib/plans";
-import { getCalendlyUrl } from "@/lib/calendly";
 import { supportMailto } from "@/lib/support";
-import {
-  CalendlyCtaLink,
-  CalendlyEmbed,
-} from "@/components/marketing/CalendlyEmbed";
 
 const GAINS = [
   {
@@ -31,9 +26,8 @@ const GAINS = [
   },
 ] as const;
 
-/** Offre visuelle — gains concrets + Calendly. */
+/** Offre visuelle — gains concrets (Calendly réservé au desktop). */
 export function MobileLandingOffer() {
-  const calendlyUrl = getCalendlyUrl();
   const commerceAfter = Math.round(89 * (1 - LAUNCH_OFFER.discountPercent / 100));
 
   return (
@@ -82,51 +76,33 @@ export function MobileLandingOffer() {
         </ul>
 
         <div className="mland-offer__book">
-          <p className="mland-offer__book-label">
-            Réserver la config WhatsApp
-          </p>
-          {calendlyUrl ? (
-            <>
-              <div className="mland-offer__calendly">
-                <CalendlyEmbed
-                  url={calendlyUrl}
-                  title={`Config WhatsApp — ${LAUNCH_OFFER.setupMinutes} min`}
-                />
+          <p className="mland-offer__book-label">Config WhatsApp offerte</p>
+          <div className="mland-offer__fallback">
+            <div className="mland-offer__wa-preview" aria-hidden>
+              <span className="mland-offer__wa-dot" />
+              <div className="mland-offer__wa-copy">
+                <strong>Config WhatsApp offerte</strong>
+                <small>
+                  Avec vous en direct · {LAUNCH_OFFER.setupMinutes} min
+                </small>
               </div>
-              <CalendlyCtaLink
-                url={calendlyUrl}
-                className="mland-btn mland-btn--primary mland-offer__alt"
-              >
-                Ouvrir le calendrier
-              </CalendlyCtaLink>
-            </>
-          ) : (
-            <div className="mland-offer__fallback">
-              <div className="mland-offer__wa-preview" aria-hidden>
-                <span className="mland-offer__wa-dot" />
-                <div className="mland-offer__wa-copy">
-                  <strong>Config WhatsApp offerte</strong>
-                  <small>
-                    Avec vous en direct · {LAUNCH_OFFER.setupMinutes} min
-                  </small>
-                </div>
-                <span className="mland-offer__save">
-                  −{SETUP_FEE_EUR}&nbsp;€
-                  <em>setup</em>
-                </span>
-              </div>
-              <p>
-                On branche votre alerte rupture ensemble. En Franchise, le
-                setup caisse (~{SETUP_FEE_EUR}&nbsp;€) est inclus.
-              </p>
-              <a
-                href={supportMailto("Config WhatsApp offerte Margin")}
-                className="mland-btn mland-btn--primary"
-              >
-                Réserver mes {LAUNCH_OFFER.setupMinutes} minutes
-              </a>
+              <span className="mland-offer__save">
+                −{SETUP_FEE_EUR}&nbsp;€
+                <em>setup</em>
+              </span>
             </div>
-          )}
+            <p>
+              On branche votre alerte rupture ensemble. En Franchise, le setup
+              caisse (~{SETUP_FEE_EUR}&nbsp;€) est inclus. Pour réserver un
+              créneau, ouvrez Margin sur ordinateur.
+            </p>
+            <a
+              href={supportMailto("Config WhatsApp offerte Margin")}
+              className="mland-btn mland-btn--primary"
+            >
+              Nous écrire
+            </a>
+          </div>
         </div>
 
         <a

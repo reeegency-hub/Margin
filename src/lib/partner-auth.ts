@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
+import { requirePartnerAuthSecret } from "@/lib/security/prod-secrets";
 
 import { PARTNER_COOKIE } from "@/lib/partner-auth-constants";
 
@@ -15,11 +16,7 @@ export type PartnerToken = {
 };
 
 function secret(): string {
-  return (
-    process.env.PARTNER_AUTH_SECRET ||
-    process.env.NEXTAUTH_SECRET ||
-    "margin-partner-dev"
-  );
+  return requirePartnerAuthSecret();
 }
 
 function sign(payload: Omit<PartnerToken, "exp">, maxAgeSec = MAX_AGE_SEC): string {

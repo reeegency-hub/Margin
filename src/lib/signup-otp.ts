@@ -1,4 +1,5 @@
 import { createHash, randomInt } from "crypto";
+import { requireOtpPepper } from "@/lib/security/prod-secrets";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 export const SIGNUP_OTP_TTL_MS = OTP_TTL_MS;
@@ -16,6 +17,20 @@ export function isSignupOtpSmsConfigured(): boolean {
   );
 }
 
+/** Au moins un canal OTP utilisable (email Resend ou SMS Twilio). */
+export function isSignupOtpLive(): boolean {
+  return isSignupOtpEmailConfigured() || isSignupOtpSmsConfigured();
+}
+
+/**
+ * En production : OTP toujours obligatoire.
+ * Hors prod : OTP si un provider est configuré.
+ */
+export function mustVerifySignupOtp(): boolean {
+  if (process.env.NODE_ENV === "production") return true;
+  return isSignupOtpLive();
+}
+
 export function canSendSignupOtp(channel: "email" | "sms"): boolean {
   if (channel === "sms") return isSignupOtpSmsConfigured();
   if (isSignupOtpEmailConfigured()) return true;
@@ -24,11 +39,7 @@ export function canSendSignupOtp(channel: "email" | "sms"): boolean {
 }
 
 function pepper(): string {
-  return (
-    process.env.NEXTAUTH_SECRET ||
-    process.env.CREDENTIALS_ENCRYPTION_KEY ||
-    "margin-otp-dev"
-  );
+  return requireOtpPepper();
 }
 
 export function hashOtpCode(email: string, code: string): string {

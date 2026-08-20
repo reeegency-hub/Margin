@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 
 /**
  * Cron POS — retry FAILED + digest DEAD récents.
- * Auth: Authorization: Bearer $CRON_SECRET (ou ?secret=)
+ * Auth: Authorization: Bearer $CRON_SECRET
  */
 export async function GET(request: Request) {
   const denied = assertCronAuthorized(request);

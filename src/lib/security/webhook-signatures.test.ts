@@ -69,6 +69,14 @@ function testCronRejectsWithoutSecret() {
       headers: { authorization: "Bearer test-cron-secret-abcdefghijklmnop" },
     });
     assert.equal(assertCronAuthorized(okReq), null);
+
+    // Query string secret must be rejected (Bearer only)
+    const qReq = new Request(
+      "http://localhost/api/cron/stock-alerts?secret=test-cron-secret-abcdefghijklmnop"
+    );
+    const qDenied = assertCronAuthorized(qReq);
+    assert.ok(qDenied);
+    assert.equal(qDenied!.status, 401);
   } finally {
     if (prev === undefined) delete process.env.CRON_SECRET;
     else process.env.CRON_SECRET = prev;

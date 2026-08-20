@@ -16,9 +16,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const secret = process.env.CRON_SECRET;
   const auth = request.headers.get("authorization") || "";
-  const token = auth.startsWith("Bearer ")
-    ? auth.slice(7)
-    : url.searchParams.get("secret");
+  const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
   const cronOk = Boolean(secret && token === secret);
 
   if (!cronOk) {

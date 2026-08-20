@@ -14,7 +14,9 @@ export default async function PartnerLoginPage({
       ? "Email ou mot de passe incorrect."
       : params.error === "missing"
         ? "Email et mot de passe requis."
-        : null;
+        : params.error === "rate"
+          ? "Trop de tentatives. Réessayez dans quelques minutes."
+          : null;
 
   return (
     <div className="auth-shell">

@@ -21,6 +21,28 @@ export async function partnerLoginAction(formData: FormData) {
     redirect("/partner/login?error=missing");
   }
 
+  const {
+    checkRateLimit,
+    clientIpFromHeaders,
+    PARTNER_LOGIN_EMAIL_LIMIT,
+    PARTNER_LOGIN_IP_LIMIT,
+    PARTNER_LOGIN_WINDOW_MS,
+  } = await import("@/lib/rate-limit");
+  const ip = await clientIpFromHeaders();
+  const ipLimit = checkRateLimit(
+    `partner-login:ip:${ip}`,
+    PARTNER_LOGIN_IP_LIMIT,
+    PARTNER_LOGIN_WINDOW_MS
+  );
+  const emailLimit = checkRateLimit(
+    `partner-login:email:${email}`,
+    PARTNER_LOGIN_EMAIL_LIMIT,
+    PARTNER_LOGIN_WINDOW_MS
+  );
+  if (!ipLimit.ok || !emailLimit.ok) {
+    redirect("/partner/login?error=rate");
+  }
+
   const ambassador = await prisma.ambassador.findUnique({ where: { email } });
   if (!ambassador?.active) {
     redirect("/partner/login?error=invalid");

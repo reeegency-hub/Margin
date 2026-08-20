@@ -20,6 +20,10 @@ function isPostgresUrl(url: string) {
 /**
  * Pose `app.tenant_id` **dans une transaction** (même connexion pooler).
  * No-op SQLite — isolation applicative via restaurantId.
+ *
+ * Ops : DATABASE_URL doit utiliser un rôle **sans BYPASSRLS**
+ * (voir prisma/rls.sql — rôle `margin_app` recommandé). Le scoping
+ * applicatif reste le contrôle primaire.
  */
 export async function withTenantRls<T>(
   tenantId: TenantId,

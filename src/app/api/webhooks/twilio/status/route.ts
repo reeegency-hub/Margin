@@ -27,15 +27,22 @@ export async function POST(req: NextRequest) {
   const url = process.env.WEBHOOK_BASE_URL
     ? `${process.env.WEBHOOK_BASE_URL}/api/webhooks/twilio/status`
     : req.url;
+  const isProd = process.env.NODE_ENV === "production";
+  const params = Object.fromEntries(form.entries()) as Record<string, string>;
 
-  if (authToken && signature) {
-    const valid = twilio.validateRequest(
-      authToken,
-      signature,
-      url,
-      Object.fromEntries(form.entries()) as Record<string, string>
-    );
-    if (!valid && process.env.NODE_ENV === "production") {
+  // Prod : signature Twilio obligatoire (miroir WhatsApp inbound).
+  if (isProd) {
+    if (!authToken || !signature) {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
+    const valid = twilio.validateRequest(authToken, signature, url, params);
+    if (!valid) {
+      console.warn("[twilio-status] invalid signature");
+      return new NextResponse("Forbidden", { status: 403 });
+    }
+  } else if (authToken && signature) {
+    const valid = twilio.validateRequest(authToken, signature, url, params);
+    if (!valid) {
       return new NextResponse("Forbidden", { status: 403 });
     }
   }
