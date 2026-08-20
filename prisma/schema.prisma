@@ -15,16 +15,18 @@ enum UserRole {
 }
 
 model User {
-  id           String     @id @default(cuid())
-  email        String     @unique
-  name         String
-  passwordHash String
+  id             String     @id @default(cuid())
+  email          String     @unique
+  name           String
+  passwordHash   String
   /// MEMBER | MANAGER | FOUNDER — FOUNDER = accès Ops /admin
-  role         UserRole   @default(MEMBER)
-  restaurantId String
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  lastLoginAt  DateTime?
-  createdAt    DateTime   @default(now())
+  role           UserRole   @default(MEMBER)
+  restaurantId   String
+  restaurant     Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  lastLoginAt    DateTime?
+  /// Incrémenté à chaque reset/changement de mot de passe — invalide les JWT existants
+  sessionVersion Int        @default(0)
+  createdAt      DateTime   @default(now())
   adminAuditLogs AdminAuditLog[]
 }
 

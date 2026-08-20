@@ -278,6 +278,10 @@ export async function uploadInvoiceFileAction(formData: FormData): Promise<
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
+  const { sniffUpload } = await import("@/lib/security/upload-sniff");
+  const sniffed = sniffUpload(buffer, file.type, file.name, "invoice");
+  if (!sniffed.ok) return sniffed;
+
   const [catalog, openai] = await Promise.all([
     prisma.stockUnit.findMany({
       where: { restaurantId: session.user.restaurantId },
@@ -291,7 +295,7 @@ export async function uploadInvoiceFileAction(formData: FormData): Promise<
   const { analyzeInvoiceFromFile } = await import("@/lib/invoice-import");
   return analyzeInvoiceFromFile(
     buffer,
-    file.type,
+    sniffed.mime,
     file.name,
     catalog,
     { apiKey: openai.apiKey, model: openai.model }
@@ -1184,6 +1188,10 @@ export async function uploadMenuFileAction(formData: FormData): Promise<
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
+  const { sniffUpload } = await import("@/lib/security/upload-sniff");
+  const sniffed = sniffUpload(buffer, file.type, file.name, "menu");
+  if (!sniffed.ok) return sniffed;
+
   const [existing, openai] = await Promise.all([
     prisma.stockUnit.findMany({
       where: { restaurantId: session.user.restaurantId },
@@ -1194,7 +1202,7 @@ export async function uploadMenuFileAction(formData: FormData): Promise<
 
   const result = await analyzeMenuFromFile(
     buffer,
-    file.type,
+    sniffed.mime,
     file.name,
     existing.map((i) => i.name),
     { apiKey: openai.apiKey, model: openai.model }
@@ -2066,7 +2074,10 @@ export async function saveOnboardingTeam(input: {
   const stubDrivers = drivers.filter((d) => /^Livreur \d+$/.test(d.name));
   if (stubDrivers.length) {
     await prisma.deliveryDriver.deleteMany({
-      where: { id: { in: stubDrivers.map((d) => d.id) } },
+      where: {
+        restaurantId: rid,
+        id: { in: stubDrivers.map((d) => d.id) },
+      },
     });
   }
   if (livreurNames.length) {
@@ -2376,7 +2387,10 @@ export async function adminResetPasswordAction(formData: FormData) {
   const bcrypt = await import("bcryptjs");
   await prisma.user.update({
     where: { id: user.id },
-    data: { passwordHash: await bcrypt.hash(password, 10) },
+    data: {
+      passwordHash: await bcrypt.hash(password, 10),
+      sessionVersion: { increment: 1 },
+    },
   });
   revalidatePath(`/admin/stores/${restaurantId}`);
   redirect(`/admin/stores/${restaurantId}?password=1`);

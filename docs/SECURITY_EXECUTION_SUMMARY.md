@@ -38,10 +38,18 @@ Plan initial : `plan-securite-marginshop.md` · Audit live : canvas `margin-secu
 - Secrets : refuse fallbacks `*-dev` en prod (`lib/security/prod-secrets.ts`)
 - `check:prod-env` : RESEND_API_KEY erreur en prod ; warn RLS
 
+## Chantier 7 — P2 (2026-08-20 suite)
+- Security headers : CSP + XFO + nosniff + referrer + Permissions-Policy (`next.config.ts`) ; `poweredByHeader: false`
+- Uploads : magic bytes + allowlist (`lib/security/upload-sniff.ts`) sur menu / facture
+- Sessions : `User.sessionVersion` — bump au reset password (admin + partner) ; JWT invalidé si version diverge
+- POS v1 GET : champs réduits à `id` / `status` (aligné `[connectionId]`)
+- TOCTOU : `deliveryDriver.deleteMany` scopé `restaurantId`
+
 ## Deploy checklist
 - [ ] Confirmer jobs cron Vercel envoient `Authorization: Bearer $CRON_SECRET` (plus de `?secret=`)
 - [ ] `RESEND_API_KEY` présent en prod (OTP)
 - [ ] `NEXTAUTH_SECRET` / `PARTNER_AUTH_SECRET` posés (pas de fallback)
+- [ ] Appliquer migration `sessionVersion` (`prisma migrate deploy` / `db push`)
 - [ ] Confirmer rôle DB sans BYPASSRLS + `rls.sql` appliqué
 - [ ] `npm run db:backfill-founder` si pas déjà fait
 - [ ] `DEMO_AUTO_LOGIN≠1`

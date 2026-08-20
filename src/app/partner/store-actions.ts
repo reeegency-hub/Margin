@@ -109,7 +109,10 @@ export async function partnerResetPasswordAction(formData: FormData) {
 
   await prisma.user.update({
     where: { id: user.id },
-    data: { passwordHash: await bcrypt.hash(password, 10) },
+    data: {
+      passwordHash: await bcrypt.hash(password, 10),
+      sessionVersion: { increment: 1 },
+    },
   });
 
   redirect(storePath(restaurantId, "password=1"));

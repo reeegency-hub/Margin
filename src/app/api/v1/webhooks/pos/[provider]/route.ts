@@ -134,14 +134,16 @@ export async function GET(
     where: { id: connectionId },
     select: {
       id: true,
-      name: true,
       status: true,
-      lastOrderAt: true,
       vendor: true,
     },
   });
   if (!connection || resolvePosProvider(connection.vendor) !== provider) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  return NextResponse.json(connection);
+  return NextResponse.json({
+    ok: true,
+    id: connection.id,
+    status: connection.status,
+  });
 }
