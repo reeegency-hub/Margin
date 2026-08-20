@@ -66,8 +66,11 @@ export async function updateInventoryLines(
     const line = inv.lines.find((l) => l.id === input.lineId);
     if (!line) continue;
     const varianceQty = input.countedQty - line.theoreticalQty;
-    await db.inventoryCountLine.update({
-      where: { id: line.id },
+    await db.inventoryCountLine.updateMany({
+      where: {
+        id: line.id,
+        inventoryCount: { id: inventoryId, restaurantId },
+      },
       data: { countedQty: input.countedQty, varianceQty },
     });
   }
@@ -97,13 +100,16 @@ export async function validateInventory(
       const varianceValueEur =
         unitCost > 0 ? Math.round(delta * unitCost * 100) / 100 : null;
 
-      await tx.inventoryCountLine.update({
-        where: { id: line.id },
+      await tx.inventoryCountLine.updateMany({
+        where: {
+          id: line.id,
+          inventoryCount: { id: inventoryId, restaurantId },
+        },
         data: { varianceValueEur },
       });
 
-      await tx.stockUnit.update({
-        where: { id: line.stockUnitId },
+      await tx.stockUnit.updateMany({
+        where: { id: line.stockUnitId, restaurantId },
         data: { stockTheoretical: line.countedQty },
       });
       if (delta !== 0) {
@@ -120,8 +126,8 @@ export async function validateInventory(
       }
     }
 
-    await tx.inventoryCount.update({
-      where: { id: inv.id },
+    await tx.inventoryCount.updateMany({
+      where: { id: inv.id, restaurantId, status: "DRAFT" },
       data: { status: "VALIDATED", validatedAt: new Date() },
     });
   });

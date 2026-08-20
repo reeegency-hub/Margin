@@ -89,8 +89,8 @@ export async function commitImportInventory(input: {
 
     const existingId = known.get(key);
     if (existingId) {
-      await prisma.stockUnit.update({
-        where: { id: existingId },
+      await prisma.stockUnit.updateMany({
+        where: { id: existingId, restaurantId: input.restaurantId },
         data,
       });
       updated += 1;

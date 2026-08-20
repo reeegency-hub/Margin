@@ -6,8 +6,9 @@ Plan initial : `plan-securite-marginshop.md` · Audit live : canvas `margin-secu
 ## Chantier 1 — Tenant scoping
 **Fichiers** : `whatsapp/batch.ts`, `stock-engine.ts`, `actions.ts` (resend WA), `whatsapp-bot.ts`, `catalog/issues.ts`, `api/stripe/checkout`, `lib/db/tenant-scoped.ts`, `lib/tenant.ts`, `security/tenant-isolation.test.ts`, `actions/README.md`
 **Tests** : `tsx src/lib/security/tenant-isolation.test.ts` + `npm run test:tenant`
-**Reste ⚠️** : updates by id après find scoped (TOCTOU) — à migrer progressivement vers `updateMany` + restaurantId  
-**Ops P0** : confirmer `DATABASE_URL` = rôle sans BYPASSRLS (`prisma/rls.sql`)
+**Reste ⚠️** : pass TOCTOU partiel — encore des `update` by id dans thresholds / pos catalog / retail import / LLM router  
+**Ops P0** : confirmer `DATABASE_URL` prod = rôle sans BYPASSRLS (`prisma/rls.sql`) — script local `npx tsx scripts/check-rls-status.ts`  
+**Durci 2026-08-20** : catalog merge/apply, inventory validate/lines, assistant drafts/commit, channels kiosk/delivery, stub attendance/shift, llm revoke
 
 ## Chantier 2 — Webhooks
 **Déjà en place** : Stripe raw body + `constructEvent` + idempotency ; Twilio `validateRequest` ; POS HMAC/`timingSafeEqual` (v1)

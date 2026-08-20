@@ -32,8 +32,8 @@ export async function DELETE(_req: Request, ctx: Ctx) {
     return new Response(null, { status: 204 });
   }
 
-  await prisma.llmProviderCredential.update({
-    where: { id: existing.id },
+  await prisma.llmProviderCredential.updateMany({
+    where: { id: existing.id, restaurantId },
     data: {
       status: "revoked",
       encryptedKey: null,

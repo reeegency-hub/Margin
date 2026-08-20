@@ -2021,9 +2021,17 @@ export async function saveOnboardingTeam(input: {
   const stubIds = existing.filter((e) => isStubEmployeeName(e.name)).map((e) => e.id);
   if (stubIds.length) {
     await prisma.attendance.deleteMany({
-      where: { employeeId: { in: stubIds } },
+      where: {
+        employeeId: { in: stubIds },
+        employee: { restaurantId: rid },
+      },
     });
-    await prisma.shift.deleteMany({ where: { employeeId: { in: stubIds } } });
+    await prisma.shift.deleteMany({
+      where: {
+        employeeId: { in: stubIds },
+        employee: { restaurantId: rid },
+      },
+    });
     await prisma.employee.deleteMany({
       where: { id: { in: stubIds }, restaurantId: rid },
     });

@@ -46,8 +46,8 @@ export async function getAssistantDraft(
     draft.expiresAt.getTime() < Date.now()
   ) {
     if (draft.status !== "expired") {
-      await prisma.assistantDraft.update({
-        where: { id: draft.id },
+      await prisma.assistantDraft.updateMany({
+        where: { id: draft.id, restaurantId },
         data: { status: "expired" },
       });
     }
@@ -84,14 +84,16 @@ export async function updateDraftPayload(
   const existing = await getAssistantDraft(restaurantId, draftId);
   if (!existing || existing.status === "expired") return null;
   if (existing.status === "committed") return null;
-  return prisma.assistantDraft.update({
-    where: { id: draftId },
+  const updated = await prisma.assistantDraft.updateMany({
+    where: { id: draftId, restaurantId, status: { not: "committed" } },
     data: {
       payloadJson: JSON.stringify(payload),
       flagsJson: JSON.stringify(flags ?? JSON.parse(existing.flagsJson || "[]")),
       status: "preview",
     },
   });
+  if (!updated.count) return null;
+  return getAssistantDraft(restaurantId, draftId);
 }
 
 export async function markDraftCommitted(

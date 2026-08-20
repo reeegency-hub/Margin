@@ -33,8 +33,8 @@ export async function simulateKioskSale(
 
   if (!dish) throw new Error("Aucun produit disponible");
 
-  await prisma.kiosk.update({
-    where: { id: kioskId },
+  await prisma.kiosk.updateMany({
+    where: { id: kioskId, restaurantId },
     data: { lastSeenAt: new Date() },
   });
 
@@ -65,8 +65,8 @@ export async function simulateDeliverySale(
   });
   if (!dish) throw new Error("Aucun produit disponible");
 
-  await prisma.deliveryPlatformConnection.update({
-    where: { id: conn.id },
+  await prisma.deliveryPlatformConnection.updateMany({
+    where: { id: conn.id, restaurantId },
     data: { lastSyncAt: new Date() },
   });
 
@@ -90,8 +90,8 @@ export async function setDeliveryStatus(
   });
   if (!conn) throw new Error("Connexion introuvable");
 
-  await prisma.deliveryPlatformConnection.update({
-    where: { id: conn.id },
+  await prisma.deliveryPlatformConnection.updateMany({
+    where: { id: conn.id, restaurantId },
     data: {
       status,
       lastSyncAt: status === "CONNECTED" ? new Date() : conn.lastSyncAt,

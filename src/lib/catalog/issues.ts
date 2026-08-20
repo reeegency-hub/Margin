@@ -258,14 +258,25 @@ export async function mergeIngredients(
         },
       });
       if (existing) {
-        await tx.productStock.update({
-          where: { id: existing.id },
+        await tx.productStock.updateMany({
+          where: {
+            id: existing.id,
+            product: { restaurantId },
+          },
           data: { quantity: existing.quantity + line.quantity },
         });
-        await tx.productStock.delete({ where: { id: line.id } });
+        await tx.productStock.deleteMany({
+          where: {
+            id: line.id,
+            product: { restaurantId },
+          },
+        });
       } else {
-        await tx.productStock.update({
-          where: { id: line.id },
+        await tx.productStock.updateMany({
+          where: {
+            id: line.id,
+            product: { restaurantId },
+          },
           data: { stockUnitId: keepId },
         });
       }
@@ -301,8 +312,8 @@ export async function mergeIngredients(
     });
 
     // Merge stock
-    await tx.stockUnit.update({
-      where: { id: keepId },
+    await tx.stockUnit.updateMany({
+      where: { id: keepId, restaurantId },
       data: {
         stockTheoretical: keep.stockTheoretical + remove.stockTheoretical,
         criticalThreshold:
@@ -314,7 +325,9 @@ export async function mergeIngredients(
       },
     });
 
-    await tx.stockUnit.delete({ where: { id: removeId } });
+    await tx.stockUnit.deleteMany({
+      where: { id: removeId, restaurantId },
+    });
 
     await tx.catalogIssue.updateMany({
       where: {
@@ -342,8 +355,8 @@ export async function applySuggestedUnit(
   });
   if (!ing) return { ok: false };
   const defaults = applyUnitDefaults(ing.name);
-  await prisma.stockUnit.update({
-    where: { id: stockUnitId },
+  await prisma.stockUnit.updateMany({
+    where: { id: stockUnitId, restaurantId },
     data: {
       unit: defaults.unit,
       category: inferCategory(ing.name),
@@ -370,8 +383,8 @@ export async function applySuggestedThreshold(
   });
   if (!ing) return { ok: false };
   const defaults = applyUnitDefaults(ing.name);
-  await prisma.stockUnit.update({
-    where: { id: stockUnitId },
+  await prisma.stockUnit.updateMany({
+    where: { id: stockUnitId, restaurantId },
     data: {
       criticalThreshold: defaults.criticalThreshold,
       reorderQty:

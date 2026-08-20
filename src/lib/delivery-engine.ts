@@ -93,8 +93,8 @@ export async function testPlatformConnection(
   }
 
   // Sandbox ping — PAS un vrai appel Uber/Deliveroo
-  await prisma.deliveryPlatformConnection.update({
-    where: { id: conn.id },
+  await prisma.deliveryPlatformConnection.updateMany({
+    where: { id: conn.id, restaurantId },
     data: { lastSyncAt: new Date(), status: "KEY_STORED" },
   });
 
