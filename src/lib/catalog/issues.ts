@@ -215,8 +215,8 @@ export async function syncCatalogIssues(restaurantId: string): Promise<{
   for (const ex of openExisting) {
     const key = ex.payloadJson || "";
     if (key && !keepKeys.has(key)) {
-      await prisma.catalogIssue.update({
-        where: { id: ex.id },
+      await prisma.catalogIssue.updateMany({
+        where: { id: ex.id, restaurantId },
         data: { status: "RESOLVED" },
       });
     }

@@ -2416,8 +2416,8 @@ export async function adminEnsurePosAction(formData: FormData) {
   });
   const secret = generateWebhookSecret();
   if (existing) {
-    await prisma.externalPosConnection.update({
-      where: { id: existing.id },
+    await prisma.externalPosConnection.updateMany({
+      where: { id: existing.id, restaurantId },
       data: { vendor, webhookSecret: secret, status: "PENDING", name: existing.name || "Caisse" },
     });
   } else {

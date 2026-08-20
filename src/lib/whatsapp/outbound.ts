@@ -209,8 +209,8 @@ export async function sendWhatsAppOutbound(
       body,
       template: contentSid,
     });
-    await prisma.whatsAppOutboundMessage.update({
-      where: { id: row.id },
+    await prisma.whatsAppOutboundMessage.updateMany({
+      where: { id: row.id, restaurantId: row.restaurantId },
       data: {
         status: "delivered",
         statusUpdatedAt: new Date(),
@@ -262,8 +262,8 @@ export async function sendWhatsAppOutbound(
 
     const msg = await client.messages.create(createParams);
 
-    await prisma.whatsAppOutboundMessage.update({
-      where: { id: row.id },
+    await prisma.whatsAppOutboundMessage.updateMany({
+      where: { id: row.id, restaurantId: row.restaurantId },
       data: {
         twilioSid: msg.sid,
         status: msg.status || "accepted",
@@ -280,8 +280,8 @@ export async function sendWhatsAppOutbound(
     };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    await prisma.whatsAppOutboundMessage.update({
-      where: { id: row.id },
+    await prisma.whatsAppOutboundMessage.updateMany({
+      where: { id: row.id, restaurantId: row.restaurantId },
       data: {
         status: "failed",
         errorMessage: msg.slice(0, 500),
@@ -306,8 +306,8 @@ export async function applyTwilioStatusUpdate(opts: {
   });
   if (!row) return false;
 
-  await prisma.whatsAppOutboundMessage.update({
-    where: { id: row.id },
+  await prisma.whatsAppOutboundMessage.updateMany({
+    where: { id: row.id, restaurantId: row.restaurantId },
     data: {
       status: opts.messageStatus,
       errorCode: opts.errorCode || null,
