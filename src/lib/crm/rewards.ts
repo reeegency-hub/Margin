@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/db";
 import { logActivity } from "@/lib/crm/activity";
+import {
+  commissionPercentForInvoice,
+  onboardingBonusEur,
+} from "@/lib/ambassador-pricing";
 
 export type RewardStatus = "pending" | "validated" | "paid" | "reversed";
 
@@ -20,18 +24,33 @@ export async function createRewardEventForInvoice(input: {
 
   const referral = await prisma.referral.findUnique({
     where: { referredRestaurantId: input.restaurantId },
-    include: { restaurant: { select: { name: true } } },
+    include: {
+      restaurant: { select: { name: true } },
+      ambassador: { select: { id: true, name: true, referralCode: true } },
+    },
   });
-  if (!referral) return null;
-
-  const commissionCents = Math.round(
-    (input.invoiceAmountCents * referral.commissionPercent) / 100
-  );
+  if (!referral?.ambassador) return null;
 
   const existing = await prisma.rewardEvent.findUnique({
     where: { stripeInvoiceId: input.stripeInvoiceId },
   });
   if (existing) return existing;
+
+  const priorPaidInvoices = await prisma.rewardEvent.count({
+    where: {
+      referralId: referral.id,
+      status: { not: "reversed" },
+      stripeInvoiceId: { not: { startsWith: "onboarding-bonus:" } },
+    },
+  });
+
+  const percent = commissionPercentForInvoice(
+    referral.ambassador,
+    priorPaidInvoices
+  );
+  const commissionCents = Math.round(
+    (input.invoiceAmountCents * percent) / 100
+  );
 
   const event = await prisma.rewardEvent.create({
     data: {
@@ -40,7 +59,7 @@ export async function createRewardEventForInvoice(input: {
       referredRestaurantId: input.restaurantId,
       stripeInvoiceId: input.stripeInvoiceId,
       invoiceAmountCents: input.invoiceAmountCents,
-      commissionPercent: referral.commissionPercent,
+      commissionPercent: percent,
       commissionCents,
       status: "validated",
     },
@@ -48,13 +67,70 @@ export async function createRewardEventForInvoice(input: {
 
   await logActivity({
     kind: "reward.earned",
-    summary: `Commission ${(commissionCents / 100).toFixed(2)} € — ${referral.restaurant?.name ?? "magasin"}`,
+    summary: `Commission ${(commissionCents / 100).toFixed(2)} € (${percent} %) — ${referral.restaurant?.name ?? "magasin"}`,
     restaurantId: input.restaurantId,
     ambassadorId: referral.ambassadorId,
     referralId: referral.id,
     metadata: {
       rewardEventId: event.id,
       invoiceAmountCents: input.invoiceAmountCents,
+      commissionCents,
+      commissionPercent: percent,
+      paidInvoiceIndex: priorPaidInvoices,
+    },
+  });
+
+  await ensureOnboardingBonus({
+    referralId: referral.id,
+    ambassadorId: referral.ambassadorId,
+    restaurantId: input.restaurantId,
+    restaurantName: referral.restaurant?.name ?? null,
+    ambassador: referral.ambassador,
+  });
+
+  return event;
+}
+
+/** Bonus onboarding unique (ex. Farel 250 €) à la 1ʳᵉ facture. */
+async function ensureOnboardingBonus(input: {
+  referralId: string;
+  ambassadorId: string;
+  restaurantId: string;
+  restaurantName: string | null;
+  ambassador: { referralCode?: string | null; name?: string | null };
+}) {
+  const bonusEur = onboardingBonusEur(input.ambassador);
+  if (bonusEur <= 0) return null;
+
+  const stripeInvoiceId = `onboarding-bonus:${input.restaurantId}`;
+  const existing = await prisma.rewardEvent.findUnique({
+    where: { stripeInvoiceId },
+  });
+  if (existing) return existing;
+
+  const commissionCents = Math.round(bonusEur * 100);
+  const event = await prisma.rewardEvent.create({
+    data: {
+      ambassadorId: input.ambassadorId,
+      referralId: input.referralId,
+      referredRestaurantId: input.restaurantId,
+      stripeInvoiceId,
+      invoiceAmountCents: commissionCents,
+      commissionPercent: 100,
+      commissionCents,
+      status: "validated",
+    },
+  });
+
+  await logActivity({
+    kind: "reward.earned",
+    summary: `Bonus onboarding ${bonusEur} € — ${input.restaurantName ?? "magasin"}`,
+    restaurantId: input.restaurantId,
+    ambassadorId: input.ambassadorId,
+    referralId: input.referralId,
+    metadata: {
+      rewardEventId: event.id,
+      kind: "onboarding_bonus",
       commissionCents,
     },
   });

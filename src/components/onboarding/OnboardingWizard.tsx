@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { ProposedDish } from "@/lib/menu-ai";
 import {
   saveOnboardingWhatsApp,
@@ -49,8 +49,11 @@ const STEPS: {
 
 /** Chemin après l’onboarding — visible pour rassurer */
 const AFTER_PATH = [
-  { label: "Votre équipe", hint: "Planning et pointage" },
-  { label: "Votre caisse", hint: "Indiquer votre logiciel" },
+  { label: "Votre caisse", hint: "Brancher le POS ou tester 1 vente" },
+  {
+    label: "Hors caisse",
+    hint: "Sinon : tableau produits + qty → stock −",
+  },
 ];
 
 export type OnboardingInitial = {
@@ -65,6 +68,8 @@ export type OnboardingInitial = {
   openaiConfigured: boolean;
   plan: PlanId | null;
   billingPeriod: BillingPeriod | null;
+  /** true si abo Stripe déjà actif / trial */
+  billingActive: boolean;
 };
 
 function normalizeFrMobile(raw: string): string {
@@ -77,6 +82,7 @@ function normalizeFrMobile(raw: string): string {
 
 export function OnboardingWizard({ initial }: { initial: OnboardingInitial }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(0);
   const [entered, setEntered] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -91,6 +97,8 @@ export function OnboardingWizard({ initial }: { initial: OnboardingInitial }) {
   const [menuEngine, setMenuEngine] = useState<"openai" | "local" | null>(null);
   const [menuSaved, setMenuSaved] = useState(initial.dishCount > 0);
   const [dragOver, setDragOver] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [payMsg, setPayMsg] = useState<string | null>(null);
 
   const planLabel = initial.plan
     ? PLANS.find((p) => p.id === initial.plan)?.name ?? initial.plan
@@ -107,6 +115,18 @@ export function OnboardingWizard({ initial }: { initial: OnboardingInitial }) {
     const t = requestAnimationFrame(() => setEntered(true));
     return () => cancelAnimationFrame(t);
   }, [step]);
+
+  useEffect(() => {
+    const pay = searchParams.get("pay");
+    const paid = searchParams.get("paid");
+    if (paid === "1") {
+      setStep(2);
+      setPayMsg("Paiement reçu — finalisez ci-dessous.");
+    } else if (pay === "cancel") {
+      setStep(2);
+      setPayMsg("Paiement annulé — vous pouvez réessayer avec le code promo.");
+    }
+  }, [searchParams]);
 
   function goNext() {
     setError(null);
@@ -188,6 +208,32 @@ export function OnboardingWizard({ initial }: { initial: OnboardingInitial }) {
       }
       setMenuSaved(true);
       goNext();
+    });
+  }
+
+  function startCheckout() {
+    setError(null);
+    setPayMsg(null);
+    startTransition(async () => {
+      try {
+        const res = await fetch("/api/stripe/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            plan: initial.plan || "commerce",
+            billingPeriod: initial.billingPeriod || "monthly",
+            promoCode: promoCode.trim() || undefined,
+          }),
+        });
+        const data = (await res.json()) as { url?: string; error?: string };
+        if (!res.ok || !data.url) {
+          setError(data.error || "Paiement indisponible.");
+          return;
+        }
+        window.location.href = data.url;
+      } catch {
+        setError("Impossible d’ouvrir Stripe. Réessayez.");
+      }
     });
   }
 
@@ -484,6 +530,38 @@ export function OnboardingWizard({ initial }: { initial: OnboardingInitial }) {
                   : "Via la caisse ou plus tard"}
               </li>
             </ul>
+
+            {!initial.billingActive ? (
+              <div className="ob-pay" style={{ margin: "1.25rem 0" }}>
+                <p className="ob-ahead__title">Abonnement</p>
+                <p className="ob-lead" style={{ marginBottom: "0.75rem" }}>
+                  Activez Margin. Code promo −20&nbsp;% le 1<sup>er</sup> mois
+                  (accompagnement / parrainage).
+                </p>
+                <Field label="Code promo (optionnel)">
+                  <input
+                    className={inputClass}
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                    placeholder="MARGIN20"
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                </Field>
+                {payMsg ? <p className="ob-meta">{payMsg}</p> : null}
+                <button
+                  type="button"
+                  className="ob-btn ob-btn--primary"
+                  disabled={pending}
+                  onClick={startCheckout}
+                  style={{ marginTop: "0.75rem" }}
+                >
+                  {pending ? "Ouverture…" : "Payer et activer (−20 % si code)"}
+                </button>
+              </div>
+            ) : (
+              <p className="ob-meta">Abonnement actif — merci.</p>
+            )}
 
             <div className="ob-ahead">
               <p className="ob-ahead__title">Votre suite juste après</p>

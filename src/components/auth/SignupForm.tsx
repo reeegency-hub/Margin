@@ -28,6 +28,7 @@ export function SignupForm({
   const planFromUrl = Boolean(searchParams.get("plan"));
   const referralCode = (searchParams.get("ref") || "").trim();
   const ambassadorCode = (searchParams.get("amb") || "").trim();
+  const promoFromUrl = (searchParams.get("promo") || "").trim();
 
   const [step, setStep] = useState<"form" | "otp">("form");
   const [name, setName] = useState("");
@@ -40,6 +41,7 @@ export function SignupForm({
   const [otpCode, setOtpCode] = useState("");
   const [challengeId, setChallengeId] = useState<string | null>(null);
   const [devCode, setDevCode] = useState<string | null>(null);
+  const [promoCode, setPromoCode] = useState(promoFromUrl);
   const [plan, setPlan] = useState<PlanId>(
     ["commerce", "reseau"].includes(initialPlan) ? initialPlan : "commerce"
   );
@@ -110,6 +112,7 @@ export function SignupForm({
       newsletterOptIn,
       otpCode,
       otpChallengeId: challengeId || undefined,
+      promoCode: promoCode || undefined,
     });
     if (!res.ok) {
       setLoading(false);
@@ -309,6 +312,24 @@ export function SignupForm({
                 </Field>
               </>
             )}
+
+            <Field
+              label={`Code promo (−${AFFILIATE.discountPercentReferee} % 1er mois)`}
+            >
+              <input
+                className={inputClass}
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                placeholder="MARGIN20"
+                autoComplete="off"
+                spellCheck={false}
+              />
+            </Field>
+            <p className="auth-channel__hint">
+              {referralCode
+                ? "Parrainage déjà détecté — le −20 % sera appliqué au paiement."
+                : "Optionnel. Si vous avez un code d’accompagnement, saisissez-le ici."}
+            </p>
 
             <label className="auth-check">
               <input

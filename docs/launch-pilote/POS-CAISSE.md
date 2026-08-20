@@ -221,15 +221,15 @@ Le champ utilisé pour matcher = **id / sku de ligne** → `Product.externalSku`
 
 ## 5. Plan B — pas de webhook (cas fréquent)
 
-Ne bloque **pas** l’onboard. Script client :
+Ne bloque **pas** l’onboard. Script client (5 lignes) :
 
-1. Fin de service (ou pause) → ouvrir Margin  
-2. Ajuster le stock (vérification / Copilote / comptage rayon)  
-3. Checker WhatsApp alertes  
-4. Si la caisse exporte un CSV ventes → l’envoyer à `reeegency@gmail.com` (import assisté)  
-5. Ticket technique : « brancher {marque caisse} pour magasin X » → tu traites hors call
+1. Ouvrir **Hors caisse** (`/sales`)  
+2. Dans le tableau : quantité sur le(s) produit(s) vendu(s)  
+3. **Enregistrer la vente** → stock −1 (ou −qty)  
+4. Checker WhatsApp alertes si seuil bas  
+5. Ticket technique plus tard : brancher la vraie caisse
 
-**Critère ok Plan B :** le commerçant sait **où** et **quand** corriger le stock sans toi.
+**Critère ok Plan B :** 1 vente test manuelle → stock baisse. Pas besoin d’attendre le POS.
 
 ---
 

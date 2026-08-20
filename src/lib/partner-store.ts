@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/db";
 import { createReferralForRestaurant } from "@/lib/crm/activity";
+import { initialCommissionPercent } from "@/lib/ambassador-pricing";
 
-const DEFAULT_COMMISSION = 15;
+const DEFAULT_COMMISSION = 80;
 
 export async function requirePartnerStore(ambassadorId: string, restaurantId: string) {
   const referral = await prisma.referral.findFirst({
@@ -90,7 +91,15 @@ export async function createPartnerStore(input: CreatePartnerStoreInput) {
   await createReferralForRestaurant({
     ambassadorId: input.ambassadorId,
     restaurantId: restaurant.id,
-    commissionPercent: input.commissionPercent ?? DEFAULT_COMMISSION,
+    commissionPercent:
+      input.commissionPercent ??
+      (await (async () => {
+        const amb = await prisma.ambassador.findUnique({
+          where: { id: input.ambassadorId },
+          select: { name: true, referralCode: true },
+        });
+        return amb ? initialCommissionPercent(amb) : DEFAULT_COMMISSION;
+      })()),
     status: input.skipOnboarding ? "onboarding" : "signed_up",
   });
 

@@ -118,13 +118,13 @@ export async function createReferralForRestaurant(input: {
     create: {
       ambassadorId: input.ambassadorId,
       referredRestaurantId: input.restaurantId,
-      commissionPercent: input.commissionPercent ?? 15,
+      commissionPercent: input.commissionPercent ?? 80,
       status: input.status ?? "signed_up",
       signedUpAt: new Date(),
     },
     update: {
       ambassadorId: input.ambassadorId,
-      commissionPercent: input.commissionPercent ?? 15,
+      commissionPercent: input.commissionPercent ?? 80,
     },
   });
 

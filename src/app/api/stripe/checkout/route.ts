@@ -30,10 +30,12 @@ export async function POST(request: Request) {
     plan?: string;
     billingPeriod?: string;
     restaurantId?: string;
+    promoCode?: string;
   };
 
   const plan = (body.plan || "commerce") as PlanId;
   const billingPeriod = (body.billingPeriod || "monthly") as BillingPeriod;
+  const promoCode = String(body.promoCode || "").trim();
   if (!["commerce", "reseau", "boutique"].includes(plan)) {
     return NextResponse.json({ error: "Plan invalide" }, { status: 400 });
   }
@@ -51,7 +53,6 @@ export async function POST(request: Request) {
 
   const session = await getServerSession(authOptions);
   const isAdmin = isAdminEmail(session?.user?.email);
-  // Tenant depuis la session uniquement — body.restaurantId réservé aux admins Ops.
   const restaurantId =
     isAdmin && body.restaurantId
       ? body.restaurantId
@@ -84,31 +85,44 @@ export async function POST(request: Request) {
 
   const origin = new URL(request.url).origin;
   const successUrl = `${origin}/onboarding?paid=1&session_id={CHECKOUT_SESSION_ID}`;
-  const cancelUrl = `${origin}/welcome#tarifs`;
+  const cancelUrl = `${origin}/onboarding?pay=cancel`;
 
   const { affiliateCheckoutDiscounts } = await import(
     "@/lib/stripe/affiliate-discount"
   );
-  const discounts = await affiliateCheckoutDiscounts(stripe, hasReferrer);
+  const discountOpts = await affiliateCheckoutDiscounts(
+    stripe,
+    hasReferrer,
+    promoCode || undefined
+  );
+  if (discountOpts.promoError) {
+    return NextResponse.json(
+      { error: discountOpts.promoError },
+      { status: 400 }
+    );
+  }
 
   const checkout = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customerId,
     customer_email: customerId ? undefined : customerEmail,
     line_items: [{ price: priceId, quantity: 1 }],
-    ...(discounts ? { discounts } : {}),
+    ...(discountOpts.discounts ? { discounts: discountOpts.discounts } : {}),
+    ...(discountOpts.allowPromotionCodes
+      ? { allow_promotion_codes: true }
+      : {}),
     success_url: successUrl,
     cancel_url: cancelUrl,
-    // Compte Live avec Managed Payments : Checkout classique abonnement.
-    ...( {
+    ...({
       managed_payments: { enabled: false },
     } as Record<string, unknown>),
     metadata: {
       plan,
       billingPeriod,
       restaurantId: restaurantId || "",
-      affiliateDiscount: discounts ? "1" : "0",
+      affiliateDiscount: discountOpts.discounts ? "1" : "0",
       referredByRestaurantId,
+      promoCode: promoCode || "",
     },
     subscription_data: {
       metadata: {

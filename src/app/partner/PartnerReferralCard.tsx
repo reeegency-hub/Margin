@@ -5,9 +5,11 @@ import { useState } from "react";
 export function PartnerReferralCard({
   code,
   signupUrl,
+  pricingSummary,
 }: {
   code: string;
   signupUrl: string;
+  pricingSummary?: string;
 }) {
   const [copied, setCopied] = useState<"code" | "link" | null>(null);
 
@@ -32,8 +34,13 @@ export function PartnerReferralCard({
         </h2>
         <p className="partner-referral__lead">
           Partagez-les aux commerces que vous amenez — l’inscription les rattache
-          à vous.
+          automatiquement à vous (ventes &amp; commissions dans votre espace).
         </p>
+        {pricingSummary ? (
+          <p className="partner-referral__lead" style={{ marginTop: "0.75rem" }}>
+            <strong>Votre rémunération :</strong> {pricingSummary}
+          </p>
+        ) : null}
       </div>
 
       <div className="partner-referral__actions">

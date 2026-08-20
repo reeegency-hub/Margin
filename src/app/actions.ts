@@ -1713,6 +1713,8 @@ export async function signupAndCheckoutAction(input: {
   otpCode?: string;
   /** Challenge renvoyé par requestSignupOtpAction */
   otpChallengeId?: string;
+  /** Code promo (−20 % 1er mois) saisi à l’inscription */
+  promoCode?: string;
 }): Promise<
   | { ok: true; checkoutUrl?: string; redirectTo?: string }
   | { ok: false; error: string }
@@ -1739,6 +1741,7 @@ export async function signupAndCheckoutAction(input: {
   const ambassadorCode = normalizeAmbassadorCode(
     String(input.ambassadorCode || "")
   );
+  const promoCode = String(input.promoCode || "").trim();
 
   if (!name || !email || password.length < 8) {
     return {
@@ -1844,14 +1847,17 @@ export async function signupAndCheckoutAction(input: {
   if (ambassadorCode) {
     const ambassador = await prisma.ambassador.findFirst({
       where: { referralCode: ambassadorCode, active: true, status: "actif" },
-      select: { id: true },
+      select: { id: true, name: true, referralCode: true },
     });
     if (ambassador) {
       const { createReferralForRestaurant } = await import("@/lib/crm/activity");
+      const { initialCommissionPercent } = await import(
+        "@/lib/ambassador-pricing"
+      );
       await createReferralForRestaurant({
         ambassadorId: ambassador.id,
         restaurantId: restaurant.id,
-        commissionPercent: 15,
+        commissionPercent: initialCommissionPercent(ambassador),
         status: "signed_up",
       }).catch(() => null);
     }
@@ -1894,25 +1900,35 @@ export async function signupAndCheckoutAction(input: {
       const { affiliateCheckoutDiscounts } = await import(
         "@/lib/stripe/affiliate-discount"
       );
-      const discounts = await affiliateCheckoutDiscounts(
+      const discountOpts = await affiliateCheckoutDiscounts(
         stripe,
-        Boolean(referredByRestaurantId)
+        Boolean(referredByRestaurantId),
+        promoCode || undefined
       );
+      if (discountOpts.promoError) {
+        return { ok: false, error: discountOpts.promoError };
+      }
       const checkout = await stripe.checkout.sessions.create({
         mode: "subscription",
         customer_email: email,
         line_items: [{ price: priceId, quantity: 1 }],
-        ...(discounts ? { discounts } : {}),
+        ...(discountOpts.discounts
+          ? { discounts: discountOpts.discounts }
+          : {}),
+        ...(discountOpts.allowPromotionCodes
+          ? { allow_promotion_codes: true }
+          : {}),
         success_url: `${base}/login?paid=1&email=${encodeURIComponent(email)}`,
         cancel_url: `${base}/signup?plan=${plan}&billing=${billingPeriod}${
           referralCode ? `&ref=${encodeURIComponent(referralCode)}` : ""
-        }`,
+        }${promoCode ? `&promo=${encodeURIComponent(promoCode)}` : ""}`,
         metadata: {
           plan,
           billingPeriod,
           restaurantId: restaurant.id,
-          affiliateDiscount: discounts ? "1" : "0",
+          affiliateDiscount: discountOpts.discounts ? "1" : "0",
           referredByRestaurantId: referredByRestaurantId || "",
+          promoCode: promoCode || "",
         },
         subscription_data: {
           metadata: {

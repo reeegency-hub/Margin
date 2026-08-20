@@ -1,9 +1,11 @@
+import { Suspense } from "react";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getOpenAIConfig } from "@/lib/openai";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
+
 export default async function OnboardingPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || !session.user.restaurantId) {
@@ -39,13 +41,14 @@ export default async function OnboardingPage() {
   }
 
   const procurementMode = ["suppliers_deliver", "self_shop", "mixed"].includes(
-      restaurant.procurementMode || ""
-    )
-      ? restaurant.procurementMode
+    restaurant.procurementMode || ""
+  )
+    ? restaurant.procurementMode
     : null;
 
   return (
-    <OnboardingWizard
+    <Suspense fallback={<div className="ob-page">Chargement…</div>}>
+      <OnboardingWizard
         initial={{
           restaurantName: restaurant.name,
           staffSalle: restaurant.staffSalle,
@@ -66,7 +69,11 @@ export default async function OnboardingPage() {
           )
             ? restaurant.billingPeriod
             : null) as import("@/lib/plans").BillingPeriod | null,
+          billingActive:
+            restaurant.stripeStatus === "active" ||
+            restaurant.stripeStatus === "trialing",
         }}
       />
+    </Suspense>
   );
 }

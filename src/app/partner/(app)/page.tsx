@@ -8,6 +8,7 @@ import { ensureAmbassadorReferralCode } from "@/lib/ambassador-referral-code";
 import { REFERRAL_STATUS_LABEL } from "@/lib/crm/activity";
 import { PartnerReferralCard } from "@/app/partner/PartnerReferralCard";
 import { getAmbassadorRewardSummary } from "@/lib/crm/rewards";
+import { pricingSummaryForAmbassador } from "@/lib/ambassador-pricing";
 
 export default async function PartnerDashboardPage() {
   const me = await requireAmbassador();
@@ -15,6 +16,10 @@ export default async function PartnerDashboardPage() {
 
   const referralCode = await ensureAmbassadorReferralCode(me.id, me.name);
   const signupUrl = absoluteAmbassadorSignupUrl(referralCode);
+  const pricingSummary = pricingSummaryForAmbassador({
+    referralCode,
+    name: me.name,
+  });
 
   const [referrals, prospects, rewards] = await Promise.all([
     prisma.referral.findMany({
@@ -74,7 +79,11 @@ export default async function PartnerDashboardPage() {
         </p>
       </header>
 
-      <PartnerReferralCard code={referralCode} signupUrl={signupUrl} />
+      <PartnerReferralCard
+        code={referralCode}
+        signupUrl={signupUrl}
+        pricingSummary={pricingSummary}
+      />
 
       <div className="partner-shortcuts" aria-label="Raccourcis">
         <Link href="/partner/stores/new" className="partner-shortcut partner-shortcut--accent">

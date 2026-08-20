@@ -39,6 +39,13 @@ function pickRecorderMime(): string {
   return candidates.find((m) => MediaRecorder.isTypeSupported(m)) || "";
 }
 
+function formatPrice(n: number): string {
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+  }).format(n);
+}
+
 export function ManualSalePanel({
   products,
   recent,
@@ -64,6 +71,7 @@ export function ManualSalePanel({
   const [okMsg, setOkMsg] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [canRecord, setCanRecord] = useState(false);
+  const [voiceOpen, setVoiceOpen] = useState(false);
 
   useEffect(() => {
     setCanRecord(
@@ -85,6 +93,22 @@ export function ManualSalePanel({
     [products]
   );
 
+  const qtyById = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const l of lines) m.set(l.productId, l.quantity);
+    return m;
+  }, [lines]);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return products;
+    return products.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        (p.sku && p.sku.toLowerCase().includes(q))
+    );
+  }, [products, query]);
+
   const basket = lines
     .map((l) => {
       const p = byId.get(l.productId);
@@ -92,28 +116,26 @@ export function ManualSalePanel({
     })
     .filter((l): l is Line & { product: ManualSaleProduct } => Boolean(l));
 
-  const picks = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const list = q
-      ? products.filter(
-          (p) =>
-            p.name.toLowerCase().includes(q) ||
-            (p.sku && p.sku.toLowerCase().includes(q))
-        )
-      : products;
-    return list.slice(0, q ? 8 : 12);
-  }, [products, query]);
+  const itemCount = basket.reduce((n, l) => n + l.quantity, 0);
+  const totalAmount = basket.reduce(
+    (n, l) => n + l.quantity * l.product.salePrice,
+    0
+  );
 
-  function bump(productId: string, delta: number) {
+  function setQty(productId: string, quantity: number) {
     setError(null);
     setOkMsg(null);
+    const next = Math.max(0, Math.floor(quantity) || 0);
     setLines((prev) => {
-      const cur = prev.find((l) => l.productId === productId)?.quantity ?? 0;
-      const next = Math.max(0, cur + delta);
       const rest = prev.filter((l) => l.productId !== productId);
       if (next <= 0) return rest;
       return [...rest, { productId, quantity: next }];
     });
+  }
+
+  function bump(productId: string, delta: number) {
+    const cur = qtyById.get(productId) ?? 0;
+    setQty(productId, cur + delta);
   }
 
   function addMatched(
@@ -257,7 +279,7 @@ export function ManualSalePanel({
 
   function submit() {
     if (!basket.length) {
-      setError("Dictez, notez, ou touchez un produit.");
+      setError("Indiquez au moins une quantité dans le tableau.");
       return;
     }
     startTransition(async () => {
@@ -272,7 +294,7 @@ export function ManualSalePanel({
       setHeard("");
       setQuery("");
       setNote("");
-      setOkMsg("C’est noté — le stock a baissé.");
+      setOkMsg("Vente enregistrée — le stock a baissé.");
       router.refresh();
     });
   }
@@ -287,8 +309,8 @@ export function ManualSalePanel({
     return (
       <div className="msale">
         <p className="msale__hint">
-          Une fois vos produits en stock, vous noterez ici les ventes sans
-          caisse — à la voix ou à la main.
+          Ajoutez d’abord des produits au catalogue, puis notez ici chaque vente
+          hors caisse (quantité → stock −).
         </p>
         <Link href="/ingredients" className="btn-ghost">
           Voir le stock
@@ -302,124 +324,182 @@ export function ManualSalePanel({
       {okMsg ? <p className="flash">{okMsg}</p> : null}
       {error ? <p className="flash flash-warn">{error}</p> : null}
 
-      <div className="msale__tape">
-        <button
-          type="button"
-          className={`msale__mic${recording ? " is-on" : ""}${transcribing ? " is-busy" : ""}`}
-          onClick={() => (recording ? stopRec() : void startRec())}
-          disabled={!canRecord || transcribing}
-          aria-pressed={recording}
-          aria-label={recording ? "Arrêter le dictaphone" : "Dicter la vente"}
-        >
-          {recording ? (
-            <span className="msale__bars" aria-hidden>
-              <i />
-              <i />
-              <i />
-              <i />
-            </span>
-          ) : (
-            <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden>
-              <path
-                fill="currentColor"
-                d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2Z"
-              />
-            </svg>
-          )}
-        </button>
-        <div className="msale__talk-copy">
-          <p className="msale__talk-title">{recLabel}</p>
-          <p className="msale__hint">
-            {heard
-              ? `« ${heard} »`
-              : canRecord
-                ? "Appuyez, dites la vente, appuyez pour arrêter."
-                : "Micro indispo — notez à la main."}
-          </p>
-        </div>
-      </div>
-
-      <form
-        className="msale__note"
-        onSubmit={(e) => {
-          e.preventDefault();
-          addNote();
-        }}
-      >
-        <label>
-          <span>Ou notez à la main</span>
-          <input
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="2 lait, 1 pain"
-            autoComplete="off"
-            enterKeyHint="done"
-          />
-        </label>
-        <button type="submit" className="msale__note-go" disabled={!note.trim()}>
-          Ajouter
-        </button>
-      </form>
-
-      {basket.length > 0 ? (
-        <ul className="msale__lines">
-          {basket.map((l) => (
-            <li key={l.productId}>
-              <span className="msale__name">{l.product.name}</span>
-              <div className="msale__step">
-                <button
-                  type="button"
-                  onClick={() => bump(l.productId, -1)}
-                  aria-label="Moins"
-                >
-                  −
-                </button>
-                <b>{l.quantity}</b>
-                <button
-                  type="button"
-                  onClick={() => bump(l.productId, 1)}
-                  aria-label="Plus"
-                >
-                  +
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-
-      <button
-        type="button"
-        className="msale__go"
-        disabled={pending || !basket.length}
-        onClick={submit}
-      >
-        {pending ? "…" : "C’est vendu"}
-      </button>
-
       <label className="msale__search">
-        <span>Ou touchez un produit</span>
+        <span>Produits</span>
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Rechercher…"
+          placeholder="Rechercher un produit…"
           autoComplete="off"
         />
       </label>
 
-      <ul className="msale__hits">
-        {picks.map((p) => {
-          const qty = lines.find((l) => l.productId === p.id)?.quantity ?? 0;
-          return (
-            <li key={p.id}>
-              <button type="button" onClick={() => bump(p.id, 1)}>
-                <span className="msale__hit-name">{p.name}</span>
-                <span className="msale__hit-add">{qty ? qty : "+"}</span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+      <div className="msale__table-wrap">
+        <table className="msale__table">
+          <thead>
+            <tr>
+              <th scope="col">Produit</th>
+              <th scope="col" className="msale__th-num">
+                Prix
+              </th>
+              <th scope="col" className="msale__th-qty">
+                Qté vendue
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((p) => {
+              const qty = qtyById.get(p.id) ?? 0;
+              const selected = qty > 0;
+              return (
+                <tr
+                  key={p.id}
+                  className={selected ? "is-selected" : undefined}
+                >
+                  <td>
+                    <div className="msale__prod">
+                      <span className="msale__prod-name">{p.name}</span>
+                      <span className="msale__prod-meta">
+                        {[p.sku, p.stockLabel].filter(Boolean).join(" · ") ||
+                          "—"}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="msale__td-num">{formatPrice(p.salePrice)}</td>
+                  <td className="msale__td-qty">
+                    <div className="msale__step">
+                      <button
+                        type="button"
+                        onClick={() => bump(p.id, -1)}
+                        disabled={qty <= 0}
+                        aria-label={`Moins ${p.name}`}
+                      >
+                        −
+                      </button>
+                      <input
+                        className="msale__qty-input"
+                        type="number"
+                        inputMode="numeric"
+                        min={0}
+                        step={1}
+                        value={qty}
+                        onChange={(e) =>
+                          setQty(p.id, Number(e.target.value) || 0)
+                        }
+                        aria-label={`Quantité ${p.name}`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => bump(p.id, 1)}
+                        aria-label={`Plus ${p.name}`}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        {!filtered.length ? (
+          <p className="msale__empty">Aucun produit pour cette recherche.</p>
+        ) : null}
+      </div>
+
+      <div className="msale__bar">
+        <div className="msale__bar-sum">
+          {itemCount > 0 ? (
+            <>
+              <strong>
+                {itemCount} article{itemCount > 1 ? "s" : ""}
+              </strong>
+              <span>{formatPrice(totalAmount)}</span>
+            </>
+          ) : (
+            <span className="msale__bar-hint">
+              Réglez la quantité, puis enregistrez.
+            </span>
+          )}
+        </div>
+        <button
+          type="button"
+          className="msale__go"
+          disabled={pending || !basket.length}
+          onClick={submit}
+        >
+          {pending ? "…" : "Enregistrer la vente"}
+        </button>
+      </div>
+
+      <details
+        className="msale__more"
+        open={voiceOpen}
+        onToggle={(e) => setVoiceOpen((e.target as HTMLDetailsElement).open)}
+      >
+        <summary>Dictée / note rapide (optionnel)</summary>
+        <div className="msale__tape">
+          <button
+            type="button"
+            className={`msale__mic${recording ? " is-on" : ""}${transcribing ? " is-busy" : ""}`}
+            onClick={() => (recording ? stopRec() : void startRec())}
+            disabled={!canRecord || transcribing}
+            aria-pressed={recording}
+            aria-label={recording ? "Arrêter le dictaphone" : "Dicter la vente"}
+          >
+            {recording ? (
+              <span className="msale__bars" aria-hidden>
+                <i />
+                <i />
+                <i />
+                <i />
+              </span>
+            ) : (
+              <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden>
+                <path
+                  fill="currentColor"
+                  d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2Z"
+                />
+              </svg>
+            )}
+          </button>
+          <div className="msale__talk-copy">
+            <p className="msale__talk-title">{recLabel}</p>
+            <p className="msale__hint">
+              {heard
+                ? `« ${heard} »`
+                : canRecord
+                  ? "Appuyez, dites la vente, arrêtez."
+                  : "Micro indispo — utilisez le tableau."}
+            </p>
+          </div>
+        </div>
+        <form
+          className="msale__note"
+          onSubmit={(e) => {
+            e.preventDefault();
+            addNote();
+          }}
+        >
+          <label>
+            <span>Ou notez</span>
+            <input
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="2 lait, 1 pain"
+              autoComplete="off"
+              enterKeyHint="done"
+            />
+          </label>
+          <button
+            type="submit"
+            className="msale__note-go"
+            disabled={!note.trim()}
+          >
+            Ajouter
+          </button>
+        </form>
+      </details>
 
       {recent[0] ? (
         <p className="msale__last">

@@ -12,8 +12,8 @@ Support : `reeegency@gmail.com` · App : https://margin-shop.vercel.app
 |---|--------|----------------|------------------------|--------------|
 | 1 | **Compte** | Tu crées le magasin à la main (email + MDP temporaire) · tu lui envoies le lien login | Se connecte une 1ʳᵉ fois · change le MDP si besoin | Login OK, voit l’accueil |
 | 2 | **Stock / menu** | Tu guides l’import · tu débloques si le fichier est sale | Envoie **CSV, PDF ou TXT** (inventaire / stock / menu) · valide le brouillon | Stock visible dans l’app, quantités plausibles |
-| 3 | **Abonnement** | Tu partages le lien checkout + coupon −20 % · tu vérifies l’accès après paiement | Paie l’abo Margin (Stripe) | `stripeStatus=active` · accès commerce OK |
-| 4 | **Caisse** | Tu facilites le branchement POS (Zelty / autre / webhook custom) · fallback manuel si pas prêt | Donne l’accès API / webhook ou accepte le parcours manuel 5 lignes | 1 vente test → stock bouge **ou** process manuel écrit |
+| 3 | **Abonnement** | Checkout + champ **code promo** (MARGIN20 / `STRIPE_COUPON_AFFILIATE`) · vérifie accès après paiement | Paie l’abo Margin (Stripe, −20 % si code) | `stripeStatus=active` · accès commerce OK |
+| 4 | **Caisse** | POS si prêt · sinon **Hors caisse** `/sales` (tableau qty) | 1 vente test manuelle ou webhook | Stock −1 **ou** Plan B documenté |
 | 5 | **WhatsApp** | Tu configures le numéro dans Réglages · tu déclenches 1 alerte test | Reçoit le message sur son téléphone | 1 alerte WA réelle reçue |
 
 Ensuite seulement : call 30 min ([FRICTION-CALL.md](./FRICTION-CALL.md)) → notes → hotfix si bloquant → J+3 / J+7.
@@ -50,8 +50,8 @@ Ensuite seulement : call 30 min ([FRICTION-CALL.md](./FRICTION-CALL.md)) → not
 
 - [ ] Demander **quelle caisse** (Zelty, SumUp, autre, rien…)
 - [ ] Si connecteur connu → webhook `/kiosks` + SKU alignés
-- [ ] Si inconnu / trop long → **parcours manuel** · ne pas bloquer l’onboard
-- [ ] 1 test : vente → stock −1 (ou note « manuel jusqu’à J+7 »)
+- [ ] Si inconnu / trop long → **Hors caisse** `/sales` (tableau produits + qty) · ne pas bloquer
+- [ ] 1 test : vente → stock −1 (POS **ou** `/sales`)
 
 ### 5. WhatsApp (5 min)
 - [ ] Numéro commerçant dans Réglages

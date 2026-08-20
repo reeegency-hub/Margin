@@ -68,7 +68,7 @@ export default async function ManualSalesPage({
   return (
     <BrandPage
       question="Hors caisse"
-      guide="Dictez ou notez. Puis « C’est vendu »."
+      guide="Tableau des produits → quantité → Enregistrer. Le stock baisse tout de suite (plan B sans POS)."
     >
       {params.sold ? (
         <p className="flash">Vente enregistrée — stock mis à jour.</p>

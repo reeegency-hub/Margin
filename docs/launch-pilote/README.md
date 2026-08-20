@@ -13,6 +13,7 @@ Dossier ops pour le soft launch (5 commerces pilotes).
 | [GO-NOGO.md](./GO-NOGO.md) | État des critères GO |
 | [COMPTE-PILOTE-1.md](./COMPTE-PILOTE-1.md) | Magasin #1 — accès + suite |
 | [POS-CAISSE.md](./POS-CAISSE.md) | Branchement caisse (réaliste) |
+| [TARIFS-ADMINISTRATEURS.md](./TARIFS-ADMINISTRATEURS.md) | Grille Farel / admins + attribution lien |
 | [MESSAGE-ANNONCE.md](./MESSAGE-ANNONCE.md) | Texte réseau fermé |
 | [FILE-ATTENTE.md](./FILE-ATTENTE.md) | Modèle liste + J+3 / J+7 |
 | [FRICTION-CALL.md](./FRICTION-CALL.md) | Grille notes call 30 min |
