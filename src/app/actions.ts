@@ -1537,13 +1537,9 @@ export async function getPostLoginPath(): Promise<string> {
   try {
     const restaurant = await prisma.restaurant.findUnique({
       where: { id: session.user.restaurantId },
-      select: { onboardingCompletedAt: true, plan: true, networkId: true },
+      select: { onboardingCompletedAt: true },
     });
-    if (!restaurant?.onboardingCompletedAt) return "/onboarding";
-    if (restaurant.plan === "reseau" || restaurant.networkId) {
-      return "/franchise";
-    }
-    return "/";
+    return restaurant?.onboardingCompletedAt ? "/" : "/onboarding";
   } catch {
     // Stale Prisma client after schema change — force onboarding path
     return "/onboarding";
@@ -1618,7 +1614,7 @@ export async function adminCreateStoreAction(formData: FormData) {
     },
   });
 
-  const createdUser = await prisma.user.create({
+  await prisma.user.create({
     data: {
       email,
       name: name, // nom du commerce — pas de stub « Gérant »
@@ -1626,21 +1622,6 @@ export async function adminCreateStoreAction(formData: FormData) {
       restaurantId: restaurant.id,
     },
   });
-
-  await prisma.userRestaurant.create({
-    data: {
-      userId: createdUser.id,
-      restaurantId: restaurant.id,
-      role: "OWNER",
-    },
-  });
-
-  if (plan === "reseau") {
-    const { ensureFranchiseNetwork } = await import(
-      "@/lib/franchise-network"
-    );
-    await ensureFranchiseNetwork(restaurant.id);
-  }
 
   // Commerce vierge : pas de plateformes / équipe / catalogue pré-créés
 
@@ -1851,7 +1832,7 @@ export async function signupAndCheckoutAction(input: {
     data: { referralCode: codeFromRestaurantId(restaurant.id) },
   });
 
-  const createdUser = await prisma.user.create({
+  await prisma.user.create({
     data: {
       email,
       name, // nom du commerce — commerce vierge, pas de stub « Gérant »
@@ -1859,21 +1840,6 @@ export async function signupAndCheckoutAction(input: {
       restaurantId: restaurant.id,
     },
   });
-
-  await prisma.userRestaurant.create({
-    data: {
-      userId: createdUser.id,
-      restaurantId: restaurant.id,
-      role: "OWNER",
-    },
-  });
-
-  if (plan === "reseau") {
-    const { ensureFranchiseNetwork } = await import(
-      "@/lib/franchise-network"
-    );
-    await ensureFranchiseNetwork(restaurant.id);
-  }
 
   if (ambassadorCode) {
     const ambassador = await prisma.ambassador.findFirst({

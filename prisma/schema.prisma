@@ -14,12 +14,6 @@ enum UserRole {
   FOUNDER
 }
 
-enum NetworkMemberRole {
-  OWNER
-  MANAGER
-  MEMBER
-}
-
 model User {
   id             String     @id @default(cuid())
   email          String     @unique
@@ -34,7 +28,6 @@ model User {
   sessionVersion Int        @default(0)
   createdAt      DateTime   @default(now())
   adminAuditLogs AdminAuditLog[]
-  restaurantMemberships UserRestaurant[]
 }
 
 /// Journal actions admin sensibles (jamais de secrets dans metadata)
@@ -118,15 +111,10 @@ model Restaurant {
   /// Dernière facture Stripe payée (centimes) — commission ambassadeur
   lastInvoiceAmountCents  Int?
   lastInvoiceAt           DateTime?
-  /// Réseau Franchise (null = commerce mono-boutique)
-  networkId               String?
-  network                 FranchiseNetwork? @relation("NetworkStores", fields: [networkId], references: [id], onDelete: SetNull)
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
   users                       User[]
-  memberships                 UserRestaurant[]
-  hqOfNetworks                FranchiseNetwork[] @relation("NetworkHq")
   stockUnits                  StockUnit[]
   products                    Product[]
   sales                       Sale[]
@@ -159,36 +147,6 @@ model Restaurant {
   ambassadorReferrals         Referral[]
   activityLogs                ActivityLog[]
   rewardEvents                RewardEvent[]
-
-  @@index([networkId])
-}
-
-/// Réseau Franchise (1 HQ + jusqu’à 3 boutiques au total)
-model FranchiseNetwork {
-  id             String   @id @default(cuid())
-  name           String
-  hqRestaurantId String
-  hqRestaurant   Restaurant @relation("NetworkHq", fields: [hqRestaurantId], references: [id], onDelete: Restrict)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  restaurants    Restaurant[] @relation("NetworkStores")
-
-  @@index([hqRestaurantId])
-}
-
-/// Accès multi-boutiques (un User → N restaurants du même network)
-model UserRestaurant {
-  id           String            @id @default(cuid())
-  userId       String
-  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  restaurantId String
-  restaurant   Restaurant        @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  role         NetworkMemberRole @default(OWNER)
-  createdAt    DateTime          @default(now())
-
-  @@unique([userId, restaurantId])
-  @@index([restaurantId])
-  @@index([userId])
 }
 
 /// BYOK — clé LLM chiffrée par tenant (jamais en clair côté client)
