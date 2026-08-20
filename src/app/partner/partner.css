@@ -14,11 +14,13 @@
   --partner-line: rgba(16, 20, 14, 0.1);
   --partner-danger: #b42318;
   --partner-radius: 12px;
-  --partner-display: var(--font-partner-display), var(--font-body), system-ui, sans-serif;
+  --partner-display: var(--font-partner-display), "Bricolage Grotesque", system-ui, sans-serif;
+  --partner-body: var(--font-partner-body), "Manrope", system-ui, sans-serif;
 
   min-height: 100dvh;
   color: var(--partner-ink);
-  font-family: var(--font-body), "Plus Jakarta Sans", system-ui, sans-serif;
+  font-family: var(--partner-body);
+  -webkit-font-smoothing: antialiased;
   background: var(--partner-paper);
 }
 
@@ -82,9 +84,9 @@
   margin: 0;
   font-family: var(--partner-display);
   font-size: 1.05rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
 }
 
 .partner__navlinks {
@@ -218,19 +220,19 @@
 .partner-card > h1 {
   margin: 0.4rem 0 0.45rem;
   font-family: var(--partner-display);
-  font-size: clamp(1.75rem, 3.5vw, 2.35rem);
-  font-weight: 750;
-  letter-spacing: -0.035em;
-  line-height: 1.1;
+  font-size: clamp(1.75rem, 3.5vw, 2.45rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
   color: var(--partner-ink);
 }
 
 .partner-card h2 {
   margin: 0 0 0.65rem;
   font-family: var(--partner-display);
-  font-size: 1.2rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: 1.22rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 
 /* ——— Surfaces ——— */
@@ -280,9 +282,9 @@
   display: block;
   margin-top: 0.4rem;
   font-family: var(--partner-display);
-  font-size: 1.65rem;
-  font-weight: 750;
-  letter-spacing: -0.03em;
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
   color: var(--partner-ink);
 }
 
@@ -510,9 +512,9 @@
   display: block;
   margin-bottom: 0.3rem;
   font-family: var(--partner-display);
-  font-size: 1.02rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
   color: var(--partner-ink);
 }
 
@@ -562,9 +564,9 @@
 .partner-referral__code {
   display: inline-block;
   font-family: var(--partner-display);
-  font-size: 1.4rem;
+  font-size: 1.45rem;
   font-weight: 800;
-  letter-spacing: 0.05em;
+  letter-spacing: -0.02em;
   padding: 0.65rem 0.9rem;
   border-radius: 10px;
   background: var(--partner-ink);
@@ -684,9 +686,9 @@
 .partner-login__form h2 {
   margin: 0;
   font-family: var(--partner-display);
-  font-size: 1.85rem;
-  font-weight: 750;
-  letter-spacing: -0.03em;
+  font-size: 1.9rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
 }
 
 .partner-login__note {
