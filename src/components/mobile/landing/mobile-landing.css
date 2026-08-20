@@ -1780,36 +1780,14 @@
   font-size: 0.75rem;
 }
 
-/* Cookie banner — compact + aligné sur la colonne mobile */
+/* Cookie banner — compact mobile ; styles base dans cookie-banner.css */
 .mland .cookie-banner {
   left: 50%;
   right: auto;
-  bottom: 10px;
+  bottom: max(10px, env(safe-area-inset-bottom));
   width: min(calc(100% - 20px), calc(var(--mland-col) - 20px));
   max-width: min(calc(100% - 20px), calc(var(--mland-col) - 20px));
   margin: 0;
   transform: translateX(-50%);
-  padding: 10px 12px;
-  border-radius: 14px;
-  gap: 8px;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.32);
-}
-
-.mland .cookie-banner p {
-  font-size: 0.7rem;
-  line-height: 1.35;
-}
-
-.mland .cookie-banner a {
-  font-size: inherit;
-}
-
-.mland .cookie-banner__actions {
-  gap: 6px;
-  justify-content: center;
-}
-
-.mland .cookie-banner__btn {
-  padding: 6px 11px;
-  font-size: 0.7rem;
+  z-index: 10050;
 }

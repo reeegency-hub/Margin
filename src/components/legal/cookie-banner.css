@@ -1,0 +1,96 @@
+/* Bannière cookies — landing + app. Au-dessus de tout le chrome. */
+.cookie-banner {
+  position: fixed;
+  z-index: 10050;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  max-width: 440px;
+  margin-inline: auto;
+  padding: 16px 16px 14px;
+  border-radius: 16px;
+  background: #0a0a0a;
+  color: #fafafa;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-sizing: border-box;
+}
+
+.cookie-banner__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cookie-banner__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  color: #fff;
+}
+
+.cookie-banner p:not(.cookie-banner__title) {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: rgba(250, 250, 250, 0.72);
+}
+
+.cookie-banner a {
+  color: #e6f8aa;
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.cookie-banner__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.cookie-banner__btn {
+  border: 0;
+  border-radius: 999px;
+  min-height: 42px;
+  padding: 0 14px;
+  font-size: 0.9rem;
+  font-weight: 750;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.cookie-banner__btn--ghost {
+  background: transparent;
+  color: #fafafa;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.cookie-banner__btn--ghost:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.cookie-banner__btn--solid {
+  background: #e6f8aa;
+  color: #0a0a0a;
+}
+
+.cookie-banner__btn--solid:hover {
+  filter: brightness(1.05);
+}
+
+@media (max-width: 420px) {
+  .cookie-banner {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    padding: 14px;
+  }
+
+  .cookie-banner__actions {
+    grid-template-columns: 1fr;
+  }
+}
