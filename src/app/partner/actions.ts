@@ -22,19 +22,19 @@ export async function partnerLoginAction(formData: FormData) {
   }
 
   const {
-    checkRateLimit,
+    checkRateLimitAsync,
     clientIpFromHeaders,
     PARTNER_LOGIN_EMAIL_LIMIT,
     PARTNER_LOGIN_IP_LIMIT,
     PARTNER_LOGIN_WINDOW_MS,
   } = await import("@/lib/rate-limit");
   const ip = await clientIpFromHeaders();
-  const ipLimit = checkRateLimit(
+  const ipLimit = await checkRateLimitAsync(
     `partner-login:ip:${ip}`,
     PARTNER_LOGIN_IP_LIMIT,
     PARTNER_LOGIN_WINDOW_MS
   );
-  const emailLimit = checkRateLimit(
+  const emailLimit = await checkRateLimitAsync(
     `partner-login:email:${email}`,
     PARTNER_LOGIN_EMAIL_LIMIT,
     PARTNER_LOGIN_WINDOW_MS

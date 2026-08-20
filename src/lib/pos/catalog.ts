@@ -68,8 +68,8 @@ export async function acceptPosPendingProducts(
       let productId: string;
       if (existingDish) {
         productId = existingDish.id;
-        await tx.product.update({
-          where: { id: existingDish.id },
+        await tx.product.updateMany({
+          where: { id: existingDish.id, restaurantId },
           data: {
             externalSku: skuNorm || existingDish.externalSku,
             salePrice:
@@ -115,8 +115,8 @@ export async function acceptPosPendingProducts(
 
       productIds.push(productId);
 
-      await tx.posPendingProduct.update({
-        where: { id: p.id },
+      await tx.posPendingProduct.updateMany({
+        where: { id: p.id, restaurantId },
         data: { status: "ACCEPTED" },
       });
       accepted += 1;

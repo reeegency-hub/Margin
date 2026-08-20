@@ -1,6 +1,6 @@
 /**
- * Rate limit mémoire (process). Suffisant en single-instance / cold starts ;
- * en multi-région Vercel, couplez avec un store Redis plus tard.
+ * Rate limit — mémoire process + Upstash Redis optionnel
+ * (UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN).
  */
 
 type Bucket = { count: number; resetAt: number };
@@ -11,7 +11,7 @@ export type RateLimitResult =
   | { ok: true; remaining: number }
   | { ok: false; retryAfterSec: number };
 
-export function checkRateLimit(
+function memoryLimit(
   key: string,
   limit: number,
   windowMs: number
@@ -30,6 +30,64 @@ export function checkRateLimit(
   }
   row.count += 1;
   return { ok: true, remaining: limit - row.count };
+}
+
+/** Sync — mémoire seule (tests / fallback). */
+export function checkRateLimit(
+  key: string,
+  limit: number,
+  windowMs: number
+): RateLimitResult {
+  return memoryLimit(key, limit, windowMs);
+}
+
+async function upstashLimit(
+  key: string,
+  limit: number,
+  windowMs: number
+): Promise<RateLimitResult | null> {
+  const base = process.env.UPSTASH_REDIS_REST_URL?.trim();
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
+  if (!base || !token) return null;
+
+  const ttlSec = Math.max(1, Math.ceil(windowMs / 1000));
+  const redisKey = `rl:${key}`;
+
+  try {
+    const res = await fetch(`${base}/pipeline`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify([
+        ["INCR", redisKey],
+        ["EXPIRE", redisKey, ttlSec],
+      ]),
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { result?: unknown }[];
+    const count = Number(data?.[0]?.result ?? 0);
+    if (!Number.isFinite(count) || count <= 0) return null;
+    if (count > limit) {
+      return { ok: false, retryAfterSec: ttlSec };
+    }
+    return { ok: true, remaining: Math.max(0, limit - count) };
+  } catch {
+    return null;
+  }
+}
+
+/** Async — Upstash si configuré, sinon mémoire. */
+export async function checkRateLimitAsync(
+  key: string,
+  limit: number,
+  windowMs: number
+): Promise<RateLimitResult> {
+  const remote = await upstashLimit(key, limit, windowMs);
+  if (remote) return remote;
+  return memoryLimit(key, limit, windowMs);
 }
 
 /** IP depuis headers Next (Vercel / proxy). */

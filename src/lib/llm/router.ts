@@ -121,10 +121,12 @@ async function getActiveCredential(
   return null;
 }
 
-async function markCredentialValidated(credId: string) {
+async function markCredentialValidated(credId: string, restaurantId?: string) {
   if (credId.startsWith("legacy_")) return;
-  await prisma.llmProviderCredential.update({
-    where: { id: credId },
+  await prisma.llmProviderCredential.updateMany({
+    where: restaurantId
+      ? { id: credId, restaurantId }
+      : { id: credId },
     data: {
       status: "valid",
       lastValidatedAt: new Date(),
@@ -322,7 +324,7 @@ export async function callTenantLLM(req: LLMRequest): Promise<LLMResponse> {
         : await callOpenAI(apiKey, openaiModel, req);
 
     if (cred.source === "byok" && cred.status === "untested") {
-      await markCredentialValidated(cred.id);
+      await markCredentialValidated(cred.id, req.tenantId);
     } else if (cred.source === "byok") {
       await logCredentialEvent({
         credentialId: cred.id,

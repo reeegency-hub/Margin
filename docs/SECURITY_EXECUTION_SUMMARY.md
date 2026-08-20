@@ -46,11 +46,19 @@ Plan initial : `plan-securite-marginshop.md` · Audit live : canvas `margin-secu
 - POS v1 GET : champs réduits à `id` / `status` (aligné `[connectionId]`)
 - TOCTOU : `deliveryDriver.deleteMany` scopé `restaurantId`
 
+## Chantier 8 — Suite 2026-08-20 (TOCTOU + delivery + rate limit + RLS prep)
+- TOCTOU : thresholds, pos catalog, retail import, LLM router/handleProviderError
+- Delivery webhook : timing-safe + HMAC `x-margin-signature` (plus de lookup SQL par secret)
+- Rate limit : `checkRateLimitAsync` → Upstash si `UPSTASH_REDIS_REST_*`, sinon mémoire
+- RLS : `prisma/rls.sql` aligné StockUnit/Product ; script `setup-margin-app-rls.ts`
+  - **Ne pas basculer DATABASE_URL vers margin_app** tant que `withTenantRls` n’est pas généralisé (crons/admin casseraient)
+  - Owner `neondb_owner` bypass encore actif → isolation = scoping app
+
 ## Deploy checklist
-- [ ] Confirmer jobs cron Vercel envoient `Authorization: Bearer $CRON_SECRET` (plus de `?secret=`)
+- [ ] Confirmer jobs cron Vercel envoient `Authorization: Bearer $CRON_SECRET`
 - [ ] `RESEND_API_KEY` présent en prod (OTP)
-- [ ] `NEXTAUTH_SECRET` / `PARTNER_AUTH_SECRET` posés (pas de fallback)
-- [ ] Appliquer migration `sessionVersion` (`prisma migrate deploy` / `db push`)
-- [ ] Confirmer rôle DB sans BYPASSRLS + `rls.sql` appliqué
-- [ ] `npm run db:backfill-founder` si pas déjà fait
+- [ ] `NEXTAUTH_SECRET` / `PARTNER_AUTH_SECRET` posés
+- [ ] `npx tsx scripts/setup-margin-app-rls.ts` (rôle + policies) — sans cutover URL
+- [ ] Optionnel : `UPSTASH_REDIS_REST_URL` + `TOKEN` pour rate limit multi-instance
 - [ ] `DEMO_AUTO_LOGIN≠1`
+- [ ] Cutover `margin_app` **après** généralisation `withTenantRls`

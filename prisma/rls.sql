@@ -1,18 +1,17 @@
--- Margin Shop — Row Level Security (Postgres / Supabase)
--- Architecture : shared database + shared schema, tenant_id = restaurantId
---
--- Appliquer APRÈS `prisma db push` sur Supabase :
---   psql "$DIRECT_URL" -f prisma/rls.sql
---
--- L’app pose le tenant via : SELECT set_config('app.tenant_id', '<id>', true);
+-- Margin Shop — Row Level Security (Postgres / Neon)
+-- tenant_id = restaurantId via set_config('app.tenant_id', …, true)
 -- (voir withTenantRls dans src/lib/db.ts)
 --
--- Rôle applicatif recommandé : pas de BYPASSRLS (le rôle `postgres` owner bypass RLS).
--- Sur Supabase, créez un rôle `margin_app` et utilisez-le dans DATABASE_URL.
+-- Noms physiques = @@map Prisma quand présent :
+--   StockUnit→Ingredient, Product→Dish, ProductStock→RecipeIngredient,
+--   StockUnitPriceEvent→IngredientPriceEvent
+--
+-- Appliquer : npx tsx scripts/setup-margin-app-rls.ts
+--
+-- IMPORTANT : ne basculez DATABASE_URL vers margin_app qu’après avoir
+-- généralisé withTenantRls / requireTenantDb (sinon crons/admin/webhooks = 0 rows).
+-- Pas de BEGIN/COMMIT : chaque statement est auto-commit (évite un ROLLBACK global).
 
-BEGIN;
-
--- Helper : lit le tenant courant (vide = aucune ligne visible si FORCED)
 CREATE OR REPLACE FUNCTION app_current_tenant() RETURNS text
 LANGUAGE sql
 STABLE
@@ -20,13 +19,13 @@ AS $$
   SELECT NULLIF(current_setting('app.tenant_id', true), '');
 $$;
 
--- Active RLS + policy tenant sur chaque table scopée
 DO $$
 DECLARE
   t text;
   tables text[] := ARRAY[
     'User',
     'Ingredient',
+    'CatalogIssue',
     'Dish',
     'Sale',
     'StockMovement',
@@ -46,12 +45,20 @@ DECLARE
     'WhatsAppActionLog',
     'CommissionRule',
     'PlatformOutage',
-    'Alert'
+    'Alert',
+    'LlmProviderCredential',
+    'AssistantDraft',
+    'AssistantCommit',
+    'IngredientPriceEvent'
   ];
 BEGIN
   FOREACH t IN ARRAY tables LOOP
+    IF to_regclass(format('public.%I', t)) IS NULL THEN
+      RAISE NOTICE 'skip missing table %', t;
+      CONTINUE;
+    END IF;
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
-    EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY', t);
+    -- Pas de FORCE : le owner (migrations) continue de bypasser.
     EXECUTE format('DROP POLICY IF EXISTS tenant_isolation ON %I', t);
     EXECUTE format(
       'CREATE POLICY tenant_isolation ON %I
@@ -63,202 +70,244 @@ BEGIN
 END $$;
 
 -- Restaurant : un tenant ne voit que SA ligne
-ALTER TABLE "Restaurant" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "Restaurant" FORCE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS tenant_isolation ON "Restaurant";
-CREATE POLICY tenant_isolation ON "Restaurant"
-  USING (id = app_current_tenant())
-  WITH CHECK (id = app_current_tenant());
+DO $$
+BEGIN
+  IF to_regclass('public."Restaurant"') IS NOT NULL THEN
+    ALTER TABLE "Restaurant" ENABLE ROW LEVEL SECURITY;
+    DROP POLICY IF EXISTS tenant_isolation ON "Restaurant";
+    CREATE POLICY tenant_isolation ON "Restaurant"
+      USING (id = app_current_tenant())
+      WITH CHECK (id = app_current_tenant());
+  END IF;
+END $$;
 
--- Tables enfants : isolation via parent
-ALTER TABLE "RecipeIngredient" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "RecipeIngredient" FORCE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS tenant_isolation ON "RecipeIngredient";
-CREATE POLICY tenant_isolation ON "RecipeIngredient"
-  USING (
-    EXISTS (
-      SELECT 1 FROM "Dish" d
-      WHERE d.id = "RecipeIngredient"."dishId"
-        AND d."restaurantId" = app_current_tenant()
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM "Dish" d
-      WHERE d.id = "RecipeIngredient"."dishId"
-        AND d."restaurantId" = app_current_tenant()
-    )
-  );
+-- Enfants via parent (noms physiques)
+DO $$
+BEGIN
+  IF to_regclass('public."RecipeIngredient"') IS NOT NULL THEN
+    ALTER TABLE "RecipeIngredient" ENABLE ROW LEVEL SECURITY;
+    DROP POLICY IF EXISTS tenant_isolation ON "RecipeIngredient";
+    CREATE POLICY tenant_isolation ON "RecipeIngredient"
+      USING (
+        EXISTS (
+          SELECT 1 FROM "Dish" p
+          WHERE p.id = "RecipeIngredient"."dishId"
+            AND p."restaurantId" = app_current_tenant()
+        )
+      )
+      WITH CHECK (
+        EXISTS (
+          SELECT 1 FROM "Dish" p
+          WHERE p.id = "RecipeIngredient"."dishId"
+            AND p."restaurantId" = app_current_tenant()
+        )
+      );
+  END IF;
+END $$;
 
-ALTER TABLE "SaleItem" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "SaleItem" FORCE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS tenant_isolation ON "SaleItem";
-CREATE POLICY tenant_isolation ON "SaleItem"
-  USING (
-    EXISTS (
-      SELECT 1 FROM "Sale" s
-      WHERE s.id = "SaleItem"."saleId"
-        AND s."restaurantId" = app_current_tenant()
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM "Sale" s
-      WHERE s.id = "SaleItem"."saleId"
-        AND s."restaurantId" = app_current_tenant()
-    )
-  );
+DO $$
+BEGIN
+  IF to_regclass('public."SaleItem"') IS NOT NULL THEN
+    ALTER TABLE "SaleItem" ENABLE ROW LEVEL SECURITY;
+    DROP POLICY IF EXISTS tenant_isolation ON "SaleItem";
+    CREATE POLICY tenant_isolation ON "SaleItem"
+      USING (
+        EXISTS (
+          SELECT 1 FROM "Sale" s
+          WHERE s.id = "SaleItem"."saleId"
+            AND s."restaurantId" = app_current_tenant()
+        )
+      )
+      WITH CHECK (
+        EXISTS (
+          SELECT 1 FROM "Sale" s
+          WHERE s.id = "SaleItem"."saleId"
+            AND s."restaurantId" = app_current_tenant()
+        )
+      );
+  END IF;
+END $$;
 
-ALTER TABLE "PurchaseOrderLine" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "PurchaseOrderLine" FORCE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS tenant_isolation ON "PurchaseOrderLine";
-CREATE POLICY tenant_isolation ON "PurchaseOrderLine"
-  USING (
-    EXISTS (
-      SELECT 1 FROM "PurchaseOrder" po
-      WHERE po.id = "PurchaseOrderLine"."purchaseOrderId"
-        AND po."restaurantId" = app_current_tenant()
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM "PurchaseOrder" po
-      WHERE po.id = "PurchaseOrderLine"."purchaseOrderId"
-        AND po."restaurantId" = app_current_tenant()
-    )
-  );
+DO $$
+BEGIN
+  IF to_regclass('public."PurchaseOrderLine"') IS NOT NULL THEN
+    ALTER TABLE "PurchaseOrderLine" ENABLE ROW LEVEL SECURITY;
+    DROP POLICY IF EXISTS tenant_isolation ON "PurchaseOrderLine";
+    CREATE POLICY tenant_isolation ON "PurchaseOrderLine"
+      USING (
+        EXISTS (
+          SELECT 1 FROM "PurchaseOrder" po
+          WHERE po.id = "PurchaseOrderLine"."orderId"
+            AND po."restaurantId" = app_current_tenant()
+        )
+      )
+      WITH CHECK (
+        EXISTS (
+          SELECT 1 FROM "PurchaseOrder" po
+          WHERE po.id = "PurchaseOrderLine"."orderId"
+            AND po."restaurantId" = app_current_tenant()
+        )
+      );
+  END IF;
+END $$;
 
-ALTER TABLE "InventoryCountLine" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "InventoryCountLine" FORCE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS tenant_isolation ON "InventoryCountLine";
-CREATE POLICY tenant_isolation ON "InventoryCountLine"
-  USING (
-    EXISTS (
-      SELECT 1 FROM "InventoryCount" ic
-      WHERE ic.id = "InventoryCountLine"."inventoryCountId"
-        AND ic."restaurantId" = app_current_tenant()
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM "InventoryCount" ic
-      WHERE ic.id = "InventoryCountLine"."inventoryCountId"
-        AND ic."restaurantId" = app_current_tenant()
-    )
-  );
+DO $$
+BEGIN
+  IF to_regclass('public."InventoryCountLine"') IS NOT NULL THEN
+    ALTER TABLE "InventoryCountLine" ENABLE ROW LEVEL SECURITY;
+    DROP POLICY IF EXISTS tenant_isolation ON "InventoryCountLine";
+    CREATE POLICY tenant_isolation ON "InventoryCountLine"
+      USING (
+        EXISTS (
+          SELECT 1 FROM "InventoryCount" ic
+          WHERE ic.id = "InventoryCountLine"."inventoryCountId"
+            AND ic."restaurantId" = app_current_tenant()
+        )
+      )
+      WITH CHECK (
+        EXISTS (
+          SELECT 1 FROM "InventoryCount" ic
+          WHERE ic.id = "InventoryCountLine"."inventoryCountId"
+            AND ic."restaurantId" = app_current_tenant()
+        )
+      );
+  END IF;
+END $$;
 
-ALTER TABLE "SupplierReceiptLine" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "SupplierReceiptLine" FORCE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS tenant_isolation ON "SupplierReceiptLine";
-CREATE POLICY tenant_isolation ON "SupplierReceiptLine"
-  USING (
-    EXISTS (
-      SELECT 1 FROM "SupplierReceipt" sr
-      WHERE sr.id = "SupplierReceiptLine"."receiptId"
-        AND sr."restaurantId" = app_current_tenant()
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM "SupplierReceipt" sr
-      WHERE sr.id = "SupplierReceiptLine"."receiptId"
-        AND sr."restaurantId" = app_current_tenant()
-    )
-  );
+DO $$
+BEGIN
+  IF to_regclass('public."SupplierReceiptLine"') IS NOT NULL THEN
+    ALTER TABLE "SupplierReceiptLine" ENABLE ROW LEVEL SECURITY;
+    DROP POLICY IF EXISTS tenant_isolation ON "SupplierReceiptLine";
+    CREATE POLICY tenant_isolation ON "SupplierReceiptLine"
+      USING (
+        EXISTS (
+          SELECT 1 FROM "SupplierReceipt" sr
+          WHERE sr.id = "SupplierReceiptLine"."receiptId"
+            AND sr."restaurantId" = app_current_tenant()
+        )
+      )
+      WITH CHECK (
+        EXISTS (
+          SELECT 1 FROM "SupplierReceipt" sr
+          WHERE sr.id = "SupplierReceiptLine"."receiptId"
+            AND sr."restaurantId" = app_current_tenant()
+        )
+      );
+  END IF;
+END $$;
 
-ALTER TABLE "SupplierCatalogItem" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "SupplierCatalogItem" FORCE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS tenant_isolation ON "SupplierCatalogItem";
-CREATE POLICY tenant_isolation ON "SupplierCatalogItem"
-  USING (
-    EXISTS (
-      SELECT 1 FROM "Supplier" s
-      WHERE s.id = "SupplierCatalogItem"."supplierId"
-        AND s."restaurantId" = app_current_tenant()
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM "Supplier" s
-      WHERE s.id = "SupplierCatalogItem"."supplierId"
-        AND s."restaurantId" = app_current_tenant()
-    )
-  );
+DO $$
+BEGIN
+  IF to_regclass('public."SupplierCatalogItem"') IS NOT NULL THEN
+    ALTER TABLE "SupplierCatalogItem" ENABLE ROW LEVEL SECURITY;
+    DROP POLICY IF EXISTS tenant_isolation ON "SupplierCatalogItem";
+    CREATE POLICY tenant_isolation ON "SupplierCatalogItem"
+      USING (
+        EXISTS (
+          SELECT 1 FROM "Supplier" s
+          WHERE s.id = "SupplierCatalogItem"."supplierId"
+            AND s."restaurantId" = app_current_tenant()
+        )
+      )
+      WITH CHECK (
+        EXISTS (
+          SELECT 1 FROM "Supplier" s
+          WHERE s.id = "SupplierCatalogItem"."supplierId"
+            AND s."restaurantId" = app_current_tenant()
+        )
+      );
+  END IF;
+END $$;
 
-ALTER TABLE "Shift" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "Shift" FORCE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS tenant_isolation ON "Shift";
-CREATE POLICY tenant_isolation ON "Shift"
-  USING (
-    EXISTS (
-      SELECT 1 FROM "Employee" e
-      WHERE e.id = "Shift"."employeeId"
-        AND e."restaurantId" = app_current_tenant()
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM "Employee" e
-      WHERE e.id = "Shift"."employeeId"
-        AND e."restaurantId" = app_current_tenant()
-    )
-  );
+DO $$
+BEGIN
+  IF to_regclass('public."Shift"') IS NOT NULL THEN
+    ALTER TABLE "Shift" ENABLE ROW LEVEL SECURITY;
+    DROP POLICY IF EXISTS tenant_isolation ON "Shift";
+    CREATE POLICY tenant_isolation ON "Shift"
+      USING (
+        EXISTS (
+          SELECT 1 FROM "Employee" e
+          WHERE e.id = "Shift"."employeeId"
+            AND e."restaurantId" = app_current_tenant()
+        )
+      )
+      WITH CHECK (
+        EXISTS (
+          SELECT 1 FROM "Employee" e
+          WHERE e.id = "Shift"."employeeId"
+            AND e."restaurantId" = app_current_tenant()
+        )
+      );
+  END IF;
+END $$;
 
-ALTER TABLE "Attendance" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "Attendance" FORCE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS tenant_isolation ON "Attendance";
-CREATE POLICY tenant_isolation ON "Attendance"
-  USING (
-    EXISTS (
-      SELECT 1 FROM "Employee" e
-      WHERE e.id = "Attendance"."employeeId"
-        AND e."restaurantId" = app_current_tenant()
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM "Employee" e
-      WHERE e.id = "Attendance"."employeeId"
-        AND e."restaurantId" = app_current_tenant()
-    )
-  );
+DO $$
+BEGIN
+  IF to_regclass('public."Attendance"') IS NOT NULL THEN
+    ALTER TABLE "Attendance" ENABLE ROW LEVEL SECURITY;
+    DROP POLICY IF EXISTS tenant_isolation ON "Attendance";
+    CREATE POLICY tenant_isolation ON "Attendance"
+      USING (
+        EXISTS (
+          SELECT 1 FROM "Employee" e
+          WHERE e.id = "Attendance"."employeeId"
+            AND e."restaurantId" = app_current_tenant()
+        )
+      )
+      WITH CHECK (
+        EXISTS (
+          SELECT 1 FROM "Employee" e
+          WHERE e.id = "Attendance"."employeeId"
+            AND e."restaurantId" = app_current_tenant()
+        )
+      );
+  END IF;
+END $$;
 
-ALTER TABLE "PerformanceSnapshot" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "PerformanceSnapshot" FORCE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS tenant_isolation ON "PerformanceSnapshot";
-CREATE POLICY tenant_isolation ON "PerformanceSnapshot"
-  USING (
-    EXISTS (
-      SELECT 1 FROM "Employee" e
-      WHERE e.id = "PerformanceSnapshot"."employeeId"
-        AND e."restaurantId" = app_current_tenant()
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM "Employee" e
-      WHERE e.id = "PerformanceSnapshot"."employeeId"
-        AND e."restaurantId" = app_current_tenant()
-    )
-  );
+DO $$
+BEGIN
+  IF to_regclass('public."PerformanceSnapshot"') IS NOT NULL THEN
+    ALTER TABLE "PerformanceSnapshot" ENABLE ROW LEVEL SECURITY;
+    DROP POLICY IF EXISTS tenant_isolation ON "PerformanceSnapshot";
+    CREATE POLICY tenant_isolation ON "PerformanceSnapshot"
+      USING (
+        EXISTS (
+          SELECT 1 FROM "Employee" e
+          WHERE e.id = "PerformanceSnapshot"."employeeId"
+            AND e."restaurantId" = app_current_tenant()
+        )
+      )
+      WITH CHECK (
+        EXISTS (
+          SELECT 1 FROM "Employee" e
+          WHERE e.id = "PerformanceSnapshot"."employeeId"
+            AND e."restaurantId" = app_current_tenant()
+        )
+      );
+  END IF;
+END $$;
 
-ALTER TABLE "DeliveryAssignment" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "DeliveryAssignment" FORCE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS tenant_isolation ON "DeliveryAssignment";
-CREATE POLICY tenant_isolation ON "DeliveryAssignment"
-  USING (
-    EXISTS (
-      SELECT 1 FROM "DeliveryOrder" o
-      WHERE o.id = "DeliveryAssignment"."orderId"
-        AND o."restaurantId" = app_current_tenant()
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM "DeliveryOrder" o
-      WHERE o.id = "DeliveryAssignment"."orderId"
-        AND o."restaurantId" = app_current_tenant()
-    )
-  );
-
-COMMIT;
+DO $$
+BEGIN
+  IF to_regclass('public."DeliveryAssignment"') IS NOT NULL THEN
+    ALTER TABLE "DeliveryAssignment" ENABLE ROW LEVEL SECURITY;
+    DROP POLICY IF EXISTS tenant_isolation ON "DeliveryAssignment";
+    CREATE POLICY tenant_isolation ON "DeliveryAssignment"
+      USING (
+        EXISTS (
+          SELECT 1 FROM "DeliveryOrder" o
+          WHERE o.id = "DeliveryAssignment"."deliveryOrderId"
+            AND o."restaurantId" = app_current_tenant()
+        )
+      )
+      WITH CHECK (
+        EXISTS (
+          SELECT 1 FROM "DeliveryOrder" o
+          WHERE o.id = "DeliveryAssignment"."deliveryOrderId"
+            AND o."restaurantId" = app_current_tenant()
+        )
+      );
+  END IF;
+END $$;

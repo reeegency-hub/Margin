@@ -57,3 +57,6 @@ next-env.d.ts
 .env.twilio
 .env.*
 !.env.example
+
+# RLS cutover secret (local only)
+.margin-app-url.local

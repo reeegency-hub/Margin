@@ -22,19 +22,19 @@ export const authOptions: NextAuthOptions = {
         const password = String(credentials.password);
 
         const {
-          checkRateLimit,
+          checkRateLimitAsync,
           clientIpFromHeaders,
           LOGIN_EMAIL_LIMIT,
           LOGIN_IP_LIMIT,
           LOGIN_WINDOW_MS,
         } = await import("@/lib/rate-limit");
         const ip = await clientIpFromHeaders();
-        const ipLimit = checkRateLimit(
+        const ipLimit = await checkRateLimitAsync(
           `login:ip:${ip}`,
           LOGIN_IP_LIMIT,
           LOGIN_WINDOW_MS
         );
-        const emailLimit = checkRateLimit(
+        const emailLimit = await checkRateLimitAsync(
           `login:email:${email}`,
           LOGIN_EMAIL_LIMIT,
           LOGIN_WINDOW_MS

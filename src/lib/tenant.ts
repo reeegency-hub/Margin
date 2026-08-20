@@ -90,6 +90,8 @@ export const TENANT_SCOPED_MODELS = new Set([
   // Journaux billing Ops (restaurantId optionnel ; écritures via lib/stripe)
   "StripeWebhookEvent",
   "StripeReconciliationRun",
+  // Ops / ambassadeur (restaurantId optionnel)
+  "ActivityLog",
 ]);
 
 /** Models enfants sans restaurantId (isolation via parent). */
@@ -110,4 +112,9 @@ export const TENANT_CHILD_MODELS = new Set([
   "MarketingInfluencer",
   "AdminAuditLog",
   "PlatformLlmUsage",
+  // Plateforme (pas de restaurantId direct — scoper via parent / Ops)
+  "Ambassador",
+  "Prospect",
+  "Referral",
+  "RewardEvent",
 ]);

@@ -61,8 +61,8 @@ export async function seedDefaultThresholds(
   let updated = 0;
   for (const ing of ingredients) {
     const d = defaultThresholdForIngredient(ing.name, ing.unit);
-    await prisma.stockUnit.update({
-      where: { id: ing.id },
+    await prisma.stockUnit.updateMany({
+      where: { id: ing.id, restaurantId },
       data: {
         criticalThreshold: d.criticalThreshold,
         reorderQty: ing.reorderQty > 0 ? ing.reorderQty : d.reorderQty,
@@ -129,8 +129,8 @@ export async function refreshVelocityThresholds(
     const critical = Math.max(1, Math.ceil(avg * VELOCITY_COVER_DAYS));
     const reorder = Math.max(critical * 2, Math.ceil(avg * VELOCITY_REORDER_DAYS));
 
-    await prisma.stockUnit.update({
-      where: { id: ing.id },
+    await prisma.stockUnit.updateMany({
+      where: { id: ing.id, restaurantId },
       data: {
         criticalThreshold: critical,
         reorderQty: reorder,

@@ -20,15 +20,17 @@ export async function logCredentialEvent(input: {
 }
 
 export async function handleProviderError(
-  cred: { id: string },
+  cred: { id: string; restaurantId?: string },
   err: unknown
 ): Promise<void> {
   const status = extractHttpStatus(err);
   // Seul 401/403 = clé cassée. 429 / 5xx ne marquent PAS invalid.
   if (status !== 401 && status !== 403) return;
 
-  await prisma.llmProviderCredential.update({
-    where: { id: cred.id },
+  await prisma.llmProviderCredential.updateMany({
+    where: cred.restaurantId
+      ? { id: cred.id, restaurantId: cred.restaurantId }
+      : { id: cred.id },
     data: {
       status: "invalid",
       lastError: `Provider a renvoyé ${status}`,

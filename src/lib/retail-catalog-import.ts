@@ -86,8 +86,8 @@ export async function importRetailCatalogCsv(
     });
 
     if (existingDish) {
-      await db.product.update({
-        where: { id: existingDish.id },
+      await db.product.updateMany({
+        where: { id: existingDish.id, restaurantId },
         data: {
           name,
           externalSku: sku,
@@ -98,8 +98,8 @@ export async function importRetailCatalogCsv(
       const link = existingDish.productStocks[0];
       const stockUnitId = link?.stockUnitId || existingIngredient?.id;
       if (stockUnitId) {
-        await db.stockUnit.update({
-          where: { id: stockUnitId },
+        await db.stockUnit.updateMany({
+          where: { id: stockUnitId, restaurantId },
           data: {
             name,
             unit,
@@ -139,8 +139,8 @@ export async function importRetailCatalogCsv(
       }));
 
     if (existingIngredient) {
-      await db.stockUnit.update({
-        where: { id: existingIngredient.id },
+      await db.stockUnit.updateMany({
+        where: { id: existingIngredient.id, restaurantId },
         data: {
           unit,
           stockTheoretical: stock,

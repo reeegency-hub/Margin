@@ -4,6 +4,10 @@ import {
   createDeliveryOrder,
   ingestDeliveryOrderAsSale,
 } from "@/lib/delivery-engine";
+import {
+  verifyHmacSha256,
+  verifyPlainWebhookSecret,
+} from "@/lib/pos/webhook-auth";
 
 type DeliveryPayload = {
   secret?: string;
@@ -28,7 +32,7 @@ const PLATFORMS = new Set(["uber_eats", "deliveroo", "just_eat", "other"]);
  * ou un script qui POSTe le JSON ici.
  *
  * POST /api/webhooks/delivery/{uber_eats|deliveroo|just_eat|other}
- * Header: x-webhook-secret (ou body.secret)
+ * Header: x-webhook-secret (plain) et/ou x-margin-signature (HMAC-SHA256 du body)
  */
 export async function POST(
   req: NextRequest,
@@ -43,31 +47,63 @@ export async function POST(
     );
   }
 
+  const rawBody = await req.text();
   let payload: DeliveryPayload;
   try {
-    payload = (await req.json()) as DeliveryPayload;
+    payload = JSON.parse(rawBody) as DeliveryPayload;
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
   const headerSecret = req.headers.get("x-webhook-secret");
-  const secret = payload.secret || headerSecret;
-  if (!secret) {
+  const plainSecret = payload.secret || headerSecret || "";
+  const signature =
+    req.headers.get("x-margin-signature") ||
+    req.headers.get("x-hub-signature-256") ||
+    "";
+
+  if (!plainSecret && !signature) {
     return NextResponse.json({ error: "Missing webhook secret" }, { status: 401 });
   }
 
-  const connection = await prisma.deliveryPlatformConnection.findFirst({
-    where: {
-      platform,
-      webhookSecret: secret,
+  // Ne pas chercher par secret en SQL (timing). Charge les connexions
+  // de la plateforme puis compare en timing-safe / HMAC.
+  const connections = await prisma.deliveryPlatformConnection.findMany({
+    where: { platform },
+    select: {
+      id: true,
+      restaurantId: true,
+      webhookSecret: true,
     },
   });
+
+  const connection = connections.find((c) => {
+    if (!c.webhookSecret) return false;
+    if (
+      signature &&
+      verifyHmacSha256({
+        rawBody,
+        secret: c.webhookSecret,
+        signatureHeader: signature,
+      })
+    ) {
+      return true;
+    }
+    if (plainSecret && verifyPlainWebhookSecret(plainSecret, c.webhookSecret)) {
+      return true;
+    }
+    return false;
+  });
+
   if (!connection) {
     return NextResponse.json(
       { error: "Unknown secret / platform — save credentials in Connexions first" },
       { status: 401 }
     );
   }
+
+  // Ne jamais réinjecter secret dans les logs / réponses
+  delete payload.secret;
 
   const externalOrderId =
     payload.externalOrderId?.trim() || `DEL-${platform}-${Date.now()}`;
@@ -113,6 +149,6 @@ export async function GET(
     ok: true,
     platform,
     usage:
-      "POST JSON { externalOrderId, totalAmount, customerName, items:[{dishName|sku, quantity}], applyStock?: true } with header x-webhook-secret",
+      "POST JSON { externalOrderId, totalAmount, customerName, items:[{dishName|sku, quantity}], applyStock?: true } with header x-webhook-secret and/or x-margin-signature (HMAC-SHA256)",
   });
 }
