@@ -67,7 +67,8 @@ export default async function PartnerDashboardPage() {
         <p className="brand-eyebrow">Espace ambassadeur</p>
         <h1>Bonjour {me.name}</h1>
         <p className="partner-muted">
-          Prospects, magasins onboardés et commissions — au même endroit.
+          Prospects, magasins onboardés et commissions — même rythme que
+          Margin, côté ambassadeur.
         </p>
       </div>
 
