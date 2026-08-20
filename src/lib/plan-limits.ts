@@ -36,19 +36,40 @@ export async function assertCanAddProducts(
   return { ok: true };
 }
 
-/** Gate multi-boutiques (admin create store). */
+/**
+ * Gate multi-boutiques.
+ * - Si le user a un `networkId` (Franchise) : compte les restaurants du network.
+ * - Sinon (Commerce / admin email neuf) : compte legacy par email, ou ok si aucun user.
+ */
 export async function assertCanAddStore(
   ownerEmail: string,
   db: TenantDb = prisma
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const user = await db.user.findUnique({
     where: { email: ownerEmail },
-    select: { restaurant: { select: { plan: true, id: true } } },
+    select: {
+      restaurant: {
+        select: { plan: true, id: true, networkId: true },
+      },
+    },
   });
-  // Admin crée des commerces indépendants — limite par plan du commerce parent n’existe pas encore.
-  // On compte les restaurants actifs du même email gérant si multi-compte ; sinon no-op soft.
   if (!user?.restaurant) return { ok: true };
+
   const plan = resolvePlan(user.restaurant.plan);
+
+  if (user.restaurant.networkId) {
+    const storeCount = await db.restaurant.count({
+      where: { networkId: user.restaurant.networkId, active: true },
+    });
+    if (storeCount >= plan.maxStores) {
+      return {
+        ok: false,
+        error: `Plan ${plan.name} : max ${plan.maxStores} boutique(s) (actuel ${storeCount}).`,
+      };
+    }
+    return { ok: true };
+  }
+
   const storeCount = await db.restaurant.count({
     where: { users: { some: { email: ownerEmail } }, active: true },
   });
@@ -56,6 +77,29 @@ export async function assertCanAddStore(
     return {
       ok: false,
       error: `Plan ${plan.name} : max ${plan.maxStores} boutique(s) (actuel ${storeCount}).`,
+    };
+  }
+  return { ok: true };
+}
+
+/** Gate par networkId (création satellite depuis le hub Franchise). */
+export async function assertCanAddStoreToNetwork(
+  networkId: string,
+  db: TenantDb = prisma
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const network = await db.franchiseNetwork.findUnique({
+    where: { id: networkId },
+    select: {
+      hqRestaurant: { select: { plan: true } },
+      _count: { select: { restaurants: true } },
+    },
+  });
+  if (!network) return { ok: false, error: "Réseau introuvable." };
+  const plan = resolvePlan(network.hqRestaurant.plan);
+  if (network._count.restaurants >= plan.maxStores) {
+    return {
+      ok: false,
+      error: `Plan ${plan.name} : max ${plan.maxStores} boutique(s) (actuel ${network._count.restaurants}).`,
     };
   }
   return { ok: true };

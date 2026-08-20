@@ -35,6 +35,33 @@ function attachDeviceCookie(
   return res;
 }
 
+function isFranchiseToken(token: {
+  plan?: unknown;
+  networkId?: unknown;
+} | null) {
+  return token?.plan === "reseau" || Boolean(token?.networkId);
+}
+
+/** Routes shell commerce — Franchise redirigé vers /franchise */
+function isCommerceAppPath(pathname: string) {
+  if (pathname === "/") return true;
+  return (
+    pathname.startsWith("/ingredients") ||
+    pathname.startsWith("/dishes") ||
+    pathname.startsWith("/sales") ||
+    pathname.startsWith("/receipts") ||
+    pathname.startsWith("/settings") ||
+    pathname.startsWith("/employees") ||
+    pathname.startsWith("/inventory") ||
+    pathname.startsWith("/orders") ||
+    pathname.startsWith("/cuisine") ||
+    pathname.startsWith("/delivery") ||
+    pathname.startsWith("/kiosks") ||
+    pathname.startsWith("/costs") ||
+    pathname.startsWith("/assistant")
+  );
+}
+
 export default withAuth(
   function middleware(req) {
     const pathname = req.nextUrl.pathname;
@@ -71,6 +98,24 @@ export default withAuth(
       res.cookies.delete("next-auth.session-token");
       res.cookies.delete("__Secure-next-auth.session-token");
       return attachDeviceCookie(res, req);
+    }
+
+    // Franchise hub vs Commerce shell
+    if (token && pathname.startsWith("/franchise")) {
+      if (!isFranchiseToken(token)) {
+        return attachDeviceCookie(
+          NextResponse.redirect(new URL("/", req.nextUrl.origin)),
+          req
+        );
+      }
+      return attachDeviceCookie(NextResponse.next(), req);
+    }
+
+    if (token && isFranchiseToken(token) && isCommerceAppPath(pathname)) {
+      return attachDeviceCookie(
+        NextResponse.redirect(new URL("/franchise", req.nextUrl.origin)),
+        req
+      );
     }
 
     // ?mobile=1 → toute l’app en chrome mobile (cookie). ?mobile=0 → quit.
@@ -160,6 +205,8 @@ export default withAuth(
 export const config = {
   matcher: [
     "/",
+    "/franchise",
+    "/franchise/:path*",
     "/partner",
     "/partner/:path*",
     "/onboarding",

@@ -3,6 +3,22 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 
+async function restaurantSessionFields(restaurantId: string) {
+  const restaurant = await prisma.restaurant.findUnique({
+    where: { id: restaurantId },
+    select: {
+      name: true,
+      plan: true,
+      networkId: true,
+    },
+  });
+  return {
+    restaurantName: restaurant?.name ?? "",
+    plan: restaurant?.plan ?? null,
+    networkId: restaurant?.networkId ?? null,
+  };
+}
+
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
   pages: {
@@ -79,6 +95,17 @@ export const authOptions: NextAuthOptions = {
           data: { lastLoginAt: new Date() },
         });
 
+        // Bootstrap network si plan Franchise sans network (upgrade / legacy)
+        let networkId = user.restaurant.networkId;
+        const plan = user.restaurant.plan;
+        if (plan === "reseau" && !networkId) {
+          const { ensureFranchiseNetwork } = await import(
+            "@/lib/franchise-network"
+          );
+          const ensured = await ensureFranchiseNetwork(user.restaurantId);
+          networkId = ensured.networkId;
+        }
+
         return {
           id: user.id,
           email: user.email,
@@ -86,23 +113,54 @@ export const authOptions: NextAuthOptions = {
           restaurantId: user.restaurantId,
           restaurantName: user.restaurant.name,
           sessionVersion: user.sessionVersion,
+          plan,
+          networkId,
         };
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         const u = user as {
           id: string;
           restaurantId: string;
           restaurantName: string;
           sessionVersion?: number;
+          plan?: string | null;
+          networkId?: string | null;
         };
         token.id = u.id;
         token.restaurantId = u.restaurantId;
         token.restaurantName = u.restaurantName;
         token.sessionVersion = u.sessionVersion ?? 0;
+        token.plan = u.plan ?? null;
+        token.networkId = u.networkId ?? null;
+        return token;
+      }
+
+      // Switch boutique Franchise (update session côté client / server)
+      if (trigger === "update" && session?.restaurantId && token.id) {
+        const nextId = String(session.restaurantId);
+        const { userCanAccessRestaurant, assertSameNetwork } = await import(
+          "@/lib/franchise-network"
+        );
+        const allowed = await userCanAccessRestaurant(
+          token.id as string,
+          nextId
+        );
+        if (allowed) {
+          const sameNet =
+            !token.restaurantId ||
+            (await assertSameNetwork(token.restaurantId as string, nextId));
+          if (sameNet || token.plan === "reseau") {
+            const fields = await restaurantSessionFields(nextId);
+            token.restaurantId = nextId;
+            token.restaurantName = fields.restaurantName;
+            token.plan = fields.plan;
+            token.networkId = fields.networkId;
+          }
+        }
         return token;
       }
 
@@ -121,11 +179,15 @@ export const authOptions: NextAuthOptions = {
             token.restaurantId = undefined;
             token.restaurantName = undefined;
             token.sessionVersion = undefined;
+            token.plan = undefined;
+            token.networkId = undefined;
             return token;
           }
           token.restaurantId = dbUser.restaurantId;
           token.restaurantName = dbUser.restaurant.name;
           token.sessionVersion = dbUser.sessionVersion;
+          token.plan = dbUser.restaurant.plan;
+          token.networkId = dbUser.restaurant.networkId;
         } else if (token.email) {
           const byEmail = await prisma.user.findUnique({
             where: { email: token.email as string },
@@ -136,11 +198,15 @@ export const authOptions: NextAuthOptions = {
             token.restaurantId = byEmail.restaurantId;
             token.restaurantName = byEmail.restaurant.name;
             token.sessionVersion = byEmail.sessionVersion;
+            token.plan = byEmail.restaurant.plan;
+            token.networkId = byEmail.restaurant.networkId;
           } else {
             token.id = undefined;
             token.restaurantId = undefined;
             token.restaurantName = undefined;
             token.sessionVersion = undefined;
+            token.plan = undefined;
+            token.networkId = undefined;
           }
         }
       }
@@ -156,12 +222,16 @@ export const authOptions: NextAuthOptions = {
               id: "",
               restaurantId: "",
               restaurantName: "",
+              plan: null,
+              networkId: null,
             },
           };
         }
         session.user.id = token.id as string;
         session.user.restaurantId = token.restaurantId as string;
         session.user.restaurantName = token.restaurantName as string;
+        session.user.plan = (token.plan as string | null) ?? null;
+        session.user.networkId = (token.networkId as string | null) ?? null;
       }
       return session;
     },

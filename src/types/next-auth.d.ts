@@ -9,6 +9,8 @@ declare module "next-auth" {
       name?: string | null;
       restaurantId: string;
       restaurantName: string;
+      plan?: string | null;
+      networkId?: string | null;
     };
   }
 
@@ -16,6 +18,8 @@ declare module "next-auth" {
     restaurantId: string;
     restaurantName: string;
     sessionVersion?: number;
+    plan?: string | null;
+    networkId?: string | null;
   }
 }
 
@@ -25,5 +29,7 @@ declare module "next-auth/jwt" {
     restaurantId?: string;
     restaurantName?: string;
     sessionVersion?: number;
+    plan?: string | null;
+    networkId?: string | null;
   }
 }

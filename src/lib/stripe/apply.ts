@@ -95,6 +95,13 @@ export async function applySubscriptionState(
       churnedAt,
     },
   });
+
+  if (plan === "reseau" && isPaidAccessStatus(status)) {
+    const { ensureFranchiseNetwork } = await import(
+      "@/lib/franchise-network"
+    );
+    await ensureFranchiseNetwork(restaurantId);
+  }
 }
 
 export async function markSubscriptionDeleted(
