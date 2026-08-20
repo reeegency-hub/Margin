@@ -26,33 +26,35 @@ export default async function PartnerAgendaPage() {
 
   return (
     <main className="partner__main">
-      <div className="partner-page-head">
-        <h1>Agenda relances</h1>
-        <p className="partner-muted">
-          {overdue.length} en retard · {upcoming.length} à venir
+      <header className="partner-page-head">
+        <p className="brand-eyebrow">Relances</p>
+        <h1>
+          Votre <em>agenda</em>
+        </h1>
+        <p className="partner-muted partner-page-head__lead">
+          <strong>{overdue.length}</strong> en retard ·{" "}
+          <strong>{upcoming.length}</strong> à venir
         </p>
-      </div>
+      </header>
 
-      <div className="partner-card">
-        <h2>En retard</h2>
-        {!overdue.length ? (
-          <p className="partner-muted">Rien en retard.</p>
-        ) : (
-          overdue.map((p) => (
-            <AgendaRow key={p.id} prospect={p} overdue />
-          ))
-        )}
-      </div>
+      <div className="partner-panel-grid">
+        <section className="partner-card">
+          <h2>En retard</h2>
+          {!overdue.length ? (
+            <p className="partner-muted">Rien en retard.</p>
+          ) : (
+            overdue.map((p) => <AgendaRow key={p.id} prospect={p} overdue />)
+          )}
+        </section>
 
-      <div className="partner-card">
-        <h2>À venir</h2>
-        {!upcoming.length ? (
-          <p className="partner-muted">Aucune relance planifiée.</p>
-        ) : (
-          upcoming.map((p) => (
-            <AgendaRow key={p.id} prospect={p} />
-          ))
-        )}
+        <section className="partner-card">
+          <h2>À venir</h2>
+          {!upcoming.length ? (
+            <p className="partner-muted">Aucune relance planifiée.</p>
+          ) : (
+            upcoming.map((p) => <AgendaRow key={p.id} prospect={p} />)
+          )}
+        </section>
       </div>
     </main>
   );
@@ -83,7 +85,7 @@ function AgendaRow({
   return (
     <div className="partner-row">
       <div>
-        <strong>{p.businessName}</strong>
+        <strong className="partner-row__title">{p.businessName}</strong>
         <p className={`partner-muted${overdue ? " partner-overdue" : ""}`}>
           {p.contactName} · {when}
         </p>
@@ -91,7 +93,7 @@ function AgendaRow({
       <form action={updateProspectStatusAction}>
         <input type="hidden" name="id" value={p.id} />
         <input type="hidden" name="status" value="contacted" />
-        <button type="submit" className="partner-btn">
+        <button type="submit" className="partner-btn partner-btn--sm">
           Fait
         </button>
       </form>

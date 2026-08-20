@@ -17,7 +17,7 @@ export default async function PartnerAppLayout({
       <aside className="partner-rail">
         <div className="partner-rail__brand">
           <MarginLogo tone="light" href="/partner" className="partner__logo" />
-          <p className="partner-rail__eyebrow">Ambassadeur</p>
+        <p className="partner-rail__eyebrow">Ambassadeur</p>
         </div>
         <p className="partner-rail__name">{me.name}</p>
         <PartnerNav />

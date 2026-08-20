@@ -9,7 +9,7 @@ import { MarginLogo } from "@/components/brand/MarginLogo";
 import { getPostLoginPath } from "@/app/actions";
 import "@/components/auth/auth-shell.css";
 
-export function LoginForm({ allowDemo }: { allowDemo: boolean }) {
+export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionExpired = searchParams.get("error") === "session";
@@ -116,11 +116,6 @@ export function LoginForm({ allowDemo }: { allowDemo: boolean }) {
           {loading ? "Connexion…" : "Se connecter"}
         </button>
 
-        {allowDemo ? (
-          <p className="auth-foot">
-            <a href="/api/demo-login">Connexion démo (local)</a>
-          </p>
-        ) : null}
         <p className="auth-foot">
           Pas encore de compte ? <Link href="/signup">Créer un compte</Link>
           {" · "}

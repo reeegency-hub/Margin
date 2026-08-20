@@ -15,16 +15,17 @@ export default async function PartnerCommissionsPage() {
 
   return (
     <main className="partner__main">
-      <div className="partner-page-head">
-        <p className="brand-eyebrow">Espace ambassadeur</p>
-        <h1>Commissions</h1>
-        <p className="partner-muted">
-          Historique des commissions générées à chaque facture payée par vos
-          filleuls.
+      <header className="partner-page-head">
+        <p className="brand-eyebrow">Revenus</p>
+        <h1>
+          Vos <em>commissions</em>
+        </h1>
+        <p className="partner-muted partner-page-head__lead">
+          Chaque facture payée par un filleul génère votre part.
         </p>
-      </div>
+      </header>
 
-      <div className="partner-stats">
+      <div className="partner-stats" aria-label="Totaux">
         <div className="partner-stat">
           <span>Total gagné</span>
           <strong>{euro(totals.earnedCents / 100)}</strong>
@@ -43,7 +44,7 @@ export default async function PartnerCommissionsPage() {
         </div>
       </div>
 
-      <div className="partner-card">
+      <section className="partner-card">
         <h2>Historique</h2>
         {!events.length ? (
           <p className="partner-muted">
@@ -54,7 +55,7 @@ export default async function PartnerCommissionsPage() {
           events.map((e) => (
             <div key={e.id} className="partner-row">
               <div>
-                <strong>{e.restaurant.name}</strong>
+                <strong className="partner-row__title">{e.restaurant.name}</strong>
                 <p className="partner-muted">
                   {e.earnedAt.toLocaleDateString("fr-FR")} · Facture{" "}
                   {euro(e.invoiceAmountCents / 100)} · {e.commissionPercent} %
@@ -63,19 +64,19 @@ export default async function PartnerCommissionsPage() {
               <div className="partner-row__end">
                 <strong>{euro(e.commissionCents / 100)}</strong>
                 <p className="partner-muted">
-                  {REWARD_STATUS_LABEL[e.status as keyof typeof REWARD_STATUS_LABEL] ??
-                    e.status}
+                  {REWARD_STATUS_LABEL[
+                    e.status as keyof typeof REWARD_STATUS_LABEL
+                  ] ?? e.status}
                 </p>
               </div>
             </div>
           ))
         )}
-      </div>
+      </section>
 
       <p className="partner-muted">
-        Les commissions sont calculées à chaque paiement Stripe réussi. Le
-        versement est traité manuellement par Margin — contactez-nous pour le
-        règlement.
+        Calcul à chaque paiement Stripe réussi. Versement traité manuellement
+        par Margin.
       </p>
 
       <Link href="/partner/stores" className="partner-btn partner-btn--link">

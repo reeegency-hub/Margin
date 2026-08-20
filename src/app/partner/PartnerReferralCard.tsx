@@ -22,32 +22,51 @@ export function PartnerReferralCard({
   }
 
   return (
-    <div className="partner-card partner-referral">
-      <p className="brand-eyebrow partner-referral__eyebrow">Parrainage</p>
-      <h2>Votre code personnel</h2>
-      <p className="partner-muted">
-        Partagez ce code ou le lien d’inscription aux commerces que vous amenez.
-      </p>
-      <div className="partner-referral__row">
-        <code className="partner-referral__code">{code}</code>
-        <button
-          type="button"
-          className="partner-btn"
-          onClick={() => copy(code, "code")}
-        >
-          {copied === "code" ? "Copié" : "Copier le code"}
-        </button>
+    <section className="partner-referral" aria-labelledby="partner-referral-title">
+      <div className="partner-referral__bg" aria-hidden />
+      <div className="partner-referral__copy">
+        <p className="partner-referral__eyebrow">Parrainage</p>
+        <h2 id="partner-referral-title">
+          Votre code.
+          <em> Votre lien.</em>
+        </h2>
+        <p className="partner-referral__lead">
+          Partagez-les aux commerces que vous amenez — l’inscription les rattache
+          à vous.
+        </p>
       </div>
-      <div className="partner-referral__row partner-referral__row--link">
-        <span className="partner-referral__url">{signupUrl}</span>
-        <button
-          type="button"
-          className="partner-btn"
-          onClick={() => copy(signupUrl, "link")}
-        >
-          {copied === "link" ? "Copié" : "Copier le lien"}
-        </button>
+
+      <div className="partner-referral__actions">
+        <div className="partner-referral__block">
+          <span className="partner-referral__label">Code</span>
+          <div className="partner-referral__row">
+            <code className="partner-referral__code">{code}</code>
+            <button
+              type="button"
+              className="partner-btn partner-btn--lime"
+              onClick={() => copy(code, "code")}
+            >
+              {copied === "code" ? "Copié" : "Copier"}
+            </button>
+          </div>
+        </div>
+
+        <div className="partner-referral__block">
+          <span className="partner-referral__label">Lien d’inscription</span>
+          <div className="partner-referral__row partner-referral__row--link">
+            <span className="partner-referral__url" title={signupUrl}>
+              {signupUrl}
+            </span>
+            <button
+              type="button"
+              className="partner-btn partner-btn--ghost-light"
+              onClick={() => copy(signupUrl, "link")}
+            >
+              {copied === "link" ? "Copié" : "Copier le lien"}
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

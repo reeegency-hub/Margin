@@ -1,10 +1,7 @@
 import { Suspense } from "react";
-import { isDemoAutoLoginEnabled } from "@/lib/demo-login";
 import { LoginForm } from "@/components/auth/LoginForm";
 
 export default function LoginPage() {
-  const allowDemo = isDemoAutoLoginEnabled();
-
   return (
     <Suspense
       fallback={
@@ -13,7 +10,7 @@ export default function LoginPage() {
         </div>
       }
     >
-      <LoginForm allowDemo={allowDemo} />
+      <LoginForm />
     </Suspense>
   );
 }

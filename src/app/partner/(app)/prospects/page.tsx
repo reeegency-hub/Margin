@@ -36,60 +36,95 @@ export default async function PartnerProspectsPage({
         <p className="flash flash-warn">Vérifiez les champs obligatoires.</p>
       ) : null}
 
-      <div className="partner-page-head">
-        <h1>Prospects</h1>
-        <p className="partner-muted">
+      <header className="partner-page-head">
+        <p className="brand-eyebrow">Pipeline</p>
+        <h1>
+          Vos <em>prospects</em>
+        </h1>
+        <p className="partner-muted partner-page-head__lead">
           Commerces contactés — cold call, mail, suivi.
         </p>
-      </div>
+      </header>
 
-      <div className="partner-card">
-        <h2>Ajouter</h2>
+      <section className="partner-card">
+        <h2>Ajouter un commerce</h2>
         <form action={createProspectAction} className="partner-form">
-          <input name="contactName" placeholder="Contact *" required />
-          <input name="businessName" placeholder="Commerce *" required />
-          <input name="city" placeholder="Ville" />
-          <input name="phone" placeholder="Téléphone" />
-          <input name="email" type="email" placeholder="Email" />
-          <input name="nextFollowUpAt" type="datetime-local" />
-          <textarea name="notes" placeholder="Notes" rows={2} />
-          <button type="submit" className="partner-btn">
+          <div className="partner-form-grid partner-form-grid--2">
+            <label>
+              Contact *
+              <input name="contactName" required placeholder="Prénom Nom" />
+            </label>
+            <label>
+              Commerce *
+              <input name="businessName" required placeholder="Nom de la boutique" />
+            </label>
+            <label>
+              Ville
+              <input name="city" placeholder="Paris" />
+            </label>
+            <label>
+              Téléphone
+              <input name="phone" placeholder="+336..." />
+            </label>
+            <label>
+              Email
+              <input name="email" type="email" placeholder="contact@..." />
+            </label>
+            <label>
+              Prochaine relance
+              <input name="nextFollowUpAt" type="datetime-local" />
+            </label>
+          </div>
+          <label>
+            Notes
+            <textarea name="notes" rows={2} placeholder="Contexte, besoin…" />
+          </label>
+          <button type="submit" className="partner-btn partner-btn--lime">
             Ajouter
           </button>
         </form>
-      </div>
+      </section>
 
-      <div className="partner-card">
-        <h2>Liste ({prospects.length})</h2>
+      <section className="partner-card">
+        <h2>
+          Liste <em>({prospects.length})</em>
+        </h2>
         {!prospects.length ? (
           <p className="partner-muted">Aucun prospect pour l’instant.</p>
         ) : (
           prospects.map((p) => (
             <div key={p.id} className="partner-row">
               <div>
-                <strong>{p.businessName}</strong>
+                <strong className="partner-row__title">{p.businessName}</strong>
                 <p className="partner-muted">
                   {p.contactName}
                   {p.city ? ` · ${p.city}` : ""}
                 </p>
               </div>
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <form action={updateProspectStatusAction} style={{ display: "flex", gap: 4 }}>
+              <div className="partner-inline-actions">
+                <form
+                  action={updateProspectStatusAction}
+                  className="partner-inline-actions"
+                >
                   <input type="hidden" name="id" value={p.id} />
-                  <select name="status" defaultValue={p.status}>
+                  <select name="status" defaultValue={p.status} aria-label="Statut">
                     {Object.entries(STATUS_LABEL).map(([k, v]) => (
                       <option key={k} value={k}>
                         {v}
                       </option>
                     ))}
                   </select>
-                  <button type="submit" className="partner-btn">
+                  <button type="submit" className="partner-btn partner-btn--sm">
                     OK
                   </button>
                 </form>
                 <form action={deleteProspectAction}>
                   <input type="hidden" name="id" value={p.id} />
-                  <button type="submit" className="partner-btn">
+                  <button
+                    type="submit"
+                    className="partner-btn partner-btn--sm partner-btn--danger"
+                    aria-label="Supprimer"
+                  >
                     ×
                   </button>
                 </form>
@@ -97,7 +132,7 @@ export default async function PartnerProspectsPage({
             </div>
           ))
         )}
-      </div>
+      </section>
     </main>
   );
 }
