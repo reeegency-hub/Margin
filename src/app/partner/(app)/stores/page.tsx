@@ -17,7 +17,7 @@ export default async function PartnerStoresPage({
 
   return (
     <main className="partner__main">
-      <div className="partner-page-head partner-card">
+      <div className="partner-page-head">
         <div className="partner-row" style={{ border: 0, padding: 0 }}>
           <div>
             <p className="brand-eyebrow">Espace ambassadeur</p>

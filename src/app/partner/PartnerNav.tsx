@@ -23,9 +23,14 @@ export function PartnerNav() {
           <Link
             key={href}
             href={href}
-            className={active ? "partner__navlink partner__navlink--active" : "partner__navlink"}
+            className={
+              active
+                ? "partner__navlink partner__navlink--active"
+                : "partner__navlink"
+            }
             aria-current={active ? "page" : undefined}
           >
+            <span className="partner__navlink-mark" aria-hidden />
             {label}
           </Link>
         );

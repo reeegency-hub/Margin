@@ -21,7 +21,7 @@ export default async function PartnerNewStorePage({
 
   return (
     <main className="partner__main">
-      <div className="partner-card">
+      <div className="partner-page-head">
         <Link href="/partner/stores" className="partner-muted">
           ← Magasins
         </Link>
@@ -30,6 +30,8 @@ export default async function PartnerNewStorePage({
           Crée le compte commerce et le lie automatiquement à votre espace (
           {me.name}).
         </p>
+      </div>
+      <div className="partner-card">
         {err ? <p className="flash flash-warn">{err}</p> : null}
         <form action={partnerCreateStoreAction} className="partner-form">
           <label>

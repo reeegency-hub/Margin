@@ -15,7 +15,7 @@ export default async function PartnerCommissionsPage() {
 
   return (
     <main className="partner__main">
-      <div className="partner-page-head partner-card partner-hero">
+      <div className="partner-page-head">
         <p className="brand-eyebrow">Espace ambassadeur</p>
         <h1>Commissions</h1>
         <p className="partner-muted">

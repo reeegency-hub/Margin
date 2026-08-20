@@ -36,8 +36,15 @@ export default async function PartnerProspectsPage({
         <p className="flash flash-warn">Vérifiez les champs obligatoires.</p>
       ) : null}
 
-      <div className="partner-card">
+      <div className="partner-page-head">
         <h1>Prospects</h1>
+        <p className="partner-muted">
+          Commerces contactés — cold call, mail, suivi.
+        </p>
+      </div>
+
+      <div className="partner-card">
+        <h2>Ajouter</h2>
         <form action={createProspectAction} className="partner-form">
           <input name="contactName" placeholder="Contact *" required />
           <input name="businessName" placeholder="Commerce *" required />

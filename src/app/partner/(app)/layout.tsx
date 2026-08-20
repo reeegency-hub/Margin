@@ -13,19 +13,19 @@ export default async function PartnerAppLayout({
   if (!me) redirect("/partner/login");
 
   return (
-    <>
-      <header className="partner__nav">
-        <MarginLogo tone="light" href="/partner" className="partner__logo" />
-        <div className="partner__nav-meta">
-          <p className="brand-eyebrow partner__eyebrow">Espace ambassadeur</p>
-          <p className="partner__name">{me.name}</p>
+    <div className="partner-shell">
+      <aside className="partner-rail">
+        <div className="partner-rail__brand">
+          <MarginLogo tone="light" href="/partner" className="partner__logo" />
+          <p className="partner-rail__eyebrow">Ambassadeur</p>
         </div>
+        <p className="partner-rail__name">{me.name}</p>
         <PartnerNav />
-        <form action={partnerLogoutAction}>
+        <form action={partnerLogoutAction} className="partner-rail__logout">
           <button type="submit">Déconnexion</button>
         </form>
-      </header>
-      {children}
-    </>
+      </aside>
+      <div className="partner-workspace">{children}</div>
+    </div>
   );
 }

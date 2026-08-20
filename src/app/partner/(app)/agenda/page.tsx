@@ -26,7 +26,7 @@ export default async function PartnerAgendaPage() {
 
   return (
     <main className="partner__main">
-      <div className="partner-card">
+      <div className="partner-page-head">
         <h1>Agenda relances</h1>
         <p className="partner-muted">
           {overdue.length} en retard · {upcoming.length} à venir

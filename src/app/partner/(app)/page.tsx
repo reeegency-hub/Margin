@@ -63,11 +63,11 @@ export default async function PartnerDashboardPage() {
 
   return (
     <main className="partner__main">
-      <div className="partner-page-head partner-card partner-hero">
+      <div className="partner-page-head">
         <p className="brand-eyebrow">Espace ambassadeur</p>
         <h1>Bonjour {me.name}</h1>
         <p className="partner-muted">
-          Suivez vos prospects, onboarder vos magasins et votre commission.
+          Prospects, magasins onboardés et commissions — au même endroit.
         </p>
       </div>
 
